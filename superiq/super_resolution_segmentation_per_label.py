@@ -8,6 +8,23 @@ import warnings
 
 
 def check_for_labels_in_image( label_list, img ):
+    """
+    Apply a two-channel super resolution model to an image and probability pair.
+
+    Arguments
+    ---------
+    label_list : list of integers
+
+    img : ANTsImage of a segmentation
+
+    Returns
+    -------
+    boolean
+
+    Example
+    -------
+    >>> FIXME
+    """
     imglabels = img.unique()
     isin = True
     for x in range( len( label_list ) ):
