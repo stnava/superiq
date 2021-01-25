@@ -101,12 +101,14 @@ def super_resolution_segmentation_per_label(
         # FIXME replace binseg with probimg and use minprob to threshold it after SR
         if ( binseg == 1 ).sum() >= sizethresh :
             minprob="NA"
+            maxprob="NA"
             if probability_images is not None:
                 whichprob = probability_labels.index(locallab)
                 probimg = probability_images[whichprob].resample_image_to_target( binseg )
                 minprob = min( probimg[ binseg >= 0.5 ] )
+                maxprob = max( probimg[ binseg >= 0.5 ] )
             if verbose:
-                print( "SR-per-label:" + str( locallab ) + " min-prob: " + str(minprob)  )
+                print( "SR-per-label:" + str( locallab ) + " min/max-prob: " + str(minprob)+ " / " + str(maxprob)  )
             binsegdil = ants.iMath( ants.threshold_image( segmentation, locallab, locallab ), "MD", dilation_amount )
             binsegdil2input = ants.resample_image_to_target( binsegdil, imgIn, interp_type='nearestNeighbor'  )
             imgc = ants.crop_image( imgIn, binsegdil2input ).iMath("Normalize")
@@ -129,10 +131,13 @@ def super_resolution_segmentation_per_label(
             # NOTE: this only works because we use sigmoid activation with binary labels
             # NOTE: we could also compute the minimum probability in the label and run
             # SR on the probability images
-            if ( imgsrh.max() > 0.5 ):
-                imgsrhb = ants.threshold_image( imgsrh, 0.5, 1.0 ).iMath("GetLargestComponent")
+            if ( imgsrh.max() < 0.9 ):
+                imgsrhb = ants.threshold_image( imgsrh, 0.5, 1.0 )
+                # FIXME - do we get largest or not?
+#                imgsrhb = ants.threshold_image( imgsrh, 0.5, 1.0 ).iMath("GetLargestComponent")
             else:
-                imgsrhb = imgsrh
+                imgsrhb = ants.iMath( imgsrh, "Normalize" )
+                imgsrhb = ants.threshold_image( imgsrhb, 0.5, 1.0 )
                 warnings.warn( "SR-per-label-prob:" + str( locallab ) + ' is small' )
             problist.append( imgsrh )
             temp = ants.resample_image_to_target( imgsrhb * locallab, imgup, interp_type='nearestNeighbor' )
@@ -286,7 +291,7 @@ def ljlf_parcellation(
     if not check_for_labels_in_image( segmentation_numbers, templateLabels ):
         warnings.warn( "segmentation_numbers do not exist in templateLabels" )
     initlab0 = ants.apply_transforms(
-        img, templateLabels, forward_transforms, interpolator="nearestNeighbor"
+        img, templateLabels, forward_transforms, interpolator="genericLabel"
     )
     initlab0 = ants.mask_image(initlab0, initlab0, segmentation_numbers)
     ################################################################################
@@ -446,7 +451,7 @@ def ljlf_parcellation_one_template(
     #  https://mindboggle.readthedocs.io/en/latest/labels.html
     ################################################################################
     initlab0 = ants.apply_transforms(
-        img, templateLabels, forward_transforms, interpolator="nearestNeighbor"
+        img, templateLabels, forward_transforms, interpolator="genericLabel"
     )
     initlab = ants.mask_image(initlab0, initlab0, segmentation_numbers)
     ################################################################################
