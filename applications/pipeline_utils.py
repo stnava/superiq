@@ -57,6 +57,7 @@ def handle_all_outputs(local_input_image, output_bucket, output_prefix, process_
 
 def get_pipeline_data(filename, initial_image_key, bucket, prefix):
     path, _ = derive_s3_path(initial_image_key)  
+    print(path) 
     key_list = list_images(bucket, prefix + path)  
     key = [i for i in key_list if i.endswith(filename)]
     if len(key) != 1:
@@ -135,17 +136,15 @@ def list_images(bucket, prefix):
     return images
     
 def get_label_geo(
-        labeled_image, 
-        initial_image, 
-        output_bucket, 
-        output_prefix,
-        process,
-        input_key,
-        label_map_params=None, 
+        labeled_image, # The ants image to be labeled 
+        initial_image, # The unlabeled image, used in the label stats
+        process, # Name of the process
+        input_key, # Replace
+        label_map_params=None, # Ignore for now
         resolution='OR',
         direction=None):
-    print('Starting Label Geometry Measures') 
     import ants
+    print('Starting Label Geometry Measures') 
     lgms = ants.label_geometry_measures(
             labeled_image,
     )
@@ -178,7 +177,7 @@ def get_label_geo(
             if direction is not None: 
                 new_df['Side'] = direction
             else:
-                new_df['Side'] = 'Full'
+                new_df['Side'] = 'full'
             new_df['Label'] = clean_label
             new_df = pd.DataFrame(new_df, index=[0])
             new_rows.append(new_df)
@@ -211,10 +210,10 @@ def get_label_geo(
             new_rows.append(new_df)
     label_data = pd.concat(new_rows) 
     
+    s3_path, _ = derive_s3_path(input_key)
+    split = s3_path.split('/')  
 
-    split = input_key.split('/')  
-
-    label_data['Study'] = "ADNI"
+    label_data['Study'] = split[0]
     label_data['Subject'] = split[1]
     label_data['Date'] = split[2]
     label_data['Modality'] =  split[3]

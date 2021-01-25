@@ -94,6 +94,15 @@ if ( not 'dktpar' in locals() ) & ( not os.path.isfile(output_filename_seg) ):
         verbose=seg_params['verbose'],
     )
     ants.image_write( locseg['segmentation'], output_filename_seg )
+    get_label_geo(
+            locseg['segmentation'],
+            imgIn, 
+            config.process_name, 
+            config.input_value, 
+            resolution='OR',
+    )
+    plot_output(locseg['segmentation'], 'outputs/OR_ortho_plot.png', overlay=imgIn)
+
 
 localseg = ants.image_read( output_filename_seg )
 
@@ -109,8 +118,18 @@ if hasattr(config, "sr_params"):
         dilation_amount = sr_params['dilation_amount'],
         verbose = sr_params['verbose']
     )
+    get_label_geo(
+            srseg['super_resolution_segmentation'],
+            srseg['super_resolution'],
+            config.process_name, 
+            config.input_value, 
+            resolution='SR',
+    )
+    plot_output(
+            srseg['super_resolution_segmentation'],
+            'outputs/SR_ortho_plot.png',
+            srseg['super_resolution'],
+    )
 
-# writing ....
-ants.image_write( srseg['super_resolution'], output_filename_sr )
-ants.image_write(srseg['super_resolution_segmentation'], output_filename_sr_seg )
-# FIXME write csv
+    ants.image_write( srseg['super_resolution'], output_filename_sr )
+    ants.image_write(srseg['super_resolution_segmentation'], output_filename_sr_seg )
