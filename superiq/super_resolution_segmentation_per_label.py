@@ -183,6 +183,7 @@ def ljlf_parcellation(
     reg_iterations = [100,100,5],
     syn_sampling=2,
     syn_metric='CC',
+    max_lab_plus_one=False,
     output_prefix=None,
     is_test=True,
     sr_model=None,
@@ -233,6 +234,9 @@ def ljlf_parcellation(
 
     syn_metric : string
         the metric type usually CC or mattes
+
+    max_lab_plus_one : boolean
+        set True if you are having problems with background segmentation labels
 
     output_prefix : string
         the location of the output; should be both a directory and prefix filename
@@ -310,7 +314,6 @@ def ljlf_parcellation(
     imgc = ants.iMath(imgc, "TruncateIntensity", 0.001, 0.99999)
     initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
     jlfmask = ants.resample_image_to_target( img*0+1, imgc, interp_type="nearestNeighbor"  )
-    mlp1 = False
     deftx = "SyN"
     loctx = "Affine"
     if is_test:
@@ -335,7 +338,7 @@ def ljlf_parcellation(
         beta=2,  # higher "sharper" more robust to outliers ( need to check this again )
         rho=0.1,
         nonnegative=True,
-        max_lab_plus_one=mlp1,
+        max_lab_plus_one=max_lab_plus_one,
         verbose=verbose,
         output_prefix=output_prefix,
     )
@@ -364,6 +367,7 @@ def ljlf_parcellation_one_template(
     reg_iterations = [100,100,5],
     syn_sampling=2,
     syn_metric='CC',
+    max_lab_plus_one=False,
     output_prefix=None,
     verbose=False,
 ):
@@ -410,6 +414,9 @@ def ljlf_parcellation_one_template(
     syn_metric : string
         the metric type usually CC or mattes
 
+    max_lab_plus_one : boolean
+        set True if you are having problems with background segmentation labels
+
     output_prefix : string
         the location of the output; should be both a directory and prefix filename
 
@@ -444,7 +451,9 @@ def ljlf_parcellation_one_template(
     libraryI = []
     libraryL = []
     for x in range(templateRepeats):
-        libraryI.append(template)
+        temp = ants.iMath( template, "Normalize" )
+        temp = ants.add_noise_to_image( temp, "additivegaussian", [0,0.1] )
+        libraryI.append( temp )
         temp = ants.mask_image( templateLabels, templateLabels, segmentation_numbers )
         libraryL.append( temp )
 
@@ -464,7 +473,6 @@ def ljlf_parcellation_one_template(
     imgc = ants.iMath(imgc, "TruncateIntensity", 0.001, 0.99999)
     initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
     jlfmask = ants.resample_image_to_target( img*0+1, imgc, interp_type="nearestNeighbor"  )
-    mlp1 = False
     deftx = "SyN"
     loctx = "Affine"
     ljlf = ants.local_joint_label_fusion(
@@ -485,7 +493,7 @@ def ljlf_parcellation_one_template(
         beta=2,  # higher "sharper" more robust to outliers ( need to check this again )
         rho=0.1,
         nonnegative=True,
-        max_lab_plus_one=mlp1,
+        max_lab_plus_one=max_lab_plus_one,
         verbose=verbose,
         output_prefix=output_prefix,
     )

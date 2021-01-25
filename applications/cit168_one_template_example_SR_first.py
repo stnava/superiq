@@ -42,7 +42,6 @@ templateL = ants.image_read(tfnl)
 mdl = tf.keras.models.load_model( model_file_name ) # FIXME - parameterize this
 
 # expected output data
-output_filename_seg = output_filename + "_ORseg.nii.gz"
 output_filename_sr = output_filename + "_SR.nii.gz"
 output_filename_sr_seg_init = output_filename  +  "_SR_seginit.nii.gz"
 output_filename_sr_seg = output_filename  +  "_SR_seg.nii.gz"
@@ -69,8 +68,10 @@ srseg = super_resolution_segmentation_per_label(
 )
 
 # write
+initlab0 = ants.apply_transforms( srseg['super_resolution'], templateL,
+    forward_transforms, interpolator="genericLabel" )
 ants.image_write( srseg['super_resolution'] , output_filename_sr )
-ants.image_write( srseg['super_resolution_segmentation'] , output_filename_sr_seg_init )
+ants.image_write( initlab0 , output_filename_sr_seg_init )
 
 locseg = ljlf_parcellation_one_template(
         srseg['super_resolution'],
@@ -80,12 +81,16 @@ locseg = ljlf_parcellation_one_template(
         templateLabels=templateL,
         templateRepeats = 8,
         submask_dilation=6,  # a parameter that should be explored
-        searcher=1,  # double this for SR
-        radder=2,  # double this for SR
-        reg_iterations=[100,100,20,0], # fast test
-        output_prefix=output_filename ,
+        searcher=0,  # double this for SR
+        radder=3,  # double this for SR
+        reg_iterations=[100,100,40,0], # fast test
+        syn_sampling = 16,
+        syn_metric = 'mattes',
+        max_lab_plus_one=True,
+        output_prefix=output_filename,
         verbose=True,
     )
 
-ants.image_write( locseg['segmentation'], output_filename_seg )
+ants.image_write( locseg['segmentation'], output_filename_sr_seg )
 # write anything else out here e.g. label geometry etcetera
+# output_filename_sr_seg_csv
