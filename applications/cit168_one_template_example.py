@@ -39,7 +39,7 @@ def listToString(s):
 
 # config handling
 output_filename = "outputs/CITI68"
-config = LoadConfig('configs/basalforebrain.json')
+config = LoadConfig('configs/cit168_one_template_example.json')
 
 tfn = get_s3_object(config.template_bucket, config.template_key, "data")
 tfnl = get_s3_object(config.template_bucket, config.template_label_key, "data")
