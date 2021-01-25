@@ -40,7 +40,7 @@ def super_resolution_segmentation_per_label(
     upFactor : list
         the upsampling factors associated with the super-resolution model
 
-    sr_model : tensorflow model
+    sr_model : tensorflow model or None
         for computing super-resolution
 
     segmentation_numbers : list of target segmentation labels
