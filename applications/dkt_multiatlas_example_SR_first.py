@@ -97,7 +97,7 @@ locseg = ljlf_parcellation(
         reg_iterations=[100,100,10], # fast test
         syn_sampling = 2,
         syn_metric = 'CC',
-        max_lab_plus_one=True,
+        max_lab_plus_one=False,
         verbose=True,
     )
 ################################################################
