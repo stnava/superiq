@@ -71,7 +71,8 @@ output_filename_sr_seg_csv = output_filename  + "_SR_seg.csv"
 
 # just run - note : DANGER - we might skip this if it is already there so take
 # care to run with a clean output directory or new output prefix
-if ( not 'dktpar' in locals() ) & ( not os.path.isfile(output_filename_seg) ):
+#if ( not 'dktpar' in locals() ) & ( not os.path.isfile(output_filename_seg) ):
+if True:
     if not 'reg' in locals():
         print("SyN begin")
         reg = ants.registration( imgIn, template, 'SyN' )
@@ -101,8 +102,11 @@ if ( not 'dktpar' in locals() ) & ( not os.path.isfile(output_filename_seg) ):
             config.input_value, 
             resolution='OR',
     )
-    plot_output(locseg['segmentation'], 'outputs/OR_ortho_plot.png', overlay=imgIn)
-
+    plot_output(
+            imgIn,
+            'outputs/OR_ortho_plot.png',
+            locseg['segmentation'],
+    )
 
 localseg = ants.image_read( output_filename_seg )
 
@@ -126,10 +130,18 @@ if hasattr(config, "sr_params"):
             resolution='SR',
     )
     plot_output(
-            srseg['super_resolution_segmentation'],
-            'outputs/SR_ortho_plot.png',
             srseg['super_resolution'],
+            'outputs/SR_ortho_plot.png',
+            srseg['super_resolution_segmentation'],
     )
 
     ants.image_write( srseg['super_resolution'], output_filename_sr )
     ants.image_write(srseg['super_resolution_segmentation'], output_filename_sr_seg )
+
+handle_outputs(
+        config.input_value, 
+        config.output_bucket,
+        config.output_prefix,
+        config.process_name,
+        dev=True,
+)
