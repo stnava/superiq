@@ -48,7 +48,8 @@ output_filename_sr_seg = output_filename  +  "_SR_seg.nii.gz"
 output_filename_sr_seg_csv = output_filename  + "_SR_seg.csv"
 
 
-# just run
+# just run - note : DANGER - we might skip this if it is already there so take
+# care to run with a clean output directory or new output prefix
 if ( not 'dktpar' in locals() ) & ( not os.path.isfile(output_filename_seg) ):
     if not 'reg' in locals():
         print("SyN begin")
@@ -67,7 +68,7 @@ if ( not 'dktpar' in locals() ) & ( not os.path.isfile(output_filename_seg) ):
         submask_dilation=6,  # a parameter that should be explored
         searcher=1,  # double this for SR
         radder=2,  # double this for SR
-        reg_iterations=[100,0,0,0], # fast test
+        reg_iterations=[100,100,20,0], # fast test
         output_prefix=output_filename ,
         verbose=True,
     )
