@@ -193,10 +193,10 @@ def ljlf_parcellation(
     templateLabels : ANTsImages
         the reference template segmentation image.
 
-    library_intensity : list of strings
+    library_intensity : list of strings or ANTsImages
         the list of library intensity images
 
-    library_segmentation : list of strings
+    library_segmentation : list of strings or ANTsImages
         the list of library segmentation images
 
     submask_dilation : integer dilation of mask
@@ -249,23 +249,27 @@ def ljlf_parcellation(
 
     if output_prefix is None:
         temp_dir = tempfile.TemporaryDirectory()
-        output_prefix = temp_dir + "LJLF_"
+        output_prefix = str(temp_dir) + "LJLF_"
         if verbose:
             print("Created temporary output location: " + output_prefix )
 
 
     # build the filenames
     ################################################################################
-    libraryI = []
-    for fn in library_intensity:
-        libraryI.append(ants.image_read(fn))
-    libraryL = []
-    for fn in library_segmentation:
-        temp = ants.image_read(fn)
-        temp = ants.mask_image( temp, temp, segmentation_numbers )
-        if not check_for_labels_in_image( segmentation_numbers, temp ):
-            warnings.warn( "segmentation_numbers do not exist in" + fn )
-        libraryL.append( temp )
+    if type(library_intensity[0]) == type(str(0)): # these are filenames
+        libraryI = []
+        for fn in library_intensity:
+            libraryI.append(ants.image_read(fn))
+        libraryL = []
+        for fn in library_segmentation:
+            temp = ants.image_read(fn)
+            temp = ants.mask_image( temp, temp, segmentation_numbers )
+            if not check_for_labels_in_image( segmentation_numbers, temp ):
+                warnings.warn( "segmentation_numbers do not exist in" + fn )
+            libraryL.append( temp )
+    else:
+        libraryI = library_intensity
+        libraryL = library_segmentation
 
     ################################################################################
     if not check_for_labels_in_image( segmentation_numbers, templateLabels ):
@@ -321,7 +325,7 @@ def ljlf_parcellation(
     )
     ################################################################################
     temp = ants.image_clone(ljlf["ljlf"]["segmentation"], pixeltype="float")
-    temp = ants.mask_image( temp, temp, which_labels )
+    temp = ants.mask_image( temp, temp, segmentation_numbers )
     hippLabelJLF = ants.resample_image_to_target( temp, img, interp_type="nearestNeighbor" )
     return {
         "ljlf": ljlf,
@@ -415,7 +419,7 @@ def ljlf_parcellation_one_template(
 
     if output_prefix is None:
         temp_dir = tempfile.TemporaryDirectory()
-        output_prefix = temp_dir + "LJLF_"
+        output_prefix = str(temp_dir) + "LJLF_"
         if verbose:
             print("Created temporary output location: " + output_prefix )
 
@@ -471,7 +475,7 @@ def ljlf_parcellation_one_template(
     )
     ################################################################################
     temp = ants.image_clone(ljlf["ljlf"]["segmentation"], pixeltype="float")
-    temp = ants.mask_image( temp, temp, which_labels )
+    temp = ants.mask_image( temp, temp, segmentation_numbers )
     hippLabelJLF = ants.resample_image_to_target( temp, img, interp_type="nearestNeighbor" )
     return {
         "ljlf": ljlf,
