@@ -94,7 +94,7 @@ def super_resolution_segmentation_per_label(
         if verbose:
             print( "SR-per-label:" + str( locallab ) )
         binseg = ants.threshold_image( segmentation, locallab, locallab )
-        if (  ( binseg == 1 ).sum() == 0 )
+        if ( binseg == 1 ).sum() == 0 :
             warnings.warn( "SR-per-label:" + str( locallab ) + 'does not exist' )
         # FIXME replace binseg with probimg and use minprob to threshold it after SR
         minprob="NA"
@@ -263,12 +263,12 @@ def ljlf_parcellation(
     for fn in library_segmentation:
         temp = ants.image_read(fn)
         temp = ants.mask_image( temp, temp, segmentation_numbers )
-        if ( not check_for_labels_in_image( segmentation_numbers, temp ) )
+        if not check_for_labels_in_image( segmentation_numbers, temp ):
             warnings.warn( "segmentation_numbers do not exist in" + fn )
         libraryL.append( temp )
 
     ################################################################################
-    if ( not check_for_labels_in_image( segmentation_numbers, templateLabels ) )
+    if not check_for_labels_in_image( segmentation_numbers, templateLabels ):
         warnings.warn( "segmentation_numbers do not exist in templateLabels" )
     initlab0 = ants.apply_transforms(
         img, templateLabels, forward_transforms, interpolator="nearestNeighbor"
@@ -435,7 +435,7 @@ def ljlf_parcellation_one_template(
     )
     initlab = ants.mask_image(initlab0, initlab0, segmentation_numbers)
     ################################################################################
-    if ( not check_for_labels_in_image( segmentation_numbers, templateLabels ) )
+    if not check_for_labels_in_image( segmentation_numbers, templateLabels ):
         warnings.warn( "segmentation_numbers do not exist in templateLabels" )
     initlabThresh = ants.threshold_image(initlab, 1, 1e9)
     ################################################################################
