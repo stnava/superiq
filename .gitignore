@@ -6,6 +6,8 @@ __pycache__/
 .DS_Store
 outputs3*
 models/* 
+*data*
+*.nii.gz*
 
 # C extensions
 *.so
