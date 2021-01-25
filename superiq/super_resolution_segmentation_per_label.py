@@ -90,53 +90,64 @@ def super_resolution_segmentation_per_label(
     weightedavg = imgup * 0.0
     problist = []
     seggeom = []
+    imgsegjoin = imgup * 0.0
     for locallab in segmentation_numbers:
         if verbose:
             print( "SR-per-label:" + str( locallab ) )
         binseg = ants.threshold_image( segmentation, locallab, locallab )
-        if ( binseg == 1 ).sum() == 0 :
-            warnings.warn( "SR-per-label:" + str( locallab ) + 'does not exist' )
+        sizethresh = 2
+        if ( binseg == 1 ).sum() < sizethresh :
+            warnings.warn( "SR-per-label:" + str( locallab ) + ' is small' )
         # FIXME replace binseg with probimg and use minprob to threshold it after SR
-        minprob="NA"
-        if probability_images is not None:
-            whichprob = probability_labels.index(locallab)
-            probimg = probability_images[whichprob].resample_image_to_target( binseg )
-            minprob = min( probimg[ binseg >= 0.5 ] )
-        if verbose:
-            print( "SR-per-label:" + str( locallab ) + " min-prob: " + str(minprob)  )
-        binsegdil = ants.iMath( ants.threshold_image( segmentation, locallab, locallab ), "MD", dilation_amount )
-        binsegdil2input = ants.resample_image_to_target( binsegdil, imgIn, interp_type='nearestNeighbor'  )
-        imgc = ants.crop_image( imgIn, binsegdil2input ).iMath("Normalize")
-        imgc = imgc * 255 - 127.5 # for SR
-        imgch = ants.crop_image( binseg, binsegdil )
-        imgch = ants.iMath( imgch, "Normalize" ) * 255 - 127.5 # for SR
-        myarr = np.stack( [imgc.numpy(),imgch.numpy()],axis=3 )
-        newshape = np.concatenate( [ [1],np.asarray( myarr.shape )] )
-        myarr = myarr.reshape( newshape )
-        pred = sr_model.predict( myarr )
-        imgsr = ants.from_numpy( tf.squeeze( pred[0] ).numpy())
-        imgsr = ants.copy_image_info( imgc, imgsr )
-        newspc = ( np.asarray( ants.get_spacing( imgsr ) ) * 0.5 ).tolist()
-        ants.set_spacing( imgsr,  newspc )
-        imgsrh = ants.from_numpy( tf.squeeze( pred[1] ).numpy())
-        imgsrh = ants.copy_image_info( imgc, imgsrh )
-        ants.set_spacing( imgsrh,  newspc )
-        if locallab == segmentation_numbers[0]:
-            imgsegjoin = imgup * 0.0
-        # NOTE: this only works because we use sigmoid activation with binary labels
-        # NOTE: we could also compute the minimum probability in the label and run
-        # SR on the probability images
-        imgsrhb = ants.threshold_image( imgsrh, 0.5, 1.0 ).iMath("GetLargestComponent")
-        problist.append( imgsrh )
-        temp = ants.resample_image_to_target( imgsrhb * locallab, imgup, interp_type='nearestNeighbor' )
-        temp[ (temp > 0) * (imgsegjoin > 0) ] = 0 # FIXME zeroes out uncertain boundaries
-        selector = (imgsegjoin == 0) * (temp > 0) # FIXME - this introduces some dependencies on ordering
-        imgsegjoin[ selector ] = imgsegjoin[ selector ] + temp[ selector ]
-        imgsr = antspynet.regression_match_image( imgsr, ants.resample_image_to_target(imgup,imgsr) )
-        contribtoavg = ants.resample_image_to_target( imgsr*0+1, imgup, interp_type='nearestNeighbor' )
-        weightedavg = weightedavg + contribtoavg
-        imgsrfull = imgsrfull + ants.resample_image_to_target( imgsr, imgup, interp_type='nearestNeighbor' )
-        seggeom.append( ants.label_geometry_measures( imgsrhb ))
+        if ( binseg == 1 ).sum() >= sizethresh :
+            minprob="NA"
+            if probability_images is not None:
+                whichprob = probability_labels.index(locallab)
+                probimg = probability_images[whichprob].resample_image_to_target( binseg )
+                minprob = min( probimg[ binseg >= 0.5 ] )
+            if verbose:
+                print( "SR-per-label:" + str( locallab ) + " min-prob: " + str(minprob)  )
+            binsegdil = ants.iMath( ants.threshold_image( segmentation, locallab, locallab ), "MD", dilation_amount )
+            binsegdil2input = ants.resample_image_to_target( binsegdil, imgIn, interp_type='nearestNeighbor'  )
+            imgc = ants.crop_image( imgIn, binsegdil2input ).iMath("Normalize")
+            imgc = imgc * 255 - 127.5 # for SR
+            imgch = ants.crop_image( binseg, binsegdil )
+            imgch = ants.iMath( imgch, "Normalize" ) * 255 - 127.5 # for SR
+            myarr = np.stack( [imgc.numpy(),imgch.numpy()],axis=3 )
+            newshape = np.concatenate( [ [1],np.asarray( myarr.shape )] )
+            myarr = myarr.reshape( newshape )
+            pred = sr_model.predict( myarr )
+            imgsr = ants.from_numpy( tf.squeeze( pred[0] ).numpy())
+            imgsr = ants.copy_image_info( imgc, imgsr )
+            newspc = ( np.asarray( ants.get_spacing( imgsr ) ) * 0.5 ).tolist()
+            ants.set_spacing( imgsr,  newspc )
+            imgsrh = ants.from_numpy( tf.squeeze( pred[1] ).numpy())
+            imgsrh = ants.copy_image_info( imgc, imgsrh )
+            ants.set_spacing( imgsrh,  newspc )
+            if locallab == segmentation_numbers[0]:
+                imgsegjoin = imgup * 0.0
+            # NOTE: this only works because we use sigmoid activation with binary labels
+            # NOTE: we could also compute the minimum probability in the label and run
+            # SR on the probability images
+            if ( imgsrh.max() > 0.5 ):
+                imgsrhb = ants.threshold_image( imgsrh, 0.5, 1.0 ).iMath("GetLargestComponent")
+            else:
+                imgsrhb = imgsrh
+                warnings.warn( "SR-per-label-prob:" + str( locallab ) + ' is small' )
+            problist.append( imgsrh )
+            temp = ants.resample_image_to_target( imgsrhb * locallab, imgup, interp_type='nearestNeighbor' )
+            temp[ (temp > 0) * (imgsegjoin > 0) ] = 0 # FIXME zeroes out uncertain boundaries
+            selector = (imgsegjoin == 0) * (temp > 0) # FIXME - this introduces some dependencies on ordering
+            imgsegjoin[ selector ] = imgsegjoin[ selector ] + temp[ selector ]
+            imgsr = antspynet.regression_match_image( imgsr, ants.resample_image_to_target(imgup,imgsr) )
+            contribtoavg = ants.resample_image_to_target( imgsr*0+1, imgup, interp_type='nearestNeighbor' )
+            weightedavg = weightedavg + contribtoavg
+            imgsrfull = imgsrfull + ants.resample_image_to_target( imgsr, imgup, interp_type='nearestNeighbor' )
+            if  imgsrhb.max() > imgsrhb.min():
+                tempgeo = ants.label_geometry_measures( imgsrhb )
+            else:
+                tempgeo = "NA"
+            seggeom.append( tempgeo )
 
     imgsrfull2 = imgsrfull
     selector = imgsrfull == 0
