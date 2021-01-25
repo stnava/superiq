@@ -4,6 +4,15 @@ import ants
 import tensorflow as tf
 import antspynet
 import tempfile
+import warnings
+
+
+def check_for_labels_in_image( label_list, img ):
+    imglabels = img.unique()
+    isin = True
+    for x in range( len( label_list ) ):
+        isin = isin & ( label_list[x] in imglabels )
+    return isin
 
 
 def super_resolution_segmentation_per_label(
@@ -85,6 +94,8 @@ def super_resolution_segmentation_per_label(
         if verbose:
             print( "SR-per-label:" + str( locallab ) )
         binseg = ants.threshold_image( segmentation, locallab, locallab )
+        if (  ( binseg == 1 ).sum() == 0 )
+            warnings.warn( "SR-per-label:" + str( locallab ) + 'does not exist' )
         # FIXME replace binseg with probimg and use minprob to threshold it after SR
         minprob="NA"
         if probability_images is not None:
@@ -148,7 +159,8 @@ def ljlf_parcellation(
     forward_transforms,
     template,
     templateLabels,
-    library_location,
+    library_intensity,
+    library_segmentation,
     submask_dilation=12,  # a parameter that should be explored
     searcher=1,  # double this for SR
     radder=2,  # double this for SR
@@ -172,7 +184,7 @@ def ljlf_parcellation(
         list containing integer segmentation labels
 
     forward_transforms : list
-        the upsampling factors associated with the super-resolution model
+        transformations that map the template labels to the img
 
     template : ANTsImages
         a reference template that provides the initial labeling.  could be a
@@ -184,7 +196,7 @@ def ljlf_parcellation(
     library_intensity : list of strings
         the list of library intensity images
 
-    library_location : list of strings
+    library_segmentation : list of strings
         the list of library segmentation images
 
     submask_dilation : integer dilation of mask
@@ -251,10 +263,13 @@ def ljlf_parcellation(
     for fn in library_segmentation:
         temp = ants.image_read(fn)
         temp = ants.mask_image( temp, temp, segmentation_numbers )
+        if ( not check_for_labels_in_image( segmentation_numbers, temp ) )
+            warnings.warn( "segmentation_numbers do not exist in" + fn )
         libraryL.append( temp )
 
-    #  https://mindboggle.readthedocs.io/en/latest/labels.html
     ################################################################################
+    if ( not check_for_labels_in_image( segmentation_numbers, templateLabels ) )
+        warnings.warn( "segmentation_numbers do not exist in templateLabels" )
     initlab0 = ants.apply_transforms(
         img, templateLabels, forward_transforms, interpolator="nearestNeighbor"
     )
@@ -305,7 +320,157 @@ def ljlf_parcellation(
         output_prefix=output_prefix,
     )
     ################################################################################
-    temp = ants.image_clone(ljlfOR["ljlf"]["segmentation"], pixeltype="float")
+    temp = ants.image_clone(ljlf["ljlf"]["segmentation"], pixeltype="float")
+    temp = ants.mask_image( temp, temp, which_labels )
+    hippLabelJLF = ants.resample_image_to_target( temp, img, interp_type="nearestNeighbor" )
+    return {
+        "ljlf": ljlf,
+        "segmentation": hippLabelJLF,
+    }
+
+
+
+
+def ljlf_parcellation_one_template(
+    img,
+    segmentation_numbers,
+    forward_transforms,
+    template,
+    templateLabels,
+    templateRepeats,
+    submask_dilation=12,  # a parameter that should be explored
+    searcher=1,  # double this for SR
+    radder=2,  # double this for SR
+    reg_iterations = [100,100,5],
+    syn_sampling=2,
+    syn_metric='CC',
+    output_prefix=None,
+    verbose=False,
+):
+    """
+    Apply local joint label fusion to an image given a library.
+
+    Arguments
+    ---------
+    img : ANTsImage
+        image to be labeled
+
+    segmentation_numbers : list of target segmentation labels
+        list containing integer segmentation labels
+
+    forward_transforms : list
+        transformations that map the template labels to the img
+
+    template : ANTsImages
+        a reference template that provides the initial labeling.  could be a
+        template from the library or a population-specific template
+
+    templateLabels : ANTsImages
+        the reference template segmentation image.
+
+    templateRepeats : integer number of registrations to perform
+        repeats the template templateRepeats number of times to provide variability
+
+    submask_dilation : integer dilation of mask
+        morphological operation that increases the size of the region of interest
+        for registration and segmentation
+
+    searcher :  integer search region
+        see joint label fusion; this controls the search region
+
+    radder :  integer
+        controls the patch radius for similarity calculations
+
+    reg_iterations : list of integers
+        controlling the registration iterations; see ants.registration
+
+    syn_sampling : integer
+        the metric parameter for registration 2 for CC and 32 or 16 for mattes
+
+    syn_metric : string
+        the metric type usually CC or mattes
+
+    output_prefix : string
+        the location of the output; should be both a directory and prefix filename
+
+    verbose : boolean
+        whether to show status updates
+
+    Returns
+    -------
+
+    dictionary w/ following key/value pairs:
+        `ljlf` : key/value
+            the local JLF object
+
+        `segmentation` : ANTsImage
+            the output segmentation image
+
+    Example
+    -------
+    >>> import ants
+    >>> ref = ants.image_read( ants.get_ants_data('r16'))
+    >>> FIXME
+    """
+
+    if output_prefix is None:
+        temp_dir = tempfile.TemporaryDirectory()
+        output_prefix = temp_dir + "LJLF_"
+        if verbose:
+            print("Created temporary output location: " + output_prefix )
+
+    # build the filenames
+    ################################################################################
+    libraryI = []
+    libraryL = []
+    for x in range(templateRepeats):
+        libraryI.append(template)
+        temp = ants.mask_image( templateLabels, templateLabels, segmentation_numbers )
+        libraryL.append( temp )
+
+    #  https://mindboggle.readthedocs.io/en/latest/labels.html
+    ################################################################################
+    initlab0 = ants.apply_transforms(
+        img, templateLabels, forward_transforms, interpolator="nearestNeighbor"
+    )
+    initlab = ants.mask_image(initlab0, initlab0, segmentation_numbers)
+    ################################################################################
+    if ( not check_for_labels_in_image( segmentation_numbers, templateLabels ) )
+        warnings.warn( "segmentation_numbers do not exist in templateLabels" )
+    initlabThresh = ants.threshold_image(initlab, 1, 1e9)
+    ################################################################################
+    cropmask = ants.morphology(initlabThresh, "dilate", submask_dilation)
+    imgc = ants.crop_image(img, cropmask)
+    imgc = ants.iMath(imgc, "TruncateIntensity", 0.001, 0.99999)
+    initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
+    jlfmask = ants.resample_image_to_target( img*0+1, imgc, interp_type="nearestNeighbor"  )
+    mlp1 = False
+    deftx = "SyN"
+    loctx = "Affine"
+    ljlf = ants.local_joint_label_fusion(
+        target_image=imgc,
+        which_labels=segmentation_numbers,
+        target_mask=jlfmask,
+        initial_label=initlabc,
+        type_of_transform=deftx,  # FIXME - try SyN and SyNOnly
+        submask_dilation=0,  # we do it this way for consistency across SR and OR
+        r_search=searcher,  # should explore 0, 1 and 2
+        rad=radder,  # should keep 2 at low-res and search 2 to 4 at high-res
+        atlas_list=libraryI,
+        label_list=libraryL,
+        local_mask_transform=loctx,
+        reg_iterations=reg_iterations,
+        syn_sampling=syn_sampling,
+        syn_metric=syn_metric,
+        beta=2,  # higher "sharper" more robust to outliers ( need to check this again )
+        rho=0.1,
+        nonnegative=True,
+        max_lab_plus_one=mlp1,
+        verbose=verbose,
+        output_prefix=output_prefix,
+    )
+    ################################################################################
+    temp = ants.image_clone(ljlf["ljlf"]["segmentation"], pixeltype="float")
     temp = ants.mask_image( temp, temp, which_labels )
     hippLabelJLF = ants.resample_image_to_target( temp, img, interp_type="nearestNeighbor" )
     return {
