@@ -10,6 +10,8 @@ import glob
 def get_s3_object(bucket, key, local_dir):
     s3 = boto3.client('s3')
     basename = key.split('/')[-1]
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
     local = f'{local_dir}/{basename}'
     s3.download_file(
             bucket,
