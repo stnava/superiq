@@ -8,6 +8,8 @@ outputs3*
 models/* 
 *data*
 *.nii.gz*
+*.swp
+
 
 # C extensions
 *.so
