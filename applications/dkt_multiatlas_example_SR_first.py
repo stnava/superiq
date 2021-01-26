@@ -19,6 +19,7 @@ import pandas as pd
 from superiq import super_resolution_segmentation_per_label
 from superiq import ljlf_parcellation
 from superiq import check_for_labels_in_image
+from superiq import sort_library_by_similarity
 
 # user definitions here
 tdir = "/Users/stnava/code/super_resolution_pipelines/data/OASIS30/"
@@ -72,6 +73,10 @@ if not 'reg' in locals():
     initlab0b = ants.threshold_image( initlab0, 1, 1e9 ).morphology("dilate",10)
     ants.plot_ortho( ants.crop_image( imgIn, initlab0b ), flat=True  )
 
+mysim = sort_library_by_similarity( imgIn, initlab0, wlab,
+ brains, brainsSeg )
+
+
 doKM = False
 if doKM:  # FIXME an alternative would be to pass in the extant segmentation
     maxk = 3
@@ -82,7 +87,7 @@ else:
     use_image = ants.image_clone( imgIn )
 
 
-doSR = True
+doSR = False
 if doSR:
     if not 'srseg' in locals():
         srseg = super_resolution_segmentation_per_label(
@@ -107,8 +112,8 @@ locseg = ljlf_parcellation(
         forward_transforms=forward_transforms,
         template=template,
         templateLabels=templateL,
-        library_intensity = brains,
-        library_segmentation = brainsSeg,
+        library_intensity = mysim['sorted_library_int'][0:9],
+        library_segmentation =  mysim['sorted_library_seg'][0:9],
         submask_dilation=10,  # a parameter that should be explored
         searcher= 3,  # double this for SR
         radder = 2,  # double this for SR

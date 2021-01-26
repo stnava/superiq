@@ -18,7 +18,7 @@ import pandas as pd
 from superiq import super_resolution_segmentation_per_label
 from superiq import ljlf_parcellation
 from superiq import ljlf_parcellation_one_template
-from superiq import listToString
+from superiq import list_to_string
 from pipeline_utils import *
 
 
