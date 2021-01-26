@@ -30,17 +30,24 @@ def listToString(s):
 tdir = "/Users/stnava/code/super_resolution_pipelines/data/OASIS30/"
 brains = glob.glob(tdir+"Brains/*")
 brains.sort()
-# brains = brains[0:8] # shorten this for the test application
 brainsSeg = glob.glob(tdir+"Segmentations/*")
 brainsSeg.sort()
-# brainsSeg = brainsSeg[0:8] # shorten this for this test application
 templatefilename = "/Users/stnava/code/super_resolution_pipelines/template/adni_template.nii.gz"
 templatesegfilename = "/Users/stnava/code/super_resolution_pipelines/template/adni_template_dkt_labels.nii.gz"
+
+tdir = "/Users/stnava/Downloads/Hammers_mith-n30r95/"
+brains = glob.glob(tdir+"*brain.nii.gz")
+brains.sort()
+brainsSeg = glob.glob(tdir+"*seg.nii.gz")
+brainsSeg.sort()
+templatefilename = brains[0]
+templatesegfilename = brainsSeg[0]
+
 sdir = "/Users/stnava/Downloads/temp/adniin/002_S_4473/20140227/T1w/000/brain_ext/"
 model_file_name = "/Users/stnava/code/super_resolution_pipelines/models/SEGSR_32_ANINN222_3.h5"
 infn = sdir + "ADNI-002_S_4473-20140227-T1w-000-brain_ext-bxtreg_n3.nii.gz"
 output_filename = "outputs3/ADNI_Caudate"
-wlab = [ 36 ] # basal forebrain in OASIS
+wlab = [ 35 ] # caudate
 # input data
 imgIn = ants.image_read( infn )
 template = ants.image_read( templatefilename )
@@ -53,7 +60,7 @@ if not havelabels:
 
 havelabels = check_for_labels_in_image( wlab, ants.image_read( brainsSeg[0] ) )
 if not havelabels:
-  raise Exception("Label missing from the template")
+  raise Exception("Label missing from the library")
 
 # expected output data
 output_filename_or = output_filename + "_seg.nii.gz"
@@ -67,8 +74,12 @@ if not 'reg' in locals():
     forward_transforms = reg['fwdtransforms']
     initlab0 = ants.apply_transforms( imgIn, templateL,
           forward_transforms, interpolator="genericLabel" )
+    initlab0 = ants.mask_image( initlab0, initlab0, wlab )
+    initlab0b = ants.threshold_image( initlab0, 1, 1e9 ).morphology("dilate",10)
+    ants.plot_ortho( ants.crop_image( imgIn, initlab0b ), flat=True  )
 
-if False:  # FIXME do this later
+doSR = True
+if doSR:  # FIXME do this later
     srseg = super_resolution_segmentation_per_label(
         imgIn = imgIn,
         segmentation = initlab0,
@@ -81,10 +92,14 @@ if False:  # FIXME do this later
     initlab0 = ants.apply_transforms( srseg['super_resolution'], templateL,
         forward_transforms, interpolator="genericLabel" )
     ants.image_write( srseg['super_resolution'] , output_filename_sr )
+    initlab0 = ants.mask_image( initlab0, initlab0, wlab )
     ants.image_write( initlab0 , output_filename_sr_seg_init )
+    use_image = srseg['super_resolution']
+else:
+    use_image = imgIn
 
 locseg = ljlf_parcellation(
-        imgIn,
+        use_image,
         segmentation_numbers=wlab,
         forward_transforms=forward_transforms,
         template=template,
@@ -92,13 +107,16 @@ locseg = ljlf_parcellation(
         library_intensity = brains,
         library_segmentation = brainsSeg,
         submask_dilation=10,  # a parameter that should be explored
-        searcher= 3,  # double this for SR
-        radder = 3,  # double this for SR
+        searcher= 4,  # double this for SR
+        radder = 2,  # double this for SR
         reg_iterations=[100,100,20], # fast test
-        syn_sampling = 2,
+        syn_sampling = 1,
         syn_metric = 'CC',
         max_lab_plus_one=False,
         verbose=True,
     )
 ################################################################
-ants.image_write( locseg['segmentation'], output_filename_or ) #
+if doSR:
+    ants.image_write( locseg['segmentation'], output_filename_sr_seg  ) #
+else:
+    ants.image_write( locseg['segmentation'], output_filename_or ) #
