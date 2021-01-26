@@ -4,12 +4,7 @@ import tensorflow as tf
 import numpy as np
 
 from superiq import super_resolution_segmentation_per_label
-
-def listToString(s):
-    str1 = ""
-    for ele in s:
-        str1 += ("-"+str(ele))
-    return str1
+from superiq import listToString
 
 template = antspynet.get_antsxnet_data( "biobank" )
 template = ants.image_read( template )

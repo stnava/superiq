@@ -7,6 +7,30 @@ import tempfile
 import warnings
 
 
+def listToString(s, separator='-'):
+    """
+    Convert a list of numeric types to a string with the same information.
+
+    Arguments
+    ---------
+    s : list of integers
+
+    separator : a placeholder between strings
+
+    Returns
+    -------
+    string
+
+    Example
+    -------
+    >>> listToString( [0,1], "-" )
+    """
+    str1 = ""
+    for ele in s:
+        str1 += (separator+str(ele))
+    return str1
+
+
 def check_for_labels_in_image( label_list, img ):
     """
     Apply a two-channel super resolution model to an image and probability pair.
@@ -202,7 +226,6 @@ def ljlf_parcellation(
     syn_metric='CC',
     max_lab_plus_one=False,
     output_prefix=None,
-    is_test=True,
     sr_model=None,
     verbose=False,
 ):
@@ -257,9 +280,6 @@ def ljlf_parcellation(
 
     output_prefix : string
         the location of the output; should be both a directory and prefix filename
-
-    is_test:  boolean
-        set True to set parameters to be faster
 
     sr_model: string or tensorflow model
         experimental option to upsample before LJLF
@@ -333,10 +353,6 @@ def ljlf_parcellation(
     jlfmask = ants.resample_image_to_target( img*0+1, imgc, interp_type="nearestNeighbor"  )
     deftx = "SyN"
     loctx = "Affine"
-    if is_test:
-        libraryI = libraryI[0:9]
-        libraryL = libraryL[0:9]
-        regitsSR = (10, 0, 0)
     ljlf = ants.local_joint_label_fusion(
         target_image=imgc,
         which_labels=segmentation_numbers,
@@ -354,7 +370,8 @@ def ljlf_parcellation(
         syn_metric=syn_metric,
         beta=2,  # higher "sharper" more robust to outliers ( need to check this again )
         rho=0.1,
-        nonnegative=True,
+        nonnegative=False,
+        grad_step = 0.5,
         max_lab_plus_one=max_lab_plus_one,
         verbose=verbose,
         output_prefix=output_prefix,

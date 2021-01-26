@@ -19,12 +19,7 @@ import pandas as pd
 from superiq import super_resolution_segmentation_per_label
 from superiq import ljlf_parcellation
 from superiq import check_for_labels_in_image
-
-def listToString(s):
-    str1 = ""
-    for ele in s:
-        str1 += ("-"+str(ele))
-    return str1
+from superiq import listToString
 
 # user definitions here
 tdir = "/Users/stnava/code/super_resolution_pipelines/data/OASIS30/"

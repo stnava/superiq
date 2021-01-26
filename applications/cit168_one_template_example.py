@@ -18,14 +18,8 @@ import pandas as pd
 from superiq import super_resolution_segmentation_per_label
 from superiq import ljlf_parcellation
 from superiq import ljlf_parcellation_one_template
+from superiq import listToString
 from pipeline_utils import *
-
-
-def listToString(s):
-    str1 = ""
-    for ele in s:
-        str1 += ("-"+str(ele))
-    return str1
 
 
 # user definitions here
@@ -44,9 +38,9 @@ config = LoadConfig('configs/cit168_one_template_example.json')
 tfn = get_s3_object(config.template_bucket, config.template_key, "data")
 tfnl = get_s3_object(config.template_bucket, config.template_label_key, "data")
 infn = get_pipeline_data(
-        "brain_ext-bxtreg_n3.nii.gz", 
-        config.input_value, 
-        config.pipeline_bucket, 
+        "brain_ext-bxtreg_n3.nii.gz",
+        config.input_value,
+        config.pipeline_bucket,
         config.pipeline_prefix,
 )
 model_file_name = get_s3_object(config.model_bucket, config.model_key, "models")
@@ -97,9 +91,9 @@ if True:
     ants.image_write( locseg['segmentation'], output_filename_seg )
     get_label_geo(
             locseg['segmentation'],
-            imgIn, 
-            config.process_name, 
-            config.input_value, 
+            imgIn,
+            config.process_name,
+            config.input_value,
             resolution='OR',
     )
     plot_output(
@@ -125,8 +119,8 @@ if hasattr(config, "sr_params"):
     get_label_geo(
             srseg['super_resolution_segmentation'],
             srseg['super_resolution'],
-            config.process_name, 
-            config.input_value, 
+            config.process_name,
+            config.input_value,
             resolution='SR',
     )
     plot_output(
@@ -139,7 +133,7 @@ if hasattr(config, "sr_params"):
     ants.image_write(srseg['super_resolution_segmentation'], output_filename_sr_seg )
 
 handle_outputs(
-        config.input_value, 
+        config.input_value,
         config.output_bucket,
         config.output_prefix,
         config.process_name,
