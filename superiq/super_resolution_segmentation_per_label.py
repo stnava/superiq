@@ -108,7 +108,7 @@ def sort_library_by_similarity( img, img_segmentation,
     if type(library_intensity[0]) == type(str(0)): # these are filenames
         libraryI = []
         for fn in library_intensity:
-            libraryI.append(ants.image_read(fn))
+            libraryI.append( ants.iMath( ants.image_read(fn), "Normalize" ) )
         libraryL = []
         for fn in library_segmentation:
             temp = ants.image_read(fn)
@@ -117,9 +117,10 @@ def sort_library_by_similarity( img, img_segmentation,
                 warnings.warn( "segmentation_numbers do not exist in" + fn )
             libraryL.append( temp )
     else:
-        libraryI = library_intensity
+        libraryI = []
         libraryL = []
         for x in range( len( library_segmentation ) ):
+            libraryI.append( ants.iMath( library_intensity[x], "Normalize" ) )
             temp = library_segmentation[x]
             temp = ants.mask_image( temp, temp, segmentation_numbers )
             if not check_for_labels_in_image( segmentation_numbers, temp ):
@@ -127,7 +128,7 @@ def sort_library_by_similarity( img, img_segmentation,
             libraryL.append( temp )
     similarity = []
     tempbin = ants.mask_image( img_segmentation, img_segmentation, segmentation_numbers, binarize=True )
-    imgc = ants.crop_image( img, tempbin )
+    imgc = ants.crop_image( ants.iMath( img, "Normalize"), tempbin )
     for x in range( len( library_segmentation ) ):
         tempbinlib = ants.mask_image( libraryL[x],
             libraryL[x], segmentation_numbers, binarize=True )
@@ -150,7 +151,8 @@ def sort_library_by_similarity( img, img_segmentation,
     'sorted_library_int':sorted_list1,
     'sorted_library_seg':sorted_list2,
     'sorted_similarity':similarity_sort,
-    'original_similarity':similarity
+    'original_similarity':similarity,
+    'ordering':sorted(range(len(similarity)), key=similarity.__getitem__)
     }
 
 def super_resolution_segmentation_per_label(
@@ -249,7 +251,7 @@ def super_resolution_segmentation_per_label(
                 print( "SR-per-label:" + str( locallab ) + " min/max-prob: " + str(minprob)+ " / " + str(maxprob)  )
             binsegdil = ants.iMath( ants.threshold_image( segmentation, locallab, locallab ), "MD", dilation_amount )
             binsegdil2input = ants.resample_image_to_target( binsegdil, imgIn, interp_type='nearestNeighbor'  )
-            imgc = ants.crop_image( imgIn, binsegdil2input ).iMath("Normalize")
+            imgc = ants.crop_image( ants.iMath(imgIn,"Normalize"), binsegdil2input )
             imgc = imgc * 255 - 127.5 # for SR
             imgch = ants.crop_image( binseg, binsegdil )
             imgch = ants.iMath( imgch, "Normalize" ) * 255 - 127.5 # for SR
@@ -413,7 +415,7 @@ def ljlf_parcellation(
     if type(library_intensity[0]) == type(str(0)): # these are filenames
         libraryI = []
         for fn in library_intensity:
-            libraryI.append(ants.image_read(fn))
+            libraryI.append( ants.iMath( ants.image_read(fn), "Normalize" ) )
         libraryL = []
         for fn in library_segmentation:
             temp = ants.image_read(fn)
@@ -422,9 +424,10 @@ def ljlf_parcellation(
                 warnings.warn( "segmentation_numbers do not exist in" + fn )
             libraryL.append( temp )
     else:
-        libraryI = library_intensity
+        libraryI = []
         libraryL = []
         for x in range( len( library_segmentation ) ):
+            libraryI.append( ants.iMath( library_intensity[x], "Normalize" ) )
             temp = library_segmentation[x]
             temp = ants.mask_image( temp, temp, segmentation_numbers )
             if not check_for_labels_in_image( segmentation_numbers, temp ):
@@ -447,7 +450,7 @@ def ljlf_parcellation(
     initlabThresh = ants.threshold_image(initlab, 1, 1e9)
     ################################################################################
     cropmask = ants.morphology(initlabThresh, "dilate", submask_dilation)
-    imgc = ants.crop_image(img, cropmask)
+    imgc = ants.crop_image( ants.iMath( img, "Normalize"), cropmask)
     if not sr_model is None: # FIXME replace with an actual model
         newspc = ( np.asarray( ants.get_spacing( imgc ) ) * 0.5 ).tolist()
         imgc = ants.resample_image( imgc, newspc, use_voxels=False, interp_type=0 )
@@ -606,7 +609,7 @@ def ljlf_parcellation_one_template(
     initlabThresh = ants.threshold_image(initlab, 1, 1e9)
     ################################################################################
     cropmask = ants.morphology(initlabThresh, "dilate", submask_dilation)
-    imgc = ants.crop_image(img, cropmask)
+    imgc = ants.crop_image( ants.iMath( img, "Normalize"), cropmask)
     imgc = ants.iMath(imgc, "TruncateIntensity", 0.001, 0.99999)
     initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
     jlfmask = ants.resample_image_to_target( img*0+1, imgc, interp_type="nearestNeighbor"  )
