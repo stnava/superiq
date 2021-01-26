@@ -143,5 +143,5 @@ handle_outputs(
         config.output_bucket,
         config.output_prefix,
         config.process_name,
-        dev=True,
+        dev=False, # False = outputs uploaded to s3 location
 )
