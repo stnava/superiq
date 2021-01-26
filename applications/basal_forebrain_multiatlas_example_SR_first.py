@@ -152,7 +152,7 @@ get_label_geo(
 )
 plot_output(
     srseg['super_resolution'],
-    "outputs/basalforebrain-SR_ortho_plot.png" 
+    "outputs/basalforebrain-SR_ortho_plot.png",
     probseg,
 )
 handle_outputs(
