@@ -7,7 +7,7 @@ import tempfile
 import warnings
 
 
-def listToString(s, separator='-'):
+def list_to_string(s, separator='-'):
     """
     Convert a list of numeric types to a string with the same information.
 
@@ -23,7 +23,7 @@ def listToString(s, separator='-'):
 
     Example
     -------
-    >>> listToString( [0,1], "-" )
+    >>> list_to_string( [0,1], "-" )
     """
     str1 = ""
     for ele in s:
@@ -55,6 +55,105 @@ def check_for_labels_in_image( label_list, img ):
         isin = isin & ( label_list[x] in imglabels )
     return isin
 
+
+
+def sort_library_by_similarity( img, img_segmentation,
+    segmentation_numbers, library_intensity, library_segmentation,
+    transformation='AffineFast' ):
+    """
+    Convert a list of numeric types to a string with the same information.
+
+    Arguments
+    ---------
+
+    img : target image
+
+    img_segmentation : target image segmentation containing the segmentation_numbers
+
+    segmentation_numbers : list of target segmentation labels
+        list containing integer segmentation labels
+
+    library_intensity : list of strings or ANTsImages
+        the list of library intensity images
+
+    library_segmentation : list of strings or ANTsImages
+        the list of library segmentation images
+
+    transformation : type of transform used in ants.registration
+
+    Returns
+    -------
+    dictionary:
+        'sorted_library_int': sorted library images,
+        'sorted_library_seg': sorted library segmentations,
+        'sorted_similarity':  sorted similarity scores (lower better),
+        'original_similarity': original similarity scores (lower better)
+
+    Example
+    -------
+    import ants
+    from superiq import sort_library_by_similarity
+    targetimage = ants.image_read( ants.get_data("r16") )
+    img0 = ants.add_noise_to_image( targetimage, "additivegaussian", ( 0, 2 ) )
+    img1 = ants.image_read( ants.get_data("r27") )
+    img2 = ants.image_read( ants.get_data("r16") ).add_noise_to_image( "additivegaussian", (0, 6) )
+    tseg = ants.threshold_image( targetimage, "Otsu" , 3 )
+    img0s = ants.threshold_image( img0, "Otsu" , 3 )
+    img1s = ants.threshold_image( img1, "Otsu" , 3 )
+    img2s = ants.threshold_image( img2, "Otsu" , 3 )
+    ilist=[img2,img1,img0]
+    slist=[img2s,img1s,img0s]
+    ss = sort_library_by_similarity( targetimage, tseg, [3], ilist, slist )
+    """
+    if type(library_intensity[0]) == type(str(0)): # these are filenames
+        libraryI = []
+        for fn in library_intensity:
+            libraryI.append( ants.iMath( ants.image_read(fn), "Normalize" ) )
+        libraryL = []
+        for fn in library_segmentation:
+            temp = ants.image_read(fn)
+            temp = ants.mask_image( temp, temp, segmentation_numbers )
+            if not check_for_labels_in_image( segmentation_numbers, temp ):
+                warnings.warn( "segmentation_numbers do not exist in" + fn )
+            libraryL.append( temp )
+    else:
+        libraryI = []
+        libraryL = []
+        for x in range( len( library_segmentation ) ):
+            libraryI.append( ants.iMath( library_intensity[x], "Normalize" ) )
+            temp = library_segmentation[x]
+            temp = ants.mask_image( temp, temp, segmentation_numbers )
+            if not check_for_labels_in_image( segmentation_numbers, temp ):
+                warnings.warn( "segmentation_numbers do not exist in" + fn )
+            libraryL.append( temp )
+    similarity = []
+    tempbin = ants.mask_image( img_segmentation, img_segmentation, segmentation_numbers, binarize=True )
+    imgc = ants.crop_image( ants.iMath( img, "Normalize"), tempbin )
+    for x in range( len( library_segmentation ) ):
+        tempbinlib = ants.mask_image( libraryL[x],
+            libraryL[x], segmentation_numbers, binarize=True )
+        fastaff = ants.registration( tempbin, tempbinlib, transformation )['fwdtransforms']
+        reg = ants.registration( imgc, libraryI[x], "SyN", initial_transform=fastaff[0] )
+        mysim = ants.image_mutual_information( imgc, reg['warpedmovout' ] )
+        similarity.append( mysim )
+
+    zipped_lists1 = zip(similarity, libraryI)
+    zipped_lists1 = sorted(zipped_lists1)
+    sorted_list1 = [element for _, element in zipped_lists1]
+
+
+    zipped_lists2 = zip(similarity, libraryL)
+    zipped_lists2 = sorted(zipped_lists2)
+    sorted_list2 = [element for _, element in zipped_lists2]
+    similarity_sort = similarity.copy()
+    similarity_sort.sort()
+    return {
+    'sorted_library_int':sorted_list1,
+    'sorted_library_seg':sorted_list2,
+    'sorted_similarity':similarity_sort,
+    'original_similarity':similarity,
+    'ordering':sorted(range(len(similarity)), key=similarity.__getitem__)
+    }
 
 def super_resolution_segmentation_per_label(
     imgIn,
@@ -152,7 +251,7 @@ def super_resolution_segmentation_per_label(
                 print( "SR-per-label:" + str( locallab ) + " min/max-prob: " + str(minprob)+ " / " + str(maxprob)  )
             binsegdil = ants.iMath( ants.threshold_image( segmentation, locallab, locallab ), "MD", dilation_amount )
             binsegdil2input = ants.resample_image_to_target( binsegdil, imgIn, interp_type='nearestNeighbor'  )
-            imgc = ants.crop_image( imgIn, binsegdil2input ).iMath("Normalize")
+            imgc = ants.crop_image( ants.iMath(imgIn,"Normalize"), binsegdil2input )
             imgc = imgc * 255 - 127.5 # for SR
             imgch = ants.crop_image( binseg, binsegdil )
             imgch = ants.iMath( imgch, "Normalize" ) * 255 - 127.5 # for SR
@@ -316,7 +415,7 @@ def ljlf_parcellation(
     if type(library_intensity[0]) == type(str(0)): # these are filenames
         libraryI = []
         for fn in library_intensity:
-            libraryI.append(ants.image_read(fn))
+            libraryI.append( ants.iMath( ants.image_read(fn), "Normalize" ) )
         libraryL = []
         for fn in library_segmentation:
             temp = ants.image_read(fn)
@@ -325,8 +424,15 @@ def ljlf_parcellation(
                 warnings.warn( "segmentation_numbers do not exist in" + fn )
             libraryL.append( temp )
     else:
-        libraryI = library_intensity
-        libraryL = library_segmentation
+        libraryI = []
+        libraryL = []
+        for x in range( len( library_segmentation ) ):
+            libraryI.append( ants.iMath( library_intensity[x], "Normalize" ) )
+            temp = library_segmentation[x]
+            temp = ants.mask_image( temp, temp, segmentation_numbers )
+            if not check_for_labels_in_image( segmentation_numbers, temp ):
+                warnings.warn( "segmentation_numbers do not exist in" + fn )
+            libraryL.append( temp )
 
     ################################################################################
     if not check_for_labels_in_image( segmentation_numbers, templateLabels ):
@@ -344,7 +450,7 @@ def ljlf_parcellation(
     initlabThresh = ants.threshold_image(initlab, 1, 1e9)
     ################################################################################
     cropmask = ants.morphology(initlabThresh, "dilate", submask_dilation)
-    imgc = ants.crop_image(img, cropmask)
+    imgc = ants.crop_image( ants.iMath( img, "Normalize"), cropmask)
     if not sr_model is None: # FIXME replace with an actual model
         newspc = ( np.asarray( ants.get_spacing( imgc ) ) * 0.5 ).tolist()
         imgc = ants.resample_image( imgc, newspc, use_voxels=False, interp_type=0 )
@@ -503,7 +609,7 @@ def ljlf_parcellation_one_template(
     initlabThresh = ants.threshold_image(initlab, 1, 1e9)
     ################################################################################
     cropmask = ants.morphology(initlabThresh, "dilate", submask_dilation)
-    imgc = ants.crop_image(img, cropmask)
+    imgc = ants.crop_image( ants.iMath( img, "Normalize"), cropmask)
     imgc = ants.iMath(imgc, "TruncateIntensity", 0.001, 0.99999)
     initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
     jlfmask = ants.resample_image_to_target( img*0+1, imgc, interp_type="nearestNeighbor"  )

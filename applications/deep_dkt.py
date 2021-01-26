@@ -4,7 +4,7 @@ import tensorflow as tf
 import numpy as np
 
 from superiq import super_resolution_segmentation_per_label
-from superiq import listToString
+from superiq import list_to_string
 
 template = antspynet.get_antsxnet_data( "biobank" )
 template = ants.image_read( template )
@@ -118,7 +118,7 @@ if not 'segorigspace' in locals():
 
 # OUTPUT: write the native resolution image => segorigspace
 # and its label geometry csv
-output_filename = "/tmp/deep_dkt/deep_dkt_" # + listToString(mysegnumbers)
+output_filename = "/tmp/deep_dkt/deep_dkt_" # + list_to_string(mysegnumbers)
 output_filename_native = output_filename + "_OR_seg.nii.gz"
 output_filename_native_csv = output_filename + "_OR_seg.csv"
 ants.image_write( segorigspace, output_filename_native )
@@ -143,9 +143,9 @@ srseg = super_resolution_segmentation_per_label(
 )
 
 # writing ....
-output_filename_sr = output_filename + listToString(mysegnumbers) + "_SR.nii.gz"
+output_filename_sr = output_filename + list_to_string(mysegnumbers) + "_SR.nii.gz"
 ants.image_write( srseg['super_resolution'], output_filename_sr )
-output_filename_sr_seg = output_filename +listToString(mysegnumbers) +  "_SR_seg.nii.gz"
+output_filename_sr_seg = output_filename +list_to_string(mysegnumbers) +  "_SR_seg.nii.gz"
 ants.image_write(srseg['super_resolution_segmentation'], output_filename_sr_seg )
-output_filename_sr_seg_csv = output_filename + listToString(mysegnumbers) + "_SR_seg.csv"
+output_filename_sr_seg_csv = output_filename + list_to_string(mysegnumbers) + "_SR_seg.csv"
 # FIXME: write csv here
