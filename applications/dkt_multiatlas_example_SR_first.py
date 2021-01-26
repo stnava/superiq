@@ -20,12 +20,6 @@ from superiq import super_resolution_segmentation_per_label
 from superiq import ljlf_parcellation
 from superiq import check_for_labels_in_image
 
-def listToString(s):
-    str1 = ""
-    for ele in s:
-        str1 += ("-"+str(ele))
-    return str1
-
 # user definitions here
 tdir = "/Users/stnava/code/super_resolution_pipelines/data/OASIS30/"
 brains = glob.glob(tdir+"Brains/*")
@@ -78,25 +72,34 @@ if not 'reg' in locals():
     initlab0b = ants.threshold_image( initlab0, 1, 1e9 ).morphology("dilate",10)
     ants.plot_ortho( ants.crop_image( imgIn, initlab0b ), flat=True  )
 
+doKM = False
+if doKM:  # FIXME an alternative would be to pass in the extant segmentation
+    maxk = 3
+    kseg = ants.kmeans_segmentation( imgIn, k=maxk, mrf = 0)
+    kseg = ants.threshold_image( kseg['segmentation'], 2, maxk )
+    use_image = imgIn * kseg
+else:
+    use_image = ants.image_clone( imgIn )
+
+
 doSR = True
-if doSR:  # FIXME do this later
-    srseg = super_resolution_segmentation_per_label(
-        imgIn = imgIn,
-        segmentation = initlab0,
-        upFactor = [2,2,2],
-        sr_model = mdl,
-        segmentation_numbers = wlab,
-        dilation_amount = 12,
-        verbose = True
-    )
+if doSR:
+    if not 'srseg' in locals():
+        srseg = super_resolution_segmentation_per_label(
+            imgIn = use_image,
+            segmentation = initlab0,
+            upFactor = [2,2,2],
+            sr_model = mdl,
+            segmentation_numbers = wlab,
+            dilation_amount = 12,
+            verbose = True
+        )
     initlab0 = ants.apply_transforms( srseg['super_resolution'], templateL,
         forward_transforms, interpolator="genericLabel" )
     ants.image_write( srseg['super_resolution'] , output_filename_sr )
     initlab0 = ants.mask_image( initlab0, initlab0, wlab )
     ants.image_write( initlab0 , output_filename_sr_seg_init )
     use_image = srseg['super_resolution']
-else:
-    use_image = imgIn
 
 locseg = ljlf_parcellation(
         use_image,
@@ -107,7 +110,7 @@ locseg = ljlf_parcellation(
         library_intensity = brains,
         library_segmentation = brainsSeg,
         submask_dilation=10,  # a parameter that should be explored
-        searcher= 4,  # double this for SR
+        searcher= 3,  # double this for SR
         radder = 2,  # double this for SR
         reg_iterations=[100,100,20], # fast test
         syn_sampling = 1,
@@ -116,6 +119,9 @@ locseg = ljlf_parcellation(
         verbose=True,
     )
 ################################################################
+if doKM:
+    locseg['segmentation'] = locseg['segmentation'] * ants.resample_image_to_target( kseg, locseg['segmentation'])
+
 if doSR:
     ants.image_write( locseg['segmentation'], output_filename_sr_seg  ) #
 else:
