@@ -451,12 +451,15 @@ def ljlf_parcellation(
     ################################################################################
     cropmask = ants.morphology(initlabThresh, "dilate", submask_dilation)
     imgc = ants.crop_image( ants.iMath( img, "Normalize"), cropmask)
+    if verbose:
+        print("Nerds want to know the size if dilation is:" + str(submask_dilation ))
+        print( imgc )
     if not sr_model is None: # FIXME replace with an actual model
         newspc = ( np.asarray( ants.get_spacing( imgc ) ) * 0.5 ).tolist()
         imgc = ants.resample_image( imgc, newspc, use_voxels=False, interp_type=0 )
     imgc = ants.iMath(imgc, "TruncateIntensity", 0.001, 0.99999)
     initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
-    jlfmask = ants.resample_image_to_target( img*0+1, imgc, interp_type="nearestNeighbor"  )
+    jlfmask = imgc * 0 + 1
     deftx = "SyN"
     loctx = "Affine"
     ljlf = ants.local_joint_label_fusion(
@@ -465,7 +468,7 @@ def ljlf_parcellation(
         target_mask=jlfmask,
         initial_label=initlabc,
         type_of_transform=deftx,  # FIXME - try SyN and SyNOnly
-        submask_dilation=0,  # we do it this way for consistency across SR and OR
+        submask_dilation=submask_dilation,  # we do it this way for consistency across SR and OR
         r_search=searcher,  # should explore 0, 1 and 2
         rad=radder,  # should keep 2 at low-res and search 2 to 4 at high-res
         atlas_list=libraryI,
@@ -621,7 +624,7 @@ def ljlf_parcellation_one_template(
         target_mask=jlfmask,
         initial_label=initlabc,
         type_of_transform=deftx,  # FIXME - try SyN and SyNOnly
-        submask_dilation=0,  # we do it this way for consistency across SR and OR
+        submask_dilation=submask_dilation,  # we do it this way for consistency across SR and OR
         r_search=searcher,  # should explore 0, 1 and 2
         rad=radder,  # should keep 2 at low-res and search 2 to 4 at high-res
         atlas_list=libraryI,
