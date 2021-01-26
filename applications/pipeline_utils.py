@@ -10,6 +10,8 @@ import glob
 def get_s3_object(bucket, key, local_dir):
     s3 = boto3.client('s3')
     basename = key.split('/')[-1]
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
     local = f'{local_dir}/{basename}'
     s3.download_file(
             bucket,
@@ -17,6 +19,7 @@ def get_s3_object(bucket, key, local_dir):
             local, 
     )
     return local
+
 
 class LoadConfig:
     """
@@ -50,13 +53,14 @@ class LoadConfig:
     def __repr__(self):
         return f"config: {self.__dict__}"
 
+
 def handle_outputs(input_path, output_bucket, output_prefix, process_name, dev=False):
     outputs = [i for i in os.listdir('outputs')]
     path, basename = derive_s3_path(input_path)
     prefix = output_prefix + process_name + '/' + path
     for output in outputs:
         filename = output.split('/')[-1]
-        obj_name = basename + '-' + '-'.join(process_name) + '-' + filename
+        obj_name = basename + '-' + '-' + process_name + '-' + filename
         obj_path = prefix + obj_name
         print(f"{output} -> {obj_path}") 
         if not dev:
@@ -66,15 +70,6 @@ def handle_outputs(input_path, output_bucket, output_prefix, process_name, dev=F
                     obj_path,
             )
 
-
-def handle_all_outputs(local_input_image, output_bucket, output_prefix, process_name, dev_copy=False):
-    outputs = [i for i in os.listdir('outputs')]
-    s3 = boto3.client('s3')
-    for output in outputs:
-        path = "outputs/" + output
-        handle_output(path, local_input_image, output_bucket, output_prefix, process_name)
-        if dev_copy:
-            os.system(f'cp {path} test_outputs/{output}')
 
 def get_pipeline_data(filename, initial_image_key, bucket, prefix):
     path, _ = derive_s3_path(initial_image_key)  
@@ -88,6 +83,7 @@ def get_pipeline_data(filename, initial_image_key, bucket, prefix):
         local = get_s3_object(bucket, key, "data")
         return local
 
+
 def get_library(local_path, bucket, prefix):
     s3 = boto3.client('s3')
     keys = list_images(bucket, prefix)
@@ -100,20 +96,6 @@ def get_library(local_path, bucket, prefix):
             local
         )
 
-def handle_output(output, input_image, bucket, prefix, process, dev=False):
-    path, basename = derive_s3_path(input_image)
-    s3 = boto3.client('s3')
-    filename = output.split('/')[-1]
-    processes = process.split('/')
-    obj_name = basename + '-' + '-'.join(processes) + '-' + filename
-    obj_path = prefix + path + '/'.join(processes) + '/' + obj_name
-    if not dev:
-        s3.upload_file(
-                output,
-                bucket,
-                obj_path,
-        )
-    return obj_path
 
 def derive_s3_path(image_path):
     basename = image_path.split('/')[-1].replace('.nii.gz', '')
@@ -121,18 +103,6 @@ def derive_s3_path(image_path):
     path = '/'.join(loc) + '/'
     return path, basename
 
-def cache_handling(bucket, prefix, input_image):
-    path, basename = derive_s3_path(input_image) 
-    if not os.path.exists('cache'):
-        os.makedirs('cache')
-    try:
-        keys = pickle.load(open('cache/keys.pkl', 'rb'))
-        return keys
-    except (OSError, IOError, FileNotFoundError) as e:
-        image_prefix = prefix + path
-        keys = list_images(bucket, image_prefix)
-        pickle.dump(keys, open('cache/keys.pkl', 'wb'))
-        return keys
 
 def list_images(bucket, prefix):
     s3 = boto3.client('s3')
@@ -155,7 +125,8 @@ def list_images(bucket, prefix):
             break
     images = [i for i in items if "." in i]
     return images
-    
+
+
 def get_label_geo(
         labeled_image, # The ants image to be labeled 
         initial_image, # The unlabeled image, used in the label stats
@@ -247,13 +218,6 @@ def get_label_geo(
     output_name = f'outputs/{resolution}-{side}-lgm.csv'
     full.to_csv(output_name, index=False)
 
-def container_cleanup(dirs):
-    for d in dirs:
-        path = f'{d}/*'
-        print(f'Deleting {d}')
-        paths = glob.glob(path)
-        for p in paths:
-            os.remove(p)
 
 def plot_output(img, output_path, overlay=None):
     import ants
@@ -270,7 +234,8 @@ def plot_output(img, output_path, overlay=None):
                 flat=True,
                 filename=output_path,
         )
-    
+
+
 def dev_output(image, filename):
     """ Output an ants image object to s3 for dev testing """
     import ants

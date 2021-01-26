@@ -306,7 +306,7 @@ def ljlf_parcellation(
 
     if output_prefix is None:
         temp_dir = tempfile.TemporaryDirectory()
-        output_prefix = str(temp_dir) + "LJLF_"
+        output_prefix = str(temp_dir.name) + "/LJLF_"
         if verbose:
             print("Created temporary output location: " + output_prefix )
 
@@ -476,7 +476,7 @@ def ljlf_parcellation_one_template(
 
     if output_prefix is None:
         temp_dir = tempfile.TemporaryDirectory()
-        output_prefix = str(temp_dir) + "LJLF_"
+        output_prefix = str(temp_dir.name) + "/LJLF_"
         if verbose:
             print("Created temporary output location: " + output_prefix )
 

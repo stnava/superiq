@@ -23,7 +23,7 @@ class TestModule_ljlf_parcellation_one_template(unittest.TestCase):
         tarlab = [4,3]
         temp = superiq.ljlf_parcellation_one_template( tar, tarlab,
           fwd, ref, refseg,
-          templateRepeats=2, submask_dilation=4 )
+          templateRepeats=2, submask_dilation=4, verbose=True)
         ulab = temp['segmentation'].unique()
         testit = (int(ulab[1]) in tarlab) & (int(ulab[2]) in tarlab)
         self.assertTrue( testit )
@@ -40,7 +40,7 @@ class TestModule_ljlf_parcellation(unittest.TestCase):
         temp = superiq.ljlf_parcellation(
           tar, tarlab,
           fwd, ref1, refseg1,
-          [ref1,ref2], [refseg1,refseg2], submask_dilation=4 )
+          [ref1,ref2], [refseg1,refseg2], submask_dilation=4, verbose=True)
         ulab = temp['segmentation'].unique()
         testit = (int(ulab[1]) in tarlab) & (int(ulab[2]) in tarlab)
         self.assertTrue( testit )

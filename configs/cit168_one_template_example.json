@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "aws_profile": "role",
+    "aws_profile": "ec2-test",
     "job_definition" : "superiq_basalforebrain",
     "job_queue" : "superiq_basalforebrain_dev",
     "skip_repeats": false,
