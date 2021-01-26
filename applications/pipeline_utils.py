@@ -122,7 +122,7 @@ def handle_outputs(input_path, output_bucket, output_prefix, process_name, dev=F
     """
     outputs = [i for i in os.listdir('outputs')]
     path, basename = derive_s3_path(input_path)
-    prefix = output_prefix + path + '/' + process_name + '/'
+    prefix = output_prefix + path + process_name + '/'
     s3 = boto3.client('s3')
     for output in outputs:
         filename = output.split('/')[-1]
@@ -174,7 +174,6 @@ def get_pipeline_data(filename, initial_image_key, bucket, prefix):
     """
 
     path, _ = derive_s3_path(initial_image_key)  
-    print(path) 
     key_list = list_images(bucket, prefix + path)  
     key = [i for i in key_list if i.endswith(filename)]
     if len(key) != 1:
