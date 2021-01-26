@@ -174,7 +174,6 @@ def get_pipeline_data(filename, initial_image_key, bucket, prefix):
     """
 
     path, _ = derive_s3_path(initial_image_key)  
-    print(path) 
     key_list = list_images(bucket, prefix + path)  
     key = [i for i in key_list if i.endswith(filename)]
     if len(key) != 1:

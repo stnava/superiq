@@ -41,7 +41,7 @@ from pipeline_utils import *
 
 # config handling
 output_filename = "outputs/basalforebrain"
-config = LoadConfig('configs/basal_forebrain_mutliatlas_example_SR_first.json')
+config = LoadConfig('configs/basal_forebrain_multiatlas_example_SR_first.json')
 
 templatefilename = get_s3_object(config.template_bucket, config.template_key, "data")
 templatesegfilename = get_s3_object(config.template_bucket, config.template_label_key, "data")
