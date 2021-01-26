@@ -1,13 +1,38 @@
 import os
+import ants
 import pandas as pd
-import pickle
 import boto3
 import json
 import sys
 import ast
-import glob
 
 def get_s3_object(bucket, key, local_dir):
+    """
+    Download an object from an s3 location to specific location locally
+
+    Arguments
+    ---------
+    bucket : string
+        the name of the s3 bucket
+
+    key : string
+        the full s3 key of the object
+
+    local_dir : string
+        the folder name to download the object to, if folder does not exist one
+        is created
+
+    Returns
+    -------
+    local : string
+        the local, relative path to the newly downloaded object
+
+    Example
+    -------
+    >>> local = get_s3_object("mybucket", "prefix/object_name.txt", "data")
+    >>> print(local)
+    "data/object_name.txt"
+    """
     s3 = boto3.client('s3')
     basename = key.split('/')[-1]
     if not os.path.exists(local_dir):
@@ -23,7 +48,7 @@ def get_s3_object(bucket, key, local_dir):
 
 class LoadConfig:
     """
-    Creates a config object for referencing variables in the passed
+    Creates a config object for referencing the paramerter variables in the passed
     config file.
 
     Arguments
@@ -31,6 +56,13 @@ class LoadConfig:
     config : string
         A string that can be parsed into a dict via ast.literal_eval or a
         string representing the file path to the config json file
+
+    Example
+    -------
+    >>> conf_str = '{"version": 1, "parameters": {"process_name": "my_config"}}'
+    >>> config = LoadConfig(conf_str)
+    >>> print(config.process_name)
+    "my_config"
     """
     def __init__(self, config):
         try:
@@ -55,23 +87,92 @@ class LoadConfig:
 
 
 def handle_outputs(input_path, output_bucket, output_prefix, process_name, dev=False):
+    """
+    Uploads all files in the outputs dir to the appropriate location on s3
+
+    Arguments
+    ---------
+    input_path : string
+        the original pipeline image path or key
+
+    output_bucket : string
+        the name of the bucket to upload data to
+
+    output_prefix : string
+        the name of the prefix to prepend to the derived s3 prefix
+
+    process_name : string
+        the name of the process run suffixed to the derived s3 prefix
+
+    dev  : boolean
+        on/off switch to disable uploads to s3 during testing (True=No Upload)
+
+    Example
+    -------
+    >>> handle_outputs(
+            "data/ADNI-002_S_0413-20060224-T1w-000.nii.gz",
+            "my_bucket",
+            "output_data/",
+            "my_process",
+            dev=True
+        )
+    *print*
+    "data/ADNI-002_S_0413-20060224-T1w-000.nii.gz -> 
+        output_data/ADNI/002_S_0413/20060224/T1w/000/my_process/ADNI-002_S_0413-20060224-T1w-000-my_process-new_data.nii.gz"
+    """
     outputs = [i for i in os.listdir('outputs')]
     path, basename = derive_s3_path(input_path)
-    prefix = output_prefix + process_name + '/' + path
+    prefix = output_prefix + path + '/' + process_name + '/'
+    s3 = boto3.client('s3')
     for output in outputs:
         filename = output.split('/')[-1]
-        obj_name = basename + '-' + '-' + process_name + '-' + filename
+        outpath =  "outputs/" + output
+        obj_name = basename + '-' + process_name + '-' + filename
         obj_path = prefix + obj_name
-        print(f"{output} -> {obj_path}") 
+        print(f"{outpath} -> {obj_path}") 
         if not dev:
             s3.upload_file(
-                    output,
+                    outpath, 
                     output_bucket,
                     obj_path,
             )
 
 
 def get_pipeline_data(filename, initial_image_key, bucket, prefix):
+    """
+    Retrieve data ending with a certain name from s3 based on the original input image
+
+    Arguments
+    ---------
+    filename : string
+        the filename ending to match
+
+    initial_image_key :  string
+        the file name of the original input image to the pipeline
+
+    bucket : string
+        the bucket name where the object to match resides
+
+    prefix : string
+        the prefix in the bucekt under with the object to match resides
+
+    Return
+    ------
+    local : string
+        the local path of the downloaded object
+    
+    Example
+    -------
+    >>> data = get_pipeline_data(
+            "bxtreg_n3.nii.gz",
+            "data/ADNI-002_S_0413-20060224-T1w-000.nii.gz",
+            "my_bucket",
+            "output_data/",
+        )
+    >>> print(data)
+    "data/ADNI-002_S_0413-20060224-T1w-000-brain_ext-bxtreg_n3.nii.gz"
+    """
+
     path, _ = derive_s3_path(initial_image_key)  
     print(path) 
     key_list = list_images(bucket, prefix + path)  
@@ -84,7 +185,7 @@ def get_pipeline_data(filename, initial_image_key, bucket, prefix):
         return local
 
 
-def get_library(local_path, bucket, prefix):
+def get_library(bucket, prefix, local_path):
     s3 = boto3.client('s3')
     keys = list_images(bucket, prefix)
     for k in keys:
@@ -98,6 +199,29 @@ def get_library(local_path, bucket, prefix):
 
 
 def derive_s3_path(image_path):
+    """
+    Given a path or s3 key, derives the expected s3 prefix based on the base filename
+
+    Arguments
+    ---------
+    image_path : string
+        the s3 key or file path to an nii.gz file
+
+    Return
+    ------
+
+    path, basename : tuple (string, string)
+        the path of the image as it would appear on s3 and the basename of the image without
+        the extension
+    
+    Example
+    -------
+    >>> path, basename = derive_s3_path("data/ADNI-002_S_0413-20060224-T1w-000.nii.gz")
+    >>> print(path)
+    "ADNI/002_S_0413/20060224/T1w/000/brain_ext/"
+    >>> print(basename)
+    "ADNI-002_S_0413-20060224-T1w-000",
+    """
     basename = image_path.split('/')[-1].replace('.nii.gz', '')
     loc = basename.split('-')
     path = '/'.join(loc) + '/'
@@ -105,6 +229,29 @@ def derive_s3_path(image_path):
 
 
 def list_images(bucket, prefix):
+    """
+    Helper function for listing all file objects with an extension in s3 under 
+    a bucket and prefix
+
+    Arguments
+    ---------
+    bucket : string
+        the bucket to search for objects
+
+    prefix : string
+        the prefix to search for objects
+
+    Return
+    ------
+    images : list (strings)
+        the s3 keys of the objects with an extension in the bucket and prefix
+
+    Example
+    -------
+    >>> keys = list_images("my_bucket", "my_prefix/")
+    >>> print(keys)
+    ["my_prefix/object_A.json", "my_prefix/subfolder/object_B.json"]
+    """
     s3 = boto3.client('s3')
     items = []
     kwargs = {
@@ -135,7 +282,6 @@ def get_label_geo(
         label_map_params=None, # Ignore for now
         resolution='OR',
         direction=None):
-    import ants
     print('Starting Label Geometry Measures') 
     lgms = ants.label_geometry_measures(
             labeled_image,
@@ -220,7 +366,6 @@ def get_label_geo(
 
 
 def plot_output(img, output_path, overlay=None):
-    import ants
     if overlay is None:
         plot = ants.plot_ortho(
                 ants.crop_image(img), 
@@ -238,7 +383,6 @@ def plot_output(img, output_path, overlay=None):
 
 def dev_output(image, filename):
     """ Output an ants image object to s3 for dev testing """
-    import ants
     s3 = boto3.client('s3')
     tmp_file = f'/tmp/{filename}.nii.gz'
     ants.image_write(image, tmp_file)
