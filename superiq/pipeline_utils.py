@@ -86,7 +86,7 @@ class LoadConfig:
         return f"config: {self.__dict__}"
 
 
-def handle_outputs(input_path, output_bucket, output_prefix, process_name, dev=False):
+def handle_outputs(input_path, output_bucket, output_prefix, process_name, env="prod"):
     """
     Uploads all files in the outputs dir to the appropriate location on s3
 
@@ -130,7 +130,7 @@ def handle_outputs(input_path, output_bucket, output_prefix, process_name, dev=F
         obj_name = basename + '-' + process_name + '-' + filename
         obj_path = prefix + obj_name
         print(f"{outpath} -> {obj_path}") 
-        if not dev:
+        if env == "prod":
             s3.upload_file(
                     outpath, 
                     output_bucket,
