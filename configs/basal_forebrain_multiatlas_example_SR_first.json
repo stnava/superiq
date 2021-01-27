@@ -37,8 +37,8 @@
             "dilation_amount": 12,
             "verbose": true
         },
+        "output_name": "basalforebrain",    
         "output_bucket" : "eisai-basalforebrainsuperres2",
         "output_prefix": "superres-pipeline-dev/",
-        "output_suffix": ""
     }
 }
