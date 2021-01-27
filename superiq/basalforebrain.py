@@ -8,6 +8,7 @@ import glob as glob
 
 import tensorflow
 import ants
+import sys
 import antspynet
 import tensorflow as tf
 import glob
@@ -174,4 +175,4 @@ def basalforebrain(
         
 
 if __name__ == "__main__":
-    basalforebrain('configs/basal_forebrain_multiatlas_example_SR_first.json', env='dev')
+    basalforebrain(config=sys.argv[1], env='prod')
