@@ -1,12 +1,11 @@
-# this script assumes the image have been brain extracted
+import os
+os.environ["TF_NUM_INTEROP_THREADS"] = "8"
+os.environ["TF_NUM_INTRAOP_THREADS"] = "8"
+os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = "8"
 import os.path
 from os import path
 import glob as glob
 
-# set number of threads - this should be optimized per compute instance
-os.environ["TF_NUM_INTEROP_THREADS"] = "8"
-os.environ["TF_NUM_INTRAOP_THREADS"] = "8"
-os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = "8"
 
 import tensorflow
 import ants
@@ -56,10 +55,8 @@ atlas_image_keys = list_images(config.atlas_bucket, config.atlas_image_prefix)
 atlas_label_keys = list_images(config.atlas_bucket, config.atlas_label_prefix)
 brains = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_image_keys]
 brains.sort()
-brains = brains[0:8]
 brainsSeg = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_label_keys]
 brainsSeg.sort()
-brainsSeg = brainsSeg[0:8]
 print(brains)
 print(brainsSeg)
 
@@ -80,7 +77,7 @@ mdl = tf.keras.models.load_model( model_file_name ) # FIXME - parameterize this
 havelabels = check_for_labels_in_image( wlab, templateL )
 
 if not havelabels:
-    raise_error_here
+    raise Exception("Label missing from the template")
 
 # expected output data
 output_filename_sr = output_filename + "_SR.nii.gz"
@@ -91,13 +88,10 @@ output_filename_sr_seg_csv = output_filename  + "_SR_seg.csv"
 
 # first, run registration - then do SR in the local region
 if not 'reg' in locals():
-    print("SyN begin")
     reg = ants.registration( imgIn, template, 'SyN' )
     forward_transforms = reg['fwdtransforms']
     initlab0 = ants.apply_transforms( imgIn, templateL,
           forward_transforms, interpolator="genericLabel" )
-    print("SyN done")
-
 
 srseg = super_resolution_segmentation_per_label(
     imgIn = imgIn,

@@ -45,7 +45,7 @@ sdir = "/Users/stnava/Downloads/temp/adniin/002_S_4473/20140227/T1w/000/brain_ex
 model_file_name = "/Users/stnava/code/super_resolution_pipelines/models/SEGSR_32_ANINN222_3.h5"
 infn = sdir + "ADNI-002_S_4473-20140227-T1w-000-brain_ext-bxtreg_n3.nii.gz"
 output_filename = "outputs3/ADNI_Caudate"
-wlab = [ 35 ] # caudate
+wlab = [ 35, 39, 43 ] # caudate
 # input data
 imgIn = ants.image_read( infn )
 template = ants.image_read( templatefilename )
@@ -68,15 +68,18 @@ output_filename_sr_seg = output_filename  +  "_SR_seg.nii.gz"
 output_filename_sr_seg_csv = output_filename  + "_SR_seg.csv"
 
 if not 'reg' in locals():
-    reg = ants.registration( imgIn, template, 'SyN', verbose=False )
+    reg = ants.registration( imgIn, template, 'SyN', reg_iterations=(100,0,0), verbose=False )
     forward_transforms = reg['fwdtransforms']
-    initlab0 = ants.apply_transforms( imgIn, templateL,
-          forward_transforms, interpolator="genericLabel" )
-    initlab0 = ants.mask_image( initlab0, initlab0, wlab )
-    initlab0b = ants.threshold_image( initlab0, 1, 1e9 ).morphology("dilate",3)
-    ants.plot_ortho( ants.crop_image( imgIn, initlab0b ), flat=True  )
 
-mysim = sort_library_by_similarity( imgIn, initlab0, wlab, brains, brainsSeg )
+initlab0 = ants.apply_transforms( imgIn, templateL, forward_transforms, interpolator="genericLabel" )
+initlab0 = ants.mask_image( initlab0, initlab0, wlab )
+initlab0b = ants.threshold_image( initlab0, 1, 1e9 ).morphology("dilate",3)
+ants.plot_ortho( ants.crop_image( imgIn, initlab0b ), flat=True  )
+
+if False:
+    print("Sort start")
+    mysim = sort_library_by_similarity( imgIn, initlab0, wlab, brains, brainsSeg )
+    print("Sort finish")
 
 doKM = False
 if doKM:  # FIXME an alternative would be to pass in the extant segmentation
@@ -87,8 +90,7 @@ if doKM:  # FIXME an alternative would be to pass in the extant segmentation
 else:
     use_image = ants.image_clone( imgIn )
 
-
-doSR = False
+doSR = True
 if doSR:
     if not 'srseg' in locals():
         srseg = super_resolution_segmentation_per_label(
@@ -113,14 +115,14 @@ locseg = ljlf_parcellation(
         forward_transforms=forward_transforms,
         template=template,
         templateLabels=templateL,
-        library_intensity = mysim['sorted_library_int'][0:9],
-        library_segmentation =  mysim['sorted_library_seg'][0:9],
-        submask_dilation=15,  # a parameter that should be explored
+        library_intensity = brains, # mysim['sorted_library_int'][0:12],
+        library_segmentation =  brainsSeg, # mysim['sorted_library_seg'][0:12],
+        submask_dilation=12,  # a parameter that should be explored
         searcher = 1,  # double this for SR
         radder   = 2,  # double this for SR
-        reg_iterations=[50,5,0], # fast test
-        syn_sampling = 2,
-        syn_metric = 'CC',
+        reg_iterations=[50,50,10], # fast test
+        syn_sampling = 32,
+        syn_metric = 'mattes',
         max_lab_plus_one=True,
         verbose=True,
     )

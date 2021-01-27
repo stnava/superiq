@@ -112,7 +112,7 @@ def sort_library_by_similarity( img, img_segmentation,
         libraryL = []
         for fn in library_segmentation:
             temp = ants.image_read(fn)
-            temp = ants.mask_image( temp, temp, segmentation_numbers )
+#            temp = ants.mask_image( temp, temp, segmentation_numbers )
             if not check_for_labels_in_image( segmentation_numbers, temp ):
                 warnings.warn( "segmentation_numbers do not exist in" + fn )
             libraryL.append( temp )
@@ -122,18 +122,19 @@ def sort_library_by_similarity( img, img_segmentation,
         for x in range( len( library_segmentation ) ):
             libraryI.append( ants.iMath( library_intensity[x], "Normalize" ) )
             temp = library_segmentation[x]
-            temp = ants.mask_image( temp, temp, segmentation_numbers )
+#            temp = ants.mask_image( temp, temp, segmentation_numbers )
             if not check_for_labels_in_image( segmentation_numbers, temp ):
                 warnings.warn( "segmentation_numbers do not exist in" + fn )
             libraryL.append( temp )
     similarity = []
     tempbin = ants.mask_image( img_segmentation, img_segmentation, segmentation_numbers, binarize=True )
+    tempbin = ants.iMath( tempbin, "MD", 6 )
     imgc = ants.crop_image( ants.iMath( img, "Normalize"), tempbin )
     for x in range( len( library_segmentation ) ):
         tempbinlib = ants.mask_image( libraryL[x],
             libraryL[x], segmentation_numbers, binarize=True )
         fastaff = ants.registration( tempbin, tempbinlib, transformation )['fwdtransforms']
-        reg = ants.registration( imgc, libraryI[x], "SyN", initial_transform=fastaff[0] )
+        reg = ants.registration( imgc, libraryI[x], "SyNOnly", initial_transform=fastaff[0] )
         mysim = ants.image_mutual_information( imgc, reg['warpedmovout' ] )
         similarity.append( mysim )
 
@@ -325,7 +326,6 @@ def ljlf_parcellation(
     syn_metric='CC',
     max_lab_plus_one=False,
     output_prefix=None,
-    sr_model=None,
     verbose=False,
 ):
     """
@@ -380,9 +380,6 @@ def ljlf_parcellation(
     output_prefix : string
         the location of the output; should be both a directory and prefix filename
 
-    sr_model: string or tensorflow model
-        experimental option to upsample before LJLF
-
     verbose : boolean
         whether to show status updates
 
@@ -419,7 +416,7 @@ def ljlf_parcellation(
         libraryL = []
         for fn in library_segmentation:
             temp = ants.image_read(fn)
-            temp = ants.mask_image( temp, temp, segmentation_numbers )
+#            temp = ants.mask_image( temp, temp, segmentation_numbers )
             if not check_for_labels_in_image( segmentation_numbers, temp ):
                 warnings.warn( "segmentation_numbers do not exist in" + fn )
             libraryL.append( temp )
@@ -429,7 +426,7 @@ def ljlf_parcellation(
         for x in range( len( library_segmentation ) ):
             libraryI.append( ants.iMath( library_intensity[x], "Normalize" ) )
             temp = library_segmentation[x]
-            temp = ants.mask_image( temp, temp, segmentation_numbers )
+#            temp = ants.mask_image( temp, temp, segmentation_numbers )
             if not check_for_labels_in_image( segmentation_numbers, temp ):
                 warnings.warn( "segmentation_numbers do not exist in" + fn )
             libraryL.append( temp )
@@ -454,14 +451,11 @@ def ljlf_parcellation(
     if verbose:
         print("Nerds want to know the size if dilation is:" + str(submask_dilation ))
         print( imgc )
-    if not sr_model is None: # FIXME replace with an actual model
-        newspc = ( np.asarray( ants.get_spacing( imgc ) ) * 0.5 ).tolist()
-        imgc = ants.resample_image( imgc, newspc, use_voxels=False, interp_type=0 )
     imgc = ants.iMath(imgc, "TruncateIntensity", 0.001, 0.99999)
     initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
     jlfmask = imgc * 0 + 1
     deftx = "SyN"
-    loctx = "Affine"
+    loctx = "Similarity"
     ljlf = ants.local_joint_label_fusion(
         target_image=imgc,
         which_labels=segmentation_numbers,
@@ -479,8 +473,7 @@ def ljlf_parcellation(
         syn_metric=syn_metric,
         beta=2,  # higher "sharper" more robust to outliers ( need to check this again )
         rho=0.1,
-        nonnegative=False,
-        grad_step = 0.5,
+        nonnegative=True,
         max_lab_plus_one=max_lab_plus_one,
         verbose=verbose,
         output_prefix=output_prefix,
@@ -597,7 +590,7 @@ def ljlf_parcellation_one_template(
         temp = ants.iMath( template, "Normalize" )
         temp = ants.add_noise_to_image( temp, "additivegaussian", [0,0.1] )
         libraryI.append( temp )
-        temp = ants.mask_image( templateLabels, templateLabels, segmentation_numbers )
+#        temp = ants.mask_image( templateLabels, templateLabels, segmentation_numbers )
         libraryL.append( temp )
 
     #  https://mindboggle.readthedocs.io/en/latest/labels.html
@@ -615,9 +608,9 @@ def ljlf_parcellation_one_template(
     imgc = ants.crop_image( ants.iMath( img, "Normalize"), cropmask)
     imgc = ants.iMath(imgc, "TruncateIntensity", 0.001, 0.99999)
     initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
-    jlfmask = ants.resample_image_to_target( img*0+1, imgc, interp_type="nearestNeighbor"  )
+    jlfmask = imgc * 0 + 1
     deftx = "SyN"
-    loctx = "Affine"
+    loctx = "Similarity"
     ljlf = ants.local_joint_label_fusion(
         target_image=imgc,
         which_labels=segmentation_numbers,
