@@ -18,7 +18,7 @@ import pandas as pd
 from superiq import super_resolution_segmentation_per_label
 from superiq import ljlf_parcellation
 from superiq import check_for_labels_in_image
-from pipeline_utils import *
+from superiq.pipeline_utils import * 
 from superiq import list_to_string
 
 def basalforebrain(config, env="prod"): 
