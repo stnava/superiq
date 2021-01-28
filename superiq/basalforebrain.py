@@ -34,9 +34,8 @@ def basalforebrain(
         seg_params={
             "wlab":[75,76], "submask_dilation":20, "reg_iteration": [100,50,10],
             "searcher": 2, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
-            "max_lab_plus_one": False, "verbose": True
-        },
-        env="prod"): 
+            "max_lab_plus_one": False, "verbose": True}
+        ): 
     """
     Complete script for running super resolution on specific labels and ljlf
     parcellation on the ouputs. A config is the prefered input with the
@@ -96,8 +95,7 @@ def basalforebrain(
                 "wlab":[75,76], "submask_dilation":20, "reg_iteration": [100,50,10],
                 "searcher": 2, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
                 "max_lab_plus_one": False, "verbose": True
-            },
-            env="prod") 
+            }) 
     """
     if config: 
         config = LoadConfig(config)
@@ -236,11 +234,11 @@ def basalforebrain(
             config.output_bucket,
             config.output_prefix,
             config.process_name,
-            env=env,
+            env=config.environment,
         )
         
 
 if __name__ == "__main__":
     print('Starting basalforebrain')
     print(sys.argv)
-    basalforebrain(config=sys.argv[1], env='prod')
+    basalforebrain(config=sys.argv[1])
