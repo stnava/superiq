@@ -1,4 +1,0 @@
-Measure,Value,Process,Resolution,Side,Label,Study,Subject,Date,Modality,Repeat
-VolumeInMillimeters,1484.6962242126465,basalforebrain,SR,full,1,ADNI,002_S_4473,20140227,T1w,000
-SurfaceAreaInMillimetersSquared,1548.65135916928,basalforebrain,SR,full,1,ADNI,002_S_4473,20140227,T1w,000
-MeanIntensity,0.5153698006072389,basalforebrain,SR,full,1,ADNI,002_S_4473,20140227,T1w,000
