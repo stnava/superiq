@@ -42,7 +42,8 @@ seg_params={'submask_dilation': 20, 'reg_iterations': [100, 50, 0],
 'searcher': 0, 'radder': 2, 'syn_sampling': 16, 'syn_metric': 'mattes',
 'max_lab_plus_one': False, 'verbose': True}
 sr_params={"upFactor": [2,2,2], "dilation_amount": 12, "verbose":True}
-doSR = False
+if not 'doSR' in locals():
+    doSR = False
 for k in range( len( brains ) ):
      brainsLocal=brains.copy()
      brainsSegLocal=brainsSeg.copy()
