@@ -105,7 +105,7 @@ def basalforebrain_segmentation(
             segmentation_numbers=wlab,
             forward_transforms=forward_transforms,
             template=template,
-            template_segmentationabels=template_segmentation,
+            template_segmentation=template_segmentation,
             library_intensity = atlas_image_list,
             library_segmentation = atlas_segmentation_list,
             submask_dilation=seg_params['submask_dilation'],  # a parameter that should be explored
