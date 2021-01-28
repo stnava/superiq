@@ -71,13 +71,19 @@ class TestModule_basalforebrainSR(unittest.TestCase):
         brainsSeg = [get_s3_object(atlas_bucket, k, "atlas") for k in atlas_label_keys]
         brainsSeg.sort()
 
+        seg_params={
+            "wlab":[75,76], "submask_dilation":5, "reg_iteration": [10,0,0],
+            "searcher": 1, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
+            "max_lab_plus_one": False, "verbose": True}
+
         basalforebrainSR(
                 templatefilename=template_image,
                 templatesegfilename=template_labels,
                 infn=input_n3,
                 model_file_name=model,
-                atlas_image_dir=brains,
-                atlas_label_dir=brainsSeg,
+                atlas_image_dir=brains[0:4],
+                atlas_label_dir=brainsSeg[0:4],
+                seg_params=seg_params
                 )
         expected_output = "basalforebrainSR-SR_ortho_plot.png"
         outputs = os.listdir("outputs")
@@ -143,13 +149,19 @@ class TestModule_basalforebrainOR(unittest.TestCase):
         brainsSeg = [get_s3_object(atlas_bucket, k, "atlas") for k in atlas_label_keys]
         brainsSeg.sort()
 
+        seg_params={
+            "wlab":[75,76], "submask_dilation":5, "reg_iteration": [10,0,0],
+            "searcher": 1, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
+            "max_lab_plus_one": False, "verbose": True}
+
         basalforebrainOR(
                 templatefilename=template_image,
                 templatesegfilename=template_labels,
                 infn=input_n3,
                 model_file_name=model,
-                atlas_image_dir=brains,
-                atlas_label_dir=brainsSeg,
+                atlas_image_dir=brains[0:4],
+                atlas_label_dir=brainsSeg[0:4],
+                seg_params=seg_params
                 )
         expected_output = "basalforebrain-OR_ortho_plot.png"
         outputs = os.listdir("outputs")
