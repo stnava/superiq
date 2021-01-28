@@ -25,7 +25,7 @@ def basalforebrain_segmentation(
         atlas_image_list,
         atlas_segmentation_list,
         seg_params={
-            "wlab":[75,76], "submask_dilation":20, "reg_iteration": [100,50,10],
+            "wlab":[75,76], "submask_dilation":20, "reg_iterations": [100,50,10],
             "searcher": 2, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
             "max_lab_plus_one": False, "verbose": True},
         forward_transforms=None,
