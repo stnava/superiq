@@ -264,7 +264,7 @@ def list_images(bucket, prefix):
                 key =  obj['Key']
                 items.append(key)
         except KeyError:
-            raise KeyError("No keys found under prefix {prefix}")
+            raise KeyError(f"No keys found under prefix {prefix}")
         try:
             kwargs['ContinuationToken'] = objects['NextContinuationToken']
         except KeyError:
