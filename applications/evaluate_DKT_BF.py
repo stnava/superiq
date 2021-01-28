@@ -62,7 +62,7 @@ for k in range( len( brains ) ):
         )
         use_image = srseg['super_resolution']
      else:
-         useg_image=ants.image_read(brains[k])
+        use_image=ants.image_read(brains[k])
      localbf = basalforebrain_segmentation(
        target_image=use_image,
        segmentation_numbers = wlab,
