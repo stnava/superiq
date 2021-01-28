@@ -48,7 +48,7 @@ if not 'doSR' in locals():
 if doSR:
     mdl = tf.keras.models.load_model("models/SEGSR_32_ANINN222_3.h5")
 
-for k in range( len( brains ) ):
+for k in range( len(overlaps), len( brains ) ):
     print( str(k) + " " + str(doSR ))
     brainsLocal=brains.copy()
     brainsSegLocal=brainsSeg.copy()
