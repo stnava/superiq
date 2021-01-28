@@ -52,20 +52,6 @@ def basalforebrain(
                 config.pipeline_bucket,
                 config.pipeline_prefix,
         )
-        reg = [
-                get_pipeline_data(
-                    "bxtreg1Warp.nii.gz",
-                    config.input_value,
-                    config.pipeline_bucket,
-                    config.pipeline_prefix,
-                ),
-                get_pipeline_data(
-                    "bxtreg0GenericAffine.mat",
-                    config.input_value,
-                    config.pipeline_bucket,
-                    config.pipeline_prefix,
-                )
-        ]
 
         # TODO 
         model_file_name = get_s3_object(config.model_bucket, config.model_key, "models")
