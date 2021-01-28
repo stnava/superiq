@@ -1,7 +1,4 @@
 import os
-os.environ["TF_NUM_INTEROP_THREADS"] = "8"
-os.environ["TF_NUM_INTRAOP_THREADS"] = "8"
-os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = "8"
 import os.path
 from os import path
 import glob as glob
@@ -74,10 +71,8 @@ def basalforebrain(
     else:
         brains = glob.glob(atlas_images_dir+"/*")
         brains.sort()
-        brains = brains[0:8] # shorten this for the test application
         brainsSeg = glob.glob(atlas_labels_dir+"/*")
         brainsSeg.sort()
-        brainsSeg = brainsSeg[0:8] # shorten this for this test applicationa
         wlab = seg_params['wlab'] 
         output_filename = "outputs/basalforebrain"
 
