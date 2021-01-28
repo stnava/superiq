@@ -44,39 +44,42 @@ seg_params={'submask_dilation': 20, 'reg_iterations': [100, 50, 0],
 sr_params={"upFactor": [2,2,2], "dilation_amount": 12, "verbose":True}
 if not 'doSR' in locals():
     doSR = False
+
+if doSR:
+    mdl = tf.keras.models.load_model("models/SEGSR_32_ANINN222_3.h5")
+
 for k in range( len( brains ) ):
-     brainsLocal=brains.copy()
-     brainsSegLocal=brainsSeg.copy()
-     del brainsLocal[k:(k+1)]
-     del brainsSegLocal[k:(k+1)]
-     wlab = [75,76]
-     if doSR:
+    print( str(k) + " " + str(doSR ))
+    brainsLocal=brains.copy()
+    brainsSegLocal=brainsSeg.copy()
+    del brainsLocal[k:(k+1)]
+    del brainsSegLocal[k:(k+1)]
+    wlab = [75,76]
+    if doSR:
+        locseg = ants.image_read(brainsSeg[k])
         srseg = super_resolution_segmentation_per_label(
-            imgIn = imgIn,
-            segmentation = initlab0,
+            imgIn = ants.image_read(brains[k]),
+            segmentation = ants.mask_image( locseg, locseg, level = wlab, binarize=True ),
             upFactor = sr_params['upFactor'],
             sr_model = mdl,
             segmentation_numbers = wlab,
             dilation_amount = sr_params['dilation_amount'],
             verbose = sr_params['verbose']
-        )
+            )
         use_image = srseg['super_resolution']
-     else:
+    else:
         use_image=ants.image_read(brains[k])
-     localbf = basalforebrain_segmentation(
-       target_image=use_image,
-       segmentation_numbers = wlab,
-       template = ants.image_read(templatefilename),
-       template_segmentation = ants.image_read(templatesegfilename),
-       library_intensity=images_to_list(brainsLocal),
-       library_segmentation=images_to_list(brainsSegLocal),
-       )
-     gtseg = ants.image_read( brainsSeg[k] )
-     gtlabel = ants.mask_image( gtseg, gtseg, level = wlab, binarize=True )
-     myol = ants.label_overlap_measures(gtlabel,localbf['probseg'])
-     ants.image_write( gtlabel, '/tmp/tempGT.nii.gz' )
-     ants.image_write( localbf['probseg'], '/tmp/tempJLF.nii.gz' )
-     ants.image_write( ants.image_read(brains[k]), '/tmp/temp3.nii.gz' )
-     overlaps.append( myol )
+    localbf = basalforebrain_segmentation(
+        target_image=use_image,
+        segmentation_numbers = wlab,
+        template = ants.image_read(templatefilename),
+        template_segmentation = ants.image_read(templatesegfilename),
+        library_intensity=images_to_list(brainsLocal),
+        library_segmentation=images_to_list(brainsSegLocal),
+        )
+    gtseg = ants.image_read( brainsSeg[k] )
+    gtlabel = ants.mask_image( gtseg, gtseg, level = wlab, binarize=True )
+    myol = ants.label_overlap_measures(gtlabel,localbf['probseg'])
+    overlaps.append( myol )
 
 # FIXME - organize the overlap output and write to csv
