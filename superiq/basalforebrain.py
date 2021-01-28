@@ -1,10 +1,15 @@
 import os
+threads = "8"
+os.environ["TF_NUM_INTEROP_THREADS"] = threads
+os.environ["TF_NUM_INTRAOP_THREADS"] = threads
+os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
 import os.path
 from os import path
 import glob as glob
 
 import tensorflow
 import ants
+import sys
 import antspynet
 import tensorflow as tf
 import glob
@@ -47,6 +52,21 @@ def basalforebrain(
                 config.pipeline_bucket,
                 config.pipeline_prefix,
         )
+        reg = [
+                get_pipeline_data(
+                    "bxtreg1Warp.nii.gz",
+                    config.input_value,
+                    config.pipeline_bucket,
+                    config.pipeline_prefix,
+                ),
+                get_pipeline_data(
+                    "bxtreg0GenericAffine.mat",
+                    config.input_value,
+                    config.pipeline_bucket,
+                    config.pipeline_prefix,
+                )
+        ]
+
         # TODO 
         model_file_name = get_s3_object(config.model_bucket, config.model_key, "models")
         # TODO
@@ -96,8 +116,13 @@ def basalforebrain(
     
     # first, run registration - then do SR in the local region
     if not 'reg' in locals():
+        print("Registration")
         reg = ants.registration( imgIn, template, 'SyN' )
         forward_transforms = reg['fwdtransforms']
+        initlab0 = ants.apply_transforms( imgIn, templateL,
+              forward_transforms, interpolator="genericLabel" )
+    else: 
+        forward_transforms = reg
         initlab0 = ants.apply_transforms( imgIn, templateL,
               forward_transforms, interpolator="genericLabel" )
     
@@ -169,4 +194,6 @@ def basalforebrain(
         
 
 if __name__ == "__main__":
-    basalforebrain('configs/basal_forebrain_multiatlas_example_SR_first.json', env='dev')
+    print('Starting basalforebrain')
+    print(sys.argv)
+    basalforebrain(config=sys.argv[1], env='prod')
