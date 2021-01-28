@@ -20,9 +20,10 @@ def run_tests():
 class TestModule_basalforebrain(unittest.TestCase):
     
     def setUp(self):
-        shutil.rmtree("data")
+        print("Set up environment")
+        shutil.rmtree("data", ignore_errors=True)
         os.makedirs("data")
-        shutil.rmtree("outputs")
+        shutil.rmtree("outputs", ignore_errors=True)
         os.makedirs("outputs")
 
     def test_basalforebrain_config_isin(self):

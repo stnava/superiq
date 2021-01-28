@@ -17,9 +17,7 @@
         "model_bucket": "invicro-pipeline-inputs", 
         "model_key": "models/SEGSR_32_ANINN222_3.h5",
         "atlas_bucket": "invicro-pipeline-inputs",
-        "atlas_image_prefix": "OASIS30/Brains/",
-        "atlas_label_prefix": "OASIS30/Segmentations/",
-        "seg_params": { 
+        "atlas_image_prefix": "OASIS30/Brains/", "atlas_label_prefix": "OASIS30/Segmentations/", "seg_params": { 
             "wlab": {
                 "range": false,
                 "values": [75, 76]
