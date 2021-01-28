@@ -37,19 +37,31 @@ brainsSeg = glob.glob(tdir+"Segmentations/*")
 brainsSeg.sort()
 templatefilename = "/Users/stnava/code/super_resolution_pipelines/template/adni_template.nii.gz"
 templatesegfilename = "/Users/stnava/code/super_resolution_pipelines/template/adni_template_dkt_labels.nii.gz"
-
 overlaps = []
+seg_params={'submask_dilation': 20, 'reg_iterations': [100, 50, 0],
+'searcher': 0, 'radder': 2, 'syn_sampling': 16, 'syn_metric': 'mattes',
+'max_lab_plus_one': False, 'verbose': True}
+
 for k in range( len( brains ) ):
      brainsLocal=brains.copy()
      brainsSegLocal=brainsSeg.copy()
      del brainsLocal[k:(k+1)]
      del brainsSegLocal[k:(k+1)]
+     wlab = [75,76]
      localbf = basalforebrain_segmentation(
        target_image=ants.image_read(brains[k]),
+       segmentation_numbers = wlab,
        template = ants.image_read(templatefilename),
        template_segmentation = ants.image_read(templatesegfilename),
-       atlas_image_list=images_to_list(brainsLocal),
-       atlas_segmentation_list=images_to_list(brainsSegLocal),
+       library_intensity=images_to_list(brainsLocal),
+       library_segmentation=images_to_list(brainsSegLocal),
        )
+     gtseg = ants.image_read( brainsSeg[k] )
+     gtlabel = ants.mask_image( gtseg, gtseg, level = wlab, binarize=True )
+     myol = ants.label_overlap_measures(gtlabel,localbf['probseg'])
+     ants.image_write( gtlabel, '/tmp/tempGT.nii.gz' )
+     ants.image_write( localbf['probseg'], '/tmp/tempJLF.nii.gz' )
+     ants.image_write( ants.image_read(brains[k]), '/tmp/temp3.nii.gz' )
      overlaps.append( myol )
-     # get overlap values
+
+# FIXME - organize the overlap output and write to csv     

@@ -20,12 +20,13 @@ from superiq import list_to_string
 
 def basalforebrain_segmentation(
         target_image,
+        segmentation_numbers,
         template,
         template_segmentation,
-        atlas_image_list,
-        atlas_segmentation_list,
+        library_intensity,
+        library_segmentation,
         seg_params={
-            "wlab":[75,76], "submask_dilation":20, "reg_iterations": [100,50,10],
+            "submask_dilation":20, "reg_iterations": [100,50,10],
             "searcher": 2, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
             "max_lab_plus_one": False, "verbose": True},
         forward_transforms=None,
@@ -40,22 +41,25 @@ def basalforebrain_segmentation(
     target_image : ANTsImage
         input n3 image
 
+    segmentation_numbers : list of target segmentation labels
+        list containing integer segmentation labels
+
     template : ANTsImage
         template image
 
     template_segmentation : ANTsImage
         template labels image
 
-    atlas_image_list : list of ANTsImages
+    library_intensity : list of ANTsImages
         the intensity images
 
-    atlas_segmentation_list : list of ANTsImages
+    library_segmentation : list of ANTsImages
         the segmentation images
 
     seg_params : dict
         dict containing the variable parameters for the ljlf parcellation call.
         The parameters are:
-            {"wlab":list, "submask_dilation":int, "reg_iteration": list,
+            {"submask_dilation":int, "reg_iteration": list,
             "searcher": int, "radder": int, "syn_sampling": int, "syn_metric": string,
             "max_lab_plus_one": bool, "verbose": bool}
 
@@ -72,20 +76,17 @@ def basalforebrain_segmentation(
             target_image=ants.image_read("data/input_n3_image.nii.gz"),
             template=ants.image_read("data/template_image.nii.gz"),
             template_segmentation=ants.image_read("data/template_label_image.nii.gz"),
-            atlas_image_list=glob.glob("data/atlas_images/*"),
+            library_intensity=glob.glob("data/atlas_images/*"),
             atlas_segmentations=glob.glob"data/atlas_labels/*"),
             seg_params={
-                "wlab":[75,76], "submask_dilation":20, "reg_iteration": [100,50,10],
+                "submask_dilation":20, "reg_iteration": [100,50,10],
                 "searcher": 2, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
                 "max_lab_plus_one": False, "verbose": True
             })
     """
-
-    wlab = seg_params['wlab']
-
     # input data
 
-    havelabels = check_for_labels_in_image( wlab, template_segmentation )
+    havelabels = check_for_labels_in_image( segmentation_numbers, template_segmentation )
 
     if not havelabels:
         raise Exception("Label missing from the template")
@@ -102,12 +103,12 @@ def basalforebrain_segmentation(
 
     locseg = ljlf_parcellation(
             ants.iMath( target_image, "Normalize" ),
-            segmentation_numbers=wlab,
+            segmentation_numbers=segmentation_numbers,
             forward_transforms=forward_transforms,
             template=template,
-            template_segmentation=template_segmentation,
-            library_intensity = atlas_image_list,
-            library_segmentation = atlas_segmentation_list,
+            templateLabels=template_segmentation,
+            library_intensity = library_intensity,
+            library_segmentation = library_segmentation,
             submask_dilation=seg_params['submask_dilation'],  # a parameter that should be explored
             searcher=seg_params['searcher'],  # double this for SR
             radder=seg_params['radder'],  # double this for SR
@@ -121,8 +122,8 @@ def basalforebrain_segmentation(
     probs = locseg['ljlf']['ljlf']['probabilityimages']
     probability_labels = locseg['ljlf']['ljlf']['segmentation_numbers']
     # find proper labels
-    whichprob75 = probability_labels.index(wlab[0])
-    whichprob76 = probability_labels.index(wlab[1])
+    whichprob75 = probability_labels.index(segmentation_numbers[0])
+    whichprob76 = probability_labels.index(segmentation_numbers[1])
     probsum = ants.resample_image_to_target(probs[whichprob75], target_image ) + ants.resample_image_to_target(probs[whichprob76], target_image )
     probseg = ants.threshold_image( probsum, 0.3, 1.0 )
     mygeo = ants.label_geometry_measures( probseg, probsum )
