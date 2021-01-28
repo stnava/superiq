@@ -59,7 +59,7 @@ for k in range( len( brains ) ):
         locseg = ants.image_read(brainsSeg[k])
         srseg = super_resolution_segmentation_per_label(
             imgIn = ants.image_read(brains[k]),
-            segmentation = ants.mask_image( locseg, locseg, level = wlab, binarize=True ),
+            segmentation = ants.mask_image( locseg, locseg, level = wlab, binarize=False ),
             upFactor = sr_params['upFactor'],
             sr_model = mdl,
             segmentation_numbers = wlab,
@@ -77,7 +77,10 @@ for k in range( len( brains ) ):
         library_intensity=images_to_list(brainsLocal),
         library_segmentation=images_to_list(brainsSegLocal),
         )
-    gtseg = ants.image_read( brainsSeg[k] )
+    if not doSR:
+        gtseg = ants.image_read( brainsSeg[k] )
+    else:
+        gtseg = srseg['super_resolution_segmentation']
     gtlabel = ants.mask_image( gtseg, gtseg, level = wlab, binarize=True )
     myol = ants.label_overlap_measures(gtlabel,localbf['probseg'])
     overlaps.append( myol )
