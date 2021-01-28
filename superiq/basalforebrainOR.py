@@ -18,7 +18,7 @@ from superiq import check_for_labels_in_image
 from superiq.pipeline_utils import *
 from superiq import list_to_string
 
-def basalforebrainSR(
+def basalforebrainOR(
         config=None,
         templatefilename=None,
         templatesegfilename=None,
@@ -33,9 +33,8 @@ def basalforebrainSR(
             "max_lab_plus_one": False, "verbose": True}
         ):
     """
-    Complete script for running super resolution on specific labels and ljlf
-    parcellation on the ouputs. A config is the prefered input with the
-    necessary parameter values. If a config is not provided, the other
+    Complete script for running ljlf on an image. A config is the prefered input
+    with the necessary parameter values. If a config is not provided, the other
     arguments are used to specify the inputs.
 
     Arguments
@@ -65,6 +64,7 @@ def basalforebrainSR(
     sr_params : dict
         dict containing the variable parameters for the super resolution call.
         The parameters are: { "upFactor" : list, "dilation_amount": int, "verbose" : bool}
+        Not used here but kept for consistency with the SR processing.
 
     seg_params : dict
         dict containing the variable parameters for the ljlf parcellation call.
@@ -76,10 +76,10 @@ def basalforebrainSR(
     Example
     -------
     <With Config>
-    >>> config = "configs/basalforebrainSR_config.json"
-    >>> basalforebrainSR(config=config)
+    >>> config = "configs/basalforebrainOR_config.json"
+    >>> basalforebrainOR(config=config)
     <Local Variables>
-    >>> basalforebrainSR(
+    >>> basalforebrainOR(
             templatefilename="data/template_image.nii.gz",
             templatesegfilename="data/template_label_image.nii.gz",
             infn="data/input_n3_image.nii.gz",
@@ -135,7 +135,7 @@ def basalforebrainSR(
         brainsSeg = glob.glob(atlas_labels_dir+"/*")
         brainsSeg.sort()
         wlab = seg_params['wlab']
-        output_filename = "outputs/basalforebrainSR"
+        output_filename = "outputs/basalforebrainOR"
 
     # input data
     imgIn = ants.image_read( infn )
@@ -149,10 +149,10 @@ def basalforebrainSR(
         raise Exception("Label missing from the template")
 
     # expected output data
-    output_filename_sr = output_filename + "_SR.nii.gz"
-    output_filename_sr_seg_init = output_filename  +  "_SR_seginit.nii.gz"
-    output_filename_sr_seg = output_filename  +  "_SR_seg.nii.gz"
-    output_filename_sr_seg_csv = output_filename  + "_SR_seg.csv"
+    output_filename_or = output_filename + "_OR.nii.gz"
+    output_filename_or_seg_init = output_filename  +  "_OR_seginit.nii.gz"
+    output_filename_or_seg = output_filename  +  "_OR_seg.nii.gz"
+    output_filename_or_seg_csv = output_filename  + "_OR_seg.csv"
 
 
     # first, run registration - then do SR in the local region
@@ -167,24 +167,13 @@ def basalforebrainSR(
         initlab0 = ants.apply_transforms( imgIn, templateL,
               forward_transforms, interpolator="genericLabel" )
 
-    srseg = super_resolution_segmentation_per_label(
-        imgIn = imgIn,
-        segmentation = initlab0,
-        upFactor = sr_params['upFactor'],
-        sr_model = mdl,
-        segmentation_numbers = wlab,
-        dilation_amount = sr_params['dilation_amount'],
-        verbose = sr_params['verbose']
-    )
-
     # write
-    initlab0 = ants.apply_transforms( srseg['super_resolution'], templateL,
+    initlab0 = ants.apply_transforms( imgIn, templateL,
         forward_transforms, interpolator="genericLabel" )
-    ants.image_write( srseg['super_resolution'] , output_filename_sr )
-    ants.image_write( initlab0 , output_filename_sr_seg_init )
+    ants.image_write( initlab0 , output_filename_or_seg_init )
 
     locseg = ljlf_parcellation(
-            srseg['super_resolution'],
+            ants.iMath( imgIn, "Normalize" ),
             segmentation_numbers=wlab,
             forward_transforms=forward_transforms,
             template=template,
@@ -207,22 +196,22 @@ def basalforebrainSR(
     whichprob75 = probability_labels.index(wlab[0])
     whichprob76 = probability_labels.index(wlab[1])
     probseg = ants.threshold_image(
-      ants.resample_image_to_target(probs[whichprob75], srseg['super_resolution'] ) +
-      ants.resample_image_to_target(probs[whichprob76], srseg['super_resolution'] ),
+      ants.resample_image_to_target(probs[whichprob75], imgIn ) +
+      ants.resample_image_to_target(probs[whichprob76], imgIn ),
       0.3, 1.0 )
-    ants.image_write( probseg,  output_filename_sr_seg )
+    ants.image_write( probseg,  output_filename_or_seg )
 
     if config:
         get_label_geo(
                 probseg,
-                srseg['super_resolution'],
+                imgIn,
                 config.process_name,
                 config.input_value,
-                resolution="SR",
+                resolution="OR",
         )
         plot_output(
-            srseg['super_resolution'],
-            "outputs/basalforebrain-SR_ortho_plot.png",
+            imgIn,
+            "outputs/basalforebrain-OR_ortho_plot.png",
             probseg,
         )
         handle_outputs(
@@ -235,6 +224,6 @@ def basalforebrainSR(
 
 
 if __name__ == "__main__":
-    print('Starting basalforebrainSR')
+    print('Starting basalforebrainOR')
     print(sys.argv)
-    basalforebrainSR(config=sys.argv[1])
+    basalforebrainOR(config=sys.argv[1])
