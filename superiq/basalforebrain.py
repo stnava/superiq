@@ -37,7 +37,68 @@ def basalforebrain(
             "max_lab_plus_one": False, "verbose": True
         },
         env="prod"): 
-     
+    """
+    Complete script for running super resolution on specific labels and ljlf
+    parcellation on the ouputs. A config is the prefered input with the
+    necessary parameter values. If a config is not provided, the other
+    arguments are used to specify the inputs. 
+
+    Arguments
+    ---------
+    config : string or dict
+        a string containing the json config contents, a string of the 
+        relative path to the config file, or a python dict of the json data
+
+    templatefilename : string
+        path to the template image
+    
+    templatesegfilename : string
+        path to the template labels image
+
+    infn : string
+        path to the input n3 image
+
+    model_file_name : string
+        path to the model file
+
+    atlas_image_dir : string
+        path to the atlas image dir
+
+    atlas_label_dir : string
+        path to the atlas image dir
+
+    sr_params : dict
+        dict containing the variable parameters for the super resolution call.
+        The parameters are: { "upFactor" : list, "dilation_amount": int, "verbose" : bool}
+    
+    seg_params : dict
+        dict containing the variable parameters for the ljlf parcellation call.
+        The parameters are:
+            {"wlab":list, "submask_dilation":int, "reg_iteration": list,
+            "searcher": int, "radder": int, "syn_sampling": int, "syn_metric": string,
+            "max_lab_plus_one": bool, "verbose": bool}
+   
+    Example
+    -------
+    <With Config>
+    >>> config = "configs/basalforebrain_config.json"
+    >>> basalforebrain(config=config)
+    <Local Variables>
+    >>> basalforebrain(
+            templatefilename="data/template_image.nii.gz",
+            templatesegfilename="data/template_label_image.nii.gz",
+            infn="data/input_n3_image.nii.gz",
+            model_file_name="data/model.h5",
+            atlas_image_dir="data/atlas_images/",
+            atlas_label_dir="data/atlas_labels/",
+            sr_params={"upFactor": [2,2,2], "dilation_amount": 12, "verbose":True},
+            seg_params={
+                "wlab":[75,76], "submask_dilation":20, "reg_iteration": [100,50,10],
+                "searcher": 2, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
+                "max_lab_plus_one": False, "verbose": True
+            },
+            env="prod") 
+    """
     if config: 
         config = LoadConfig(config)
         output_filename = "outputs/" + config.output_name
