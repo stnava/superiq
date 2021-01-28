@@ -156,7 +156,7 @@ def basalforebrainSR(
 
 
     # first, run registration - then do SR in the local region
-    if not 'reg' in locals():
+    if forward_transforms is None:
         print("Registration")
         reg = ants.registration( imgIn, template, 'SyN' )
         forward_transforms = reg['fwdtransforms']
@@ -183,6 +183,7 @@ def basalforebrainSR(
     ants.image_write( srseg['super_resolution'] , output_filename_sr )
     ants.image_write( initlab0 , output_filename_sr_seg_init )
 
+    basalforebrain_segmentation( srseg['super_resolution'] )
     locseg = ljlf_parcellation(
             srseg['super_resolution'],
             segmentation_numbers=wlab,

@@ -11,7 +11,7 @@ import numpy.testing as nptest
 import unittest
 import ants
 from superiq import basalforebrainSR
-from superiq import basalforebrainOR
+from superiq import basalforebrain_segmentation
 from superiq.pipeline_utils import *
 
 
