@@ -8,6 +8,7 @@ from os import path
 import glob as glob
 # set number of threads - this should be optimized per compute instance
 
+import math
 import tensorflow
 import ants
 import antspynet
@@ -15,7 +16,7 @@ import tensorflow as tf
 import glob
 import numpy as np
 import pandas as pd
-
+import matplotlib.pyplot as plt
 from superiq import super_resolution_segmentation_per_label
 from superiq import ljlf_parcellation
 from superiq import check_for_labels_in_image
@@ -29,28 +30,32 @@ def images_to_list( x ):
     return outlist
 
 # user definitions here
-tdir = "/Users/stnava/data/srdata/"
-brains = glob.glob(tdir+"OASIS30/Brains/*")
+tdir = "/Users/stnava/data/superiq_data_resources/"
+brains = glob.glob(tdir+"segmentation_libraries/OASIS30/Brains/*")
 brains.sort()
-brainsSeg = glob.glob(tdir+"OASIS30/Segmentations/*")
+brainsSeg = glob.glob(tdir+"segmentation_libraries/OASIS30/Segmentations/*")
 brainsSeg.sort()
 templatefilename = tdir + "template/adni_template.nii.gz"
 templatesegfilename = tdir + "template/adni_template_dkt_labels.nii.gz"
-overlaps = []
-seg_params={'submask_dilation': 8, 'reg_iterations': [100, 50, 0],
+seg_params={'submask_dilation': 8, 'reg_iterations': [100, 100, 20],
 'searcher': 0, 'radder': 2, 'syn_sampling': 32, 'syn_metric': 'mattes',
 'max_lab_plus_one': True, 'verbose': True}
-
-sr_params={"upFactor": [2,2,2], "dilation_amount": 12, "verbose":True}
 
 if not 'doSR' in locals():
     doSR = False
 
 if doSR:
-    mdl = tf.keras.models.load_model("models/SEGSR_32_ANINN222_3.h5")
-    seg_params={'submask_dilation': 16, 'reg_iterations': [100, 100, 50, 0],
+    seg_params={'submask_dilation': 16, 'reg_iterations': [100, 100, 100, 20],
        'searcher': 0, 'radder': 3, 'syn_sampling': 32, 'syn_metric': 'mattes',
         'max_lab_plus_one': True, 'verbose': True}
+
+sr_params={"upFactor": [2,2,2], "dilation_amount": seg_params["submask_dilation"], "verbose":True}
+mdl = tf.keras.models.load_model("models/SEGSR_32_ANINN222_3.h5")
+
+# store output data
+brainName = []
+dicevalLR = []
+dicevalHR = []
 
 for k in range( len(overlaps), len( brains ) ):
     print( str(k) + " " + str(doSR ))
@@ -72,7 +77,7 @@ for k in range( len(overlaps), len( brains ) ):
             )
         use_image = srseg['super_resolution']
     else:
-        use_image=ants.image_read(brains[k])
+        use_image=ants.iMath( ants.image_read(brains[k]), "Normalize" )
     localbf = basalforebrain_segmentation(
         target_image=use_image,
         segmentation_numbers = wlab,
@@ -82,30 +87,48 @@ for k in range( len(overlaps), len( brains ) ):
         library_segmentation=images_to_list(brainsSegLocal),
         seg_params = seg_params
         )
-    if not doSR:
+    mypt = 0.5
+    bfsegljlf = ants.threshold_image( localbf['probsum'], mypt, 2.0 )
+    if not doSR: # here we do SR on the BF output from LR segmentation vs SR first
         gtseg = ants.image_read( brainsSeg[k] )
+        # both GT and Appoximation should undergo same operations
+        srseg = super_resolution_segmentation_per_label(
+            imgIn = use_image,
+            segmentation = bfsegljlf,
+            upFactor = sr_params['upFactor'],
+            sr_model = mdl,
+            segmentation_numbers = [1],
+            dilation_amount = sr_params['dilation_amount'],
+            verbose = sr_params['verbose'] )
+        srsegGT = super_resolution_segmentation_per_label(
+            imgIn = use_image,
+            segmentation = ants.mask_image( gtseg, gtseg, level = wlab, binarize=True ),
+            upFactor = sr_params['upFactor'],
+            sr_model = mdl,
+            segmentation_numbers = [1],
+            dilation_amount = sr_params['dilation_amount'],
+            verbose = sr_params['verbose'] )
     else:
         gtseg = srseg['super_resolution_segmentation']
+    # native resolution
     gtlabel = ants.mask_image( gtseg, gtseg, level = wlab, binarize=True )
-# if True:
-    mypt = 0.5
-    temp = ants.threshold_image( localbf['probsum'], mypt, 2.0 )
-    myol = ants.label_overlap_measures(gtlabel, temp )
-    print( myol )
-    overlaps.append( myol )
+    myol = ants.label_overlap_measures( gtlabel, bfsegljlf )
+    # super resolution
+    gtlabelUp = srsegGT['super_resolution_segmentation']
+    myolUp = ants.label_overlap_measures( gtlabelUp, srseg['super_resolution_segmentation'] )
+    brainName.append( os.path.splitext( os.path.splitext( os.path.basename( brains[k]) )[0])[0])
+    dicevalLR.append(myol["MeanOverlap"][0])
+    dicevalHR.append( myolUp["MeanOverlap"][0])
+    print( brainName[k] + ": LR: " + str(dicevalLR[k]) + " HR: " +  str(dicevalHR[k]) )
+#    ants.image_write( srseg['super_resolution'], '/tmp/tempI.nii.gz' )
+#    ants.image_write( gtlabelUp, '/tmp/tempGT.nii.gz' )
+#    ants.image_write( srseg['super_resolution_segmentation'], '/tmp/tempSRSeg.nii.gz' )
 
-# organize the overlap output and write to csv
-import pandas as pd
-brainName = []
-diceval = []
-for k in range(len(overlaps)):
-	brainName.append( os.path.splitext( os.path.splitext( os.path.basename( brains[k]) )[0] )[0] )
-	diceval.append( overlaps[k]["MeanOverlap"][0] )
 
-dict = {'name': brainName, 'Dice': diceval}   
-df = pd.DataFrame(dict)  
+################################################################################
+dict = {'name': brainName, 'DiceLR': diceval, 'DiceHR': dicevalHR}
+df = pd.DataFrame(dict)
 if not doSR:
-  	df.to_csv('/tmp/bf_ol_or.csv')  
+  	df.to_csv('/tmp/bf_ol_or.csv')
 else:
 	df.to_csv('/tmp/bf_ol_sr.csv')
-
