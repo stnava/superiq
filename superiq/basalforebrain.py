@@ -17,6 +17,7 @@ from superiq import ljlf_parcellation
 from superiq import check_for_labels_in_image
 from superiq.pipeline_utils import *
 from superiq import list_to_string
+from superiq import basalforebrain_segmentation
 
 def basalforebrainSR(
         input_image,
@@ -280,7 +281,7 @@ def basalforebrainOR(
         initlab0 = ants.apply_transforms( imgIn, templateL,
               forward_transforms, interpolator="genericLabel" )
     
-    outputs['OR_Seg_Init'] = init_tx
+    outputs['OR_Seg_Init'] = initlab0
     #ants.image_write( init_tx , output_filename_or_seg_init )
     imgOR = ants.iMath(imgIn, "Normalize")
 

@@ -10,7 +10,7 @@ import numpy.testing as nptest
 
 import unittest
 import ants
-from superiq import basalforebrainSR
+from superiq import basalforebrainSR, basalforebrainOR
 from superiq import basalforebrain_segmentation
 from superiq.pipeline_utils import *
 
@@ -70,8 +70,8 @@ class TestModule_basalforebrainSR(unittest.TestCase):
 
         outputs = basalforebrainSR(
                 input_image=ants.image_read(input_n3),
-                template=template_image,
-                templateL=template_labels,
+                template=ants.image_read(template_image),
+                templateL=ants.image_read(template_labels),
                 model_path=model,
                 atlas_images=atlas_images[0:4],
                 atlas_labels=atlas_labels[0:4],
@@ -131,8 +131,8 @@ class TestModule_basalforebrainOR(unittest.TestCase):
 
         outputs = basalforebrainOR(
                 input_image=ants.image_read(input_n3),
-                template=template_image,
-                templateL=template_labels,
+                template=ants.image_read(template_image),
+                templateL=ants.image_read(template_labels),
                 atlas_images=atlas_images[0:4],
                 atlas_labels=atlas_labels[0:4],
                 wlab=[75,76]
@@ -180,8 +180,8 @@ class TestModule_basalforebrainOR(unittest.TestCase):
 
         outputs = basalforebrainOR(
                 input_image=ants.image_read(input_n3),
-                template=template_image,
-                templateL=template_labels,
+                template=ants.image_read(template_image),
+                templateL=ants.image_read(template_labels),
                 model_path=model,
                 atlas_images=atlas_images[0:4],
                 atlas_labels=atlas_labels[0:4],
