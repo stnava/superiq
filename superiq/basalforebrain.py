@@ -122,11 +122,8 @@ def basalforebrainSR(
     srseg_tx = ants.apply_transforms( srseg['super_resolution'], templateL,
         forward_transforms, interpolator="genericLabel" )
     
-    # Output SR and SR seg
     outputs['SR_Img'] = srseg['super_resolution']
-    #ants.image_write( srseg['super_resolution'] , output_filename_sr )
     outputs['SR_Seg_Init'] = srseg_tx
-    #ants.image_write( srseg_tx , output_filename_sr_seg_init )
 
     seg_input = ants.iMath(srseg['super_resolution'], "Normalize")
     localbf = basalforebrain_segmentation( 
@@ -139,60 +136,9 @@ def basalforebrainSR(
             seg_params=seg_params,
     )
     
-    # Don't think we need this anymore
-    #locseg = ljlf_parcellation(
-    #        srseg['super_resolution'],
-    #        segmentation_numbers=wlab,
-    #        forward_transforms=forward_transforms,
-    #        template=template,
-    #        templateLabels=templateL,
-    #        library_intensity = brains,
-    #        library_segmentation = brainsSeg,
-    #        submask_dilation=seg_params['submask_dilation'],  # a parameter that should be explored
-    #        searcher=seg_params['searcher'],  # double this for SR
-    #        radder=seg_params['radder'],  # double this for SR
-    #        reg_iterations=seg_params['reg_iterations'], # fast test
-    #        syn_sampling=seg_params['syn_sampling'],
-    #        syn_metric=seg_params['syn_metric'],
-    #        max_lab_plus_one=seg_params['max_lab_plus_one'],
-    #        output_prefix=output_filename,
-    #        verbose=seg_params['verbose'],
-    #    )
-    #probs = locseg['ljlf']['ljlf']['probabilityimages']
-    #probability_labels = locseg['ljlf']['ljlf']['segmentation_numbers']
-    # find proper labels
-    #whichprob75 = probability_labels.index(wlab[0])
-    #whichprob76 = probability_labels.index(wlab[1])
-    #probseg = ants.threshold_image(
-    #  ants.resample_image_to_target(probs[whichprob75], srseg['super_resolution'] ) +
-    #  ants.resample_image_to_target(probs[whichprob76], srseg['super_resolution'] ),
-    #  0.3, 1.0 )
    
     probseg = ants.threshold_image(localbf['probsum'], 0.5, 2)
     outputs['SR_Seg'] = probseg
-    #ants.image_write( probseg,  output_filename_sr_seg )
-
-     
-    # Keep for reference but do not belong here
-    #get_label_geo(
-    #        probseg,
-    #        srseg['super_resolution'],
-    #        config.process_name,
-    #        config.input_value,
-    #        resolution="SR",
-    #)
-    #plot_output(
-    #    srseg['super_resolution'],
-    #    "outputs/basalforebrain-SR_ortho_plot.png",
-    #    probseg,
-    #)
-    #handle_outputs(
-    #    config.input_value,
-    #    config.output_bucket,
-    #    config.output_prefix,
-    #    config.process_name,
-    #    env=config.environment,
-    #)
 
 def basalforebrainOR(
         input_image,

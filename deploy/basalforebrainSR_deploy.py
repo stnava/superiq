@@ -5,9 +5,8 @@ os.environ["TF_NUM_INTRAOP_THREADS"] = threads
 os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
 import ants
 import sys
-from pipeline_utils import *
-from superiq import basalforebrainSR, basalforebrainOR
-
+from superiq.pipeline_utils import *
+from superiq import basalforebrainSR, basalforebrainOR, check_for_labels_in_image
 
 def main(input_config):
     config = LoadConfig(input_config)
@@ -18,7 +17,7 @@ def main(input_config):
             config.pipeline_prefix,
     )
     input_image = ants.image_read(input_image) 
-
+    wlab = config.wlab
     template = get_s3_object(config.template_bucket, config.template_key, "data")
     template = ants.image_read(template) 
     
