@@ -57,7 +57,7 @@ brainName = []
 dicevalLR = []
 dicevalHR = []
 
-for k in range( len(overlaps), len( brains ) ):
+for k in range( len(brainName), len( brains ) ):
     print( str(k) + " " + str(doSR ))
     brainsLocal=brains.copy()
     brainsSegLocal=brainsSeg.copy()
