@@ -8,7 +8,6 @@ from os import path
 import glob as glob
 # set number of threads - this should be optimized per compute instance
 
-
 import tensorflow
 import ants
 import antspynet
@@ -30,23 +29,26 @@ def images_to_list( x ):
     return outlist
 
 # user definitions here
-tdir = "/Users/stnava/code/super_resolution_pipelines/data/OASIS30/"
-brains = glob.glob(tdir+"Brains/*")
+tdir = "/Users/stnava/data/srdata/"
+brains = glob.glob(tdir+"OASIS30/Brains/*")
 brains.sort()
-brainsSeg = glob.glob(tdir+"Segmentations/*")
+brainsSeg = glob.glob(tdir+"OASIS30/Segmentations/*")
 brainsSeg.sort()
-templatefilename = "/Users/stnava/code/super_resolution_pipelines/template/adni_template.nii.gz"
-templatesegfilename = "/Users/stnava/code/super_resolution_pipelines/template/adni_template_dkt_labels.nii.gz"
+templatefilename = tdir + "template/adni_template.nii.gz"
+templatesegfilename = tdir + "template/adni_template_dkt_labels.nii.gz"
 overlaps = []
-seg_params={'submask_dilation': 20, 'reg_iterations': [100, 50, 0],
-'searcher': 0, 'radder': 2, 'syn_sampling': 16, 'syn_metric': 'mattes',
-'max_lab_plus_one': False, 'verbose': True}
+seg_params={'submask_dilation': 8, 'reg_iterations': [100, 50, 0],
+'searcher': 0, 'radder': 2, 'syn_sampling': 32, 'syn_metric': 'mattes',
+'max_lab_plus_one': True, 'verbose': True}
 sr_params={"upFactor": [2,2,2], "dilation_amount": 12, "verbose":True}
 if not 'doSR' in locals():
     doSR = False
 
 if doSR:
     mdl = tf.keras.models.load_model("models/SEGSR_32_ANINN222_3.h5")
+    seg_params={'submask_dilation': 16, 'reg_iterations': [100, 100, 50, 0],
+       'searcher': 0, 'radder': 3, 'syn_sampling': 32, 'syn_metric': 'mattes',
+        'max_lab_plus_one': True, 'verbose': True}
 
 for k in range( len(overlaps), len( brains ) ):
     print( str(k) + " " + str(doSR ))
@@ -76,13 +78,32 @@ for k in range( len(overlaps), len( brains ) ):
         template_segmentation = ants.image_read(templatesegfilename),
         library_intensity=images_to_list(brainsLocal),
         library_segmentation=images_to_list(brainsSegLocal),
+        seg_params=seg_params
         )
     if not doSR:
         gtseg = ants.image_read( brainsSeg[k] )
     else:
         gtseg = srseg['super_resolution_segmentation']
     gtlabel = ants.mask_image( gtseg, gtseg, level = wlab, binarize=True )
-    myol = ants.label_overlap_measures(gtlabel,localbf['probseg'])
+# if True:
+    mypt = 0.5
+    temp = ants.threshold_image( localbf['probsum'], mypt, 2.0 )
+    myol = ants.label_overlap_measures(gtlabel, temp )
+    print( myol )
     overlaps.append( myol )
 
-# FIXME - organize the overlap output and write to csv
+# organize the overlap output and write to csv
+import pandas as pd
+brainName = []
+diceval = []
+for k in range(len(overlaps)):
+	brainName.append( os.path.splitext( os.path.splitext( os.path.basename( brains[k]) )[0] )[0] )
+	diceval.append( overlaps[k]["MeanOverlap"][0] )
+
+dict = {'name': brainName, 'Dice': diceval}   
+df = pd.DataFrame(dict)  
+if not doSR:
+  	df.to_csv('/tmp/bf_ol_or.csv')  
+else:
+	df.to_csv('/tmp/bf_ol_sr.csv')
+
