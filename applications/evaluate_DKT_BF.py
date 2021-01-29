@@ -73,7 +73,7 @@ dicevalSRSeg2 = []
 
 for k in range( len(brainName), len( brains ) ):
     localid=os.path.splitext( os.path.splitext( os.path.basename( brains[k]) )[0])[0]
-    print( str(k) + " " + str(doSR ) + " " + localid)
+    print( str(k) + " " + localid)
     brainsLocal=brains.copy()
     brainsSegLocal=brainsSeg.copy()
     del brainsLocal[k:(k+1)]
