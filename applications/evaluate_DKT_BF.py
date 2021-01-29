@@ -35,7 +35,7 @@ def images_to_list( x ):
 tdir = "/Users/stnava/data/superiq_data_resources/"
 if ( not path. exists( tdir ) ):
 	raise RuntimeError('Failed to find the data directory')
-        
+
 brains = glob.glob(tdir+"segmentation_libraries/OASIS30/Brains/*")
 brains.sort()
 brainsSeg = glob.glob(tdir+"segmentation_libraries/OASIS30/Segmentations/*")
@@ -113,13 +113,14 @@ for k in range( len(brainName), len( brains ) ):
             segmentation_numbers = [1],
             dilation_amount = sr_params['dilation_amount'],
             verbose = sr_params['verbose'] )
+        gtlabelUp = srsegGT['super_resolution_segmentation']
     else:
         gtseg = srseg['super_resolution_segmentation']
+        gtlabelUp = gtseg
     # native resolution
     gtlabel = ants.mask_image( gtseg, gtseg, level = wlab, binarize=True )
     myol = ants.label_overlap_measures( gtlabel, bfsegljlf )
     # super resolution
-    gtlabelUp = srsegGT['super_resolution_segmentation']
     myolUp = ants.label_overlap_measures( gtlabelUp, srseg['super_resolution_segmentation'] )
     brainName.append( os.path.splitext( os.path.splitext( os.path.basename( brains[k]) )[0])[0])
     dicevalLR.append(myol["MeanOverlap"][0])
