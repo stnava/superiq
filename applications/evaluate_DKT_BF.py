@@ -75,7 +75,7 @@ for k in range( len(overlaps), len( brains ) ):
             dilation_amount = sr_params['dilation_amount'],
             verbose = sr_params['verbose']
             )
-        use_image = srseg['super_resolution']
+        use_image = ants.iMath( srseg['super_resolution'], "Normalize" )
     else:
         use_image=ants.iMath( ants.image_read(brains[k]), "Normalize" )
     localbf = basalforebrain_segmentation(
