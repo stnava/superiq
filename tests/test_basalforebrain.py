@@ -10,7 +10,7 @@ import numpy.testing as nptest
 
 import unittest
 import ants
-from superiq import basalforebrainSR
+from superiq import basalforebrainSR, basalforebrainOR
 from superiq import basalforebrain_segmentation
 from superiq.pipeline_utils import *
 
@@ -27,19 +27,8 @@ def images_to_list( x ):
 class TestModule_basalforebrainSR(unittest.TestCase):
 
     def setUp(self):
-        print("Set up environment")
         shutil.rmtree("data", ignore_errors=True)
         os.makedirs("data")
-        shutil.rmtree("outputs", ignore_errors=True)
-        os.makedirs("outputs")
-
-    def test_basalforebrainSR_config_isin(self):
-        config = "configs/test_basalforebrain.json"
-        basalforebrainSR(config=config)
-        expected_output = "basalforebrainSR-SR_ortho_plot.png"
-        outputs = os.listdir("outputs")
-        testit = expected_output in outputs
-        self.assertTrue(testit)
 
     def test_basalforebrainSR_local_isin(self):
         input_n3 = get_s3_object(
@@ -49,13 +38,13 @@ class TestModule_basalforebrainSR(unittest.TestCase):
         )
 
         template_image = get_s3_object(
-            "invicro-data-shared",
+            "invicro-pipeline-inputs",
             "adni_templates/adni_template.nii.gz",
             "data",
         )
 
         template_labels = get_s3_object(
-            "invicro-data-shared",
+            "invicro-pipeline-inputs",
             "adni_templates/adni_template_dkt_labels.nii.gz",
             "data",
         )
@@ -67,52 +56,40 @@ class TestModule_basalforebrainSR(unittest.TestCase):
         )
 
         atlas_bucket = "invicro-pipeline-inputs"
-        atlas_image_prefx = "OASIS30/Brains/"
+        atlas_image_prefix = "OASIS30/Brains/"
         atlas_label_prefix = "OASIS30/Segmentations/"
         atlas_image_keys = list_images(atlas_bucket, atlas_image_prefix)
         brains = [get_s3_object(atlas_bucket, k, "data") for k in atlas_image_keys]
         brains.sort()
+        atlas_images = [ants.image_read(i) for i in brains]
 
         atlas_label_keys = list_images(atlas_bucket, atlas_label_prefix)
-        brainsSeg = [get_s3_object(atlas_bucket, k, "atlas") for k in atlas_label_keys]
+        brainsSeg = [get_s3_object(atlas_bucket, k, "data") for k in atlas_label_keys]
         brainsSeg.sort()
+        atlas_labels = [ants.image_read(i) for i in brainsSeg]
 
-        basalforebrainSR(
-                templatefilename=template_image,
-                templatesegfilename=template_labels,
-                infn=input_n3,
-                model_file_name=model,
-                atlas_image_dir=brains[0:4],
-                atlas_label_dir=brainsSeg[0:4],
-                seg_params=seg_params
+        outputs = basalforebrainSR(
+                input_image=ants.image_read(input_n3),
+                template=ants.image_read(template_image),
+                templateL=ants.image_read(template_labels),
+                model_path=model,
+                atlas_images=atlas_images[0:4],
+                atlas_labels=atlas_labels[0:4],
+                wlab=[75,76]
                 )
-        expected_output = "basalforebrainSR-SR_ortho_plot.png"
-        outputs = os.listdir("outputs")
-        testit = expected_output in outputs
-        self.assertTrue(testit)
+        
+        self.assertTrue(outputs)
 
     def tearDown(self):
         shutil.rmtree("data")
-        shutil.rmtree("outputs")
 
 
 
 class TestModule_basalforebrainOR(unittest.TestCase):
 
     def setUp(self):
-        print("Set up environment")
         shutil.rmtree("data", ignore_errors=True)
         os.makedirs("data")
-        shutil.rmtree("outputs", ignore_errors=True)
-        os.makedirs("outputs")
-
-    def test_basalforebrainOR_config_isin(self):
-        config = "configs/test_basalforebrain.json"
-        basalforebrainOR(config=config)
-        expected_output = "basalforebrain-OR_ortho_plot.png"
-        outputs = os.listdir("outputs")
-        testit = expected_output in outputs
-        self.assertTrue(testit)
 
     def test_basalforebrainOR_local_isin(self):
         input_n3 = get_s3_object(
@@ -122,13 +99,13 @@ class TestModule_basalforebrainOR(unittest.TestCase):
         )
 
         template_image = get_s3_object(
-            "invicro-data-shared",
+            "invicro-pipeline-inputs",
             "adni_templates/adni_template.nii.gz",
             "data",
         )
 
         template_labels = get_s3_object(
-            "invicro-data-shared",
+            "invicro-pipeline-inputs",
             "adni_templates/adni_template_dkt_labels.nii.gz",
             "data",
         )
@@ -140,45 +117,81 @@ class TestModule_basalforebrainOR(unittest.TestCase):
         )
 
         atlas_bucket = "invicro-pipeline-inputs"
-        atlas_image_prefx = "OASIS30/Brains/"
+        atlas_image_prefix = "OASIS30/Brains/"
         atlas_label_prefix = "OASIS30/Segmentations/"
         atlas_image_keys = list_images(atlas_bucket, atlas_image_prefix)
         brains = [get_s3_object(atlas_bucket, k, "data") for k in atlas_image_keys]
         brains.sort()
+        atlas_images = [ants.image_read(i) for i in brains]
 
         atlas_label_keys = list_images(atlas_bucket, atlas_label_prefix)
-        brainsSeg = [get_s3_object(atlas_bucket, k, "atlas") for k in atlas_label_keys]
+        brainsSeg = [get_s3_object(atlas_bucket, k, "data") for k in atlas_label_keys]
         brainsSeg.sort()
+        atlas_labels = [ants.image_read(i) for i in brainsSeg]
 
-        seg_params={
-            "submask_dilation":5, "reg_iteration": [20,10,0],
-            "searcher": 0, "radder": 2, "syn_sampling": 32, "syn_metric": "mattes",
-            "max_lab_plus_one": True, "verbose": True}
+        outputs = basalforebrainOR(
+                input_image=ants.image_read(input_n3),
+                template=ants.image_read(template_image),
+                templateL=ants.image_read(template_labels),
+                atlas_images=atlas_images[0:4],
+                atlas_labels=atlas_labels[0:4],
+                wlab=[75,76]
+                )
+        
+        self.assertTrue(outputs)
+    
+    def test_basalforebrainOR_postSegSR(self):
+        input_n3 = get_s3_object(
+            "invicro-data-shared",
+            "tests/ADNI_test/002_S_4473/20140227/T1w/000/ADNI-002_S_4473-20140227-T1w-000-brain_ext-bxtreg_n3.nii.gz",
+            "data",
+        )
 
-        localbf = basalforebrain_segmentation(
-            target_image=ants.image_read(input_n3),
-            segmentation_numbers = wlab,
-            template = ants.image_read(template_image),
-            template_segmentation = ants.image_read(template_labels),
-            library_intensity=images_to_list(brains[0:7]),
-            library_segmentation=images_to_list(brainsSeg[0:7]),
-            seg_params = seg_params
-            )
+        template_image = get_s3_object(
+            "invicro-pipeline-inputs",
+            "adni_templates/adni_template.nii.gz",
+            "data",
+        )
 
-        expected_segmentation = ants.image_read("expected_bf_segmentation.nii.gz")
-        myol = ants.label_overlap_measures( expected_segmentation, localbf['probseg'] )
-        overlap_test = False
-        if myol['MeanOverlap'][0] > 0.95:
-            overlap_test=True
+        template_labels = get_s3_object(
+            "invicro-pipeline-inputs",
+            "adni_templates/adni_template_dkt_labels.nii.gz",
+            "data",
+        )
 
-        expected_output = "basalforebrain-OR_ortho_plot.png"
-        outputs = os.listdir("outputs")
-        testit = expected_output in outputs
-        self.assertTrue(testit) and self.assertTrue(overlap_test)
+        model = get_s3_object(
+            "invicro-pipeline-inputs",
+            "models/SEGSR_32_ANINN222_3.h5",
+            "data",
+        )
+
+        atlas_bucket = "invicro-pipeline-inputs"
+        atlas_image_prefix = "OASIS30/Brains/"
+        atlas_label_prefix = "OASIS30/Segmentations/"
+        atlas_image_keys = list_images(atlas_bucket, atlas_image_prefix)
+        brains = [get_s3_object(atlas_bucket, k, "data") for k in atlas_image_keys]
+        brains.sort()
+        atlas_images = [ants.image_read(i) for i in brains]
+
+        atlas_label_keys = list_images(atlas_bucket, atlas_label_prefix)
+        brainsSeg = [get_s3_object(atlas_bucket, k, "data") for k in atlas_label_keys]
+        brainsSeg.sort()
+        atlas_labels = [ants.image_read(i) for i in brainsSeg]
+
+        outputs = basalforebrainOR(
+                input_image=ants.image_read(input_n3),
+                template=ants.image_read(template_image),
+                templateL=ants.image_read(template_labels),
+                model_path=model,
+                atlas_images=atlas_images[0:4],
+                atlas_labels=atlas_labels[0:4],
+                wlab=[75,76]
+                )
+        
+        self.assertTrue(outputs)
 
     def tearDown(self):
         shutil.rmtree("data")
-        shutil.rmtree("outputs")
 
 if __name__ == "__main__":
     run_tests()

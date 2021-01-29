@@ -11,5 +11,5 @@ from .super_resolution_segmentation_per_label import ljlf_parcellation_one_templ
 from .super_resolution_segmentation_per_label import sort_library_by_similarity
 from .super_resolution_segmentation_per_label import list_to_string
 from .basalforebrain_seg import basalforebrain_segmentation
-from .basalforebrain import basalforebrainSR
+from .basalforebrain import basalforebrainSR, basalforebrainOR
 from .pipeline_utils import *

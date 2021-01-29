@@ -17,11 +17,10 @@
         "model_bucket": "invicro-pipeline-inputs", 
         "model_key": "models/SEGSR_32_ANINN222_3.h5",
         "atlas_bucket": "invicro-pipeline-inputs",
-        "atlas_image_prefix": "OASIS30/Brains/", "atlas_label_prefix": "OASIS30/Segmentations/", "seg_params": { 
-            "wlab": {
-                "range": false,
-                "values": [75, 76]
-            },
+        "atlas_image_prefix": "OASIS30/Brains/", 
+        "atlas_label_prefix": "OASIS30/Segmentations/", 
+        "wlab": [75, 76],
+        "seg_params": { 
             "submask_dilation": 20,
             "reg_iterations": [100,50,10],
             "searcher": 2,
@@ -36,7 +35,7 @@
             "dilation_amount": 12,
             "verbose": true
         },
-        "output_name": "test-basalforebrain",    
+        "output_file_prefix": "basalforebrain",    
         "output_bucket" : "invicro-data-shared",
         "output_prefix": "tests/test-outputs/"
     }
