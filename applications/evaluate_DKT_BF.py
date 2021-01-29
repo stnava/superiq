@@ -1,7 +1,8 @@
 import os
-os.environ["TF_NUM_INTEROP_THREADS"] = "8"
-os.environ["TF_NUM_INTRAOP_THREADS"] = "8"
-os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = "8"
+mynt="16"
+os.environ["TF_NUM_INTEROP_THREADS"] = mynt
+os.environ["TF_NUM_INTRAOP_THREADS"] = mynt
+os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = mynt
 
 import os.path
 from os import path
@@ -30,7 +31,11 @@ def images_to_list( x ):
     return outlist
 
 # user definitions here
+# get data from here https://ndownloader.figshare.com/files/26224727
 tdir = "/Users/stnava/data/superiq_data_resources/"
+if ( not path. exists( tdir ) ):
+	raise RuntimeError('Failed to find the data directory')
+        
 brains = glob.glob(tdir+"segmentation_libraries/OASIS30/Brains/*")
 brains.sort()
 brainsSeg = glob.glob(tdir+"segmentation_libraries/OASIS30/Segmentations/*")
