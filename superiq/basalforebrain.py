@@ -30,7 +30,7 @@ def basalforebrainSR(
         wlab=[75,76],
         sr_params={"upFactor": [2,2,2], "dilation_amount": 12, "verbose":True},
         seg_params={
-            "submask_dilation":20, "reg_iteration": [100,50,10],
+            "submask_dilation":20, "reg_iterations": [100,50,10],
             "searcher": 2, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
             "max_lab_plus_one": False, "verbose": True}
         ):
@@ -71,7 +71,7 @@ def basalforebrainSR(
     seg_params : dict
         dict containing the variable parameters for the ljlf parcellation call.
         The parameters are:
-            {"submask_dilation":int, "reg_iteration": list,
+            {"submask_dilation":int, "reg_iterations": list,
             "searcher": int, "radder": int, "syn_sampling": int, "syn_metric": string,
             "max_lab_plus_one": bool, "verbose": bool}
 
@@ -203,7 +203,7 @@ def basalforebrainOR(
         forward_transforms=None,
         wlab=[75,76],
         seg_params={
-            "submask_dilation":20, "reg_iteration": [100,50,10],
+            "submask_dilation":20, "reg_iterations": [100,50,10],
             "searcher": 2, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
             "max_lab_plus_one": False, "verbose": True},
         postsegSR=False,
@@ -240,7 +240,7 @@ def basalforebrainOR(
     seg_params : dict
         dict containing the variable parameters for the ljlf parcellation call.
         The parameters are:
-            {"submask_dilation":int, "reg_iteration": list,
+            {"submask_dilation":int, "reg_iterations": list,
             "searcher": int, "radder": int, "syn_sampling": int, "syn_metric": string,
             "max_lab_plus_one": bool, "verbose": bool}
 
