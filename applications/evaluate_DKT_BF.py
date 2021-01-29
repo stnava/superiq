@@ -37,11 +37,16 @@ brainsSeg = glob.glob(tdir+"Segmentations/*")
 brainsSeg.sort()
 templatefilename = "/Users/stnava/code/super_resolution_pipelines/template/adni_template.nii.gz"
 templatesegfilename = "/Users/stnava/code/super_resolution_pipelines/template/adni_template_dkt_labels.nii.gz"
+
+# to hold the evaluation outputs
 overlaps = []
-seg_params={'submask_dilation': 5, 'reg_iterations': [100, 50, 0],
-'searcher': 0, 'radder': 2, 'syn_sampling': 0, 'syn_metric': 'demons',
+
+seg_params={'submask_dilation': 10, 'reg_iterations': [100, 50, 0],
+'searcher': 0, 'radder': 2, 'syn_sampling': 32, 'syn_metric': 'mattes',
 'max_lab_plus_one': True, 'verbose': True}
+
 sr_params={"upFactor": [2,2,2], "dilation_amount": 12, "verbose":True}
+
 if not 'doSR' in locals():
     doSR = False
 
