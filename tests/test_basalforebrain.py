@@ -38,13 +38,13 @@ class TestModule_basalforebrainSR(unittest.TestCase):
         )
 
         template_image = get_s3_object(
-            "invicro-data-shared",
+            "invicro-pipeline-inputs",
             "adni_templates/adni_template.nii.gz",
             "data",
         )
 
         template_labels = get_s3_object(
-            "invicro-data-shared",
+            "invicro-pipeline-inputs",
             "adni_templates/adni_template_dkt_labels.nii.gz",
             "data",
         )
@@ -56,7 +56,7 @@ class TestModule_basalforebrainSR(unittest.TestCase):
         )
 
         atlas_bucket = "invicro-pipeline-inputs"
-        atlas_image_prefx = "OASIS30/Brains/"
+        atlas_image_prefix = "OASIS30/Brains/"
         atlas_label_prefix = "OASIS30/Segmentations/"
         atlas_image_keys = list_images(atlas_bucket, atlas_image_prefix)
         brains = [get_s3_object(atlas_bucket, k, "data") for k in atlas_image_keys]
@@ -99,13 +99,13 @@ class TestModule_basalforebrainOR(unittest.TestCase):
         )
 
         template_image = get_s3_object(
-            "invicro-data-shared",
+            "invicro-pipeline-inputs",
             "adni_templates/adni_template.nii.gz",
             "data",
         )
 
         template_labels = get_s3_object(
-            "invicro-data-shared",
+            "invicro-pipeline-inputs",
             "adni_templates/adni_template_dkt_labels.nii.gz",
             "data",
         )
@@ -117,7 +117,7 @@ class TestModule_basalforebrainOR(unittest.TestCase):
         )
 
         atlas_bucket = "invicro-pipeline-inputs"
-        atlas_image_prefx = "OASIS30/Brains/"
+        atlas_image_prefix = "OASIS30/Brains/"
         atlas_label_prefix = "OASIS30/Segmentations/"
         atlas_image_keys = list_images(atlas_bucket, atlas_image_prefix)
         brains = [get_s3_object(atlas_bucket, k, "data") for k in atlas_image_keys]
@@ -148,13 +148,13 @@ class TestModule_basalforebrainOR(unittest.TestCase):
         )
 
         template_image = get_s3_object(
-            "invicro-data-shared",
+            "invicro-pipeline-inputs",
             "adni_templates/adni_template.nii.gz",
             "data",
         )
 
         template_labels = get_s3_object(
-            "invicro-data-shared",
+            "invicro-pipeline-inputs",
             "adni_templates/adni_template_dkt_labels.nii.gz",
             "data",
         )
@@ -166,7 +166,7 @@ class TestModule_basalforebrainOR(unittest.TestCase):
         )
 
         atlas_bucket = "invicro-pipeline-inputs"
-        atlas_image_prefx = "OASIS30/Brains/"
+        atlas_image_prefix = "OASIS30/Brains/"
         atlas_label_prefix = "OASIS30/Segmentations/"
         atlas_image_keys = list_images(atlas_bucket, atlas_image_prefix)
         brains = [get_s3_object(atlas_bucket, k, "data") for k in atlas_image_keys]

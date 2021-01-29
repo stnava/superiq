@@ -122,7 +122,7 @@ def basalforebrainSR(
         forward_transforms, interpolator="genericLabel" )
     
     # Output SR and SR seg
-    outputs['SR_Img'] = srseg['super_resolution'])
+    outputs['SR_Img'] = srseg['super_resolution']
     #ants.image_write( srseg['super_resolution'] , output_filename_sr )
     outputs['SR_Seg_Init'] = srseg_tx
     #ants.image_write( srseg_tx , output_filename_sr_seg_init )
