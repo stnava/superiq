@@ -40,7 +40,9 @@ overlaps = []
 seg_params={'submask_dilation': 8, 'reg_iterations': [100, 50, 0],
 'searcher': 0, 'radder': 2, 'syn_sampling': 32, 'syn_metric': 'mattes',
 'max_lab_plus_one': True, 'verbose': True}
+
 sr_params={"upFactor": [2,2,2], "dilation_amount": 12, "verbose":True}
+
 if not 'doSR' in locals():
     doSR = False
 
@@ -78,7 +80,7 @@ for k in range( len(overlaps), len( brains ) ):
         template_segmentation = ants.image_read(templatesegfilename),
         library_intensity=images_to_list(brainsLocal),
         library_segmentation=images_to_list(brainsSegLocal),
-        seg_params=seg_params
+        seg_params = seg_params
         )
     if not doSR:
         gtseg = ants.image_read( brainsSeg[k] )
