@@ -38,9 +38,9 @@ brainsSeg.sort()
 templatefilename = "/Users/stnava/code/super_resolution_pipelines/template/adni_template.nii.gz"
 templatesegfilename = "/Users/stnava/code/super_resolution_pipelines/template/adni_template_dkt_labels.nii.gz"
 overlaps = []
-seg_params={'submask_dilation': 20, 'reg_iterations': [100, 50, 0],
-'searcher': 0, 'radder': 2, 'syn_sampling': 16, 'syn_metric': 'mattes',
-'max_lab_plus_one': False, 'verbose': True}
+seg_params={'submask_dilation': 5, 'reg_iterations': [100, 50, 0],
+'searcher': 0, 'radder': 2, 'syn_sampling': 0, 'syn_metric': 'demons',
+'max_lab_plus_one': True, 'verbose': True}
 sr_params={"upFactor": [2,2,2], "dilation_amount": 12, "verbose":True}
 if not 'doSR' in locals():
     doSR = False
@@ -76,13 +76,16 @@ for k in range( len(overlaps), len( brains ) ):
         template_segmentation = ants.image_read(templatesegfilename),
         library_intensity=images_to_list(brainsLocal),
         library_segmentation=images_to_list(brainsSegLocal),
+        seg_params = seg_params
         )
     if not doSR:
         gtseg = ants.image_read( brainsSeg[k] )
     else:
         gtseg = srseg['super_resolution_segmentation']
     gtlabel = ants.mask_image( gtseg, gtseg, level = wlab, binarize=True )
-    myol = ants.label_overlap_measures(gtlabel,localbf['probseg'])
+    bfseg = ants.threshold_image( localbf['probsum'], 0.30, 2.0 )
+    myol = ants.label_overlap_measures(gtlabel,bfseg)
+    print(myol)
     overlaps.append( myol )
 
 # FIXME - organize the overlap output and write to csv
