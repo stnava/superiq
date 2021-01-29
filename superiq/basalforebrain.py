@@ -78,6 +78,9 @@ def basalforebrainSR(
     -------
     # TODO 
     """
+
+    outputs = {}
+
     brains = atlas_images
     brainsSeg = atlas_labels
     output_filename = "outputs/basalforebrainSR"
@@ -119,8 +122,10 @@ def basalforebrainSR(
         forward_transforms, interpolator="genericLabel" )
     
     # Output SR and SR seg
-    ants.image_write( srseg['super_resolution'] , output_filename_sr )
-    ants.image_write( srseg_tx , output_filename_sr_seg_init )
+    outputs['SR_Img'] = srseg['super_resolution'])
+    #ants.image_write( srseg['super_resolution'] , output_filename_sr )
+    outputs['SR_Seg_Init'] = srseg_tx
+    #ants.image_write( srseg_tx , output_filename_sr_seg_init )
 
     seg_input = ants.iMath(srseg['super_resolution'], "Normalize")
     localbf = basalforebrain_segmentation( 
@@ -163,7 +168,8 @@ def basalforebrainSR(
     #  0.3, 1.0 )
    
     probseg = ants.threshold_image(localbf['probsum'], 0.5, 2)
-    ants.image_write( probseg,  output_filename_sr_seg )
+    outputs['SR_Seg'] = probseg
+    #ants.image_write( probseg,  output_filename_sr_seg )
 
      
     # Keep for reference but do not belong here
@@ -198,7 +204,10 @@ def basalforebrainOR(
         seg_params={
             "submask_dilation":20, "reg_iteration": [100,50,10],
             "searcher": 2, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
-            "max_lab_plus_one": False, "verbose": True}
+            "max_lab_plus_one": False, "verbose": True},
+        postsegSR=False,
+        model_path=None,
+        sr_params={"upFactor": [2,2,2], "dilation_amount": 12, "verbose":True},
         ):
     """
     # TODO
@@ -238,6 +247,11 @@ def basalforebrainOR(
     -------
     # TODO 
     """
+    if ((postsegSR) and (model_path is None)):
+        raise Exception("To do post segmentation SR, a model path is required")
+
+    outputs = {}
+
     brains = atlas_images
     brainsSeg = atlas_labels
     output_filename = "outputs/basalforebrainOR"
@@ -250,10 +264,11 @@ def basalforebrainOR(
         raise Exception("Label missing from the template")
     
     # Dont need this
-    output_filename_or = output_filename + "_OR.nii.gz"
-    output_filename_or_seg_init = output_filename  +  "_OR_seginit.nii.gz"
-    output_filename_or_seg = output_filename  +  "_OR_seg.nii.gz"
-    output_filename_or_seg_csv = output_filename  + "_OR_seg.csv"
+    #output_filename_or = output_filename + "_OR.nii.gz"
+    #output_filename_or_seg_init = output_filename  +  "_OR_seginit.nii.gz"
+    #output_filename_or_seg = output_filename  +  "_OR_seg.nii.gz"
+    #output_filename_or_seg_sr = output_filename + "_postseg_sr.nii.gz" 
+    #output_filename_or_seg_csv = output_filename  + "_OR_seg.csv"
 
     if forward_transforms is None:
         print("Registration")
@@ -264,8 +279,9 @@ def basalforebrainOR(
     else:
         initlab0 = ants.apply_transforms( imgIn, templateL,
               forward_transforms, interpolator="genericLabel" )
-
-    ants.image_write( init_tx , output_filename_or_seg_init )
+    
+    outputs['OR_Seg_Init'] = init_tx
+    #ants.image_write( init_tx , output_filename_or_seg_init )
     imgOR = ants.iMath(imgIn, "Normalize")
 
     localbf = basalforebrain_segmentation( 
@@ -308,7 +324,23 @@ def basalforebrainOR(
     #  0.3, 1.0 )
    
     probseg = ants.threshold_image(localbf['probsum'], 0.5, 2)
-    ants.image_write( probseg,  output_filename_or_seg )
+    outputs['OR_Seg'] = probseg
+    #ants.image_write( probseg,  output_filename_or_seg )
+
+    if postsegSR:
+        mdl = tf.keras.models.load_model( model_path )
+        srseg = super_resolution_segmentation_per_label(
+            imgIn = imgOR,
+            segmentation = probseg,
+            upFactor = sr_params['upFactor'],
+            sr_model = mdl,
+            segmentation_numbers = wlab,
+            dilation_amount = sr_params['dilation_amount'],
+            verbose = sr_params['verbose']
+        )
+        outputs['OR_PostSeg_SR'] = srseg['super_resolution_segmentation']
+    
+    return outputs
 
      
     # Keep for reference but do not belong here
