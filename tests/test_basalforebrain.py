@@ -18,6 +18,12 @@ from superiq.pipeline_utils import *
 def run_tests():
     unittest.main()
 
+def images_to_list( x ):
+    outlist = []
+    for k in range(len(x)):
+        outlist.append( ants.image_read( x[k] ) )
+    return outlist
+
 class TestModule_basalforebrainSR(unittest.TestCase):
 
     def setUp(self):
@@ -70,11 +76,6 @@ class TestModule_basalforebrainSR(unittest.TestCase):
         atlas_label_keys = list_images(atlas_bucket, atlas_label_prefix)
         brainsSeg = [get_s3_object(atlas_bucket, k, "atlas") for k in atlas_label_keys]
         brainsSeg.sort()
-
-        seg_params={
-            "wlab":[75,76], "submask_dilation":5, "reg_iteration": [10,0,0],
-            "searcher": 1, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
-            "max_lab_plus_one": False, "verbose": True}
 
         basalforebrainSR(
                 templatefilename=template_image,
@@ -150,23 +151,30 @@ class TestModule_basalforebrainOR(unittest.TestCase):
         brainsSeg.sort()
 
         seg_params={
-            "wlab":[75,76], "submask_dilation":5, "reg_iteration": [10,0,0],
-            "searcher": 1, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
-            "max_lab_plus_one": False, "verbose": True}
+            "submask_dilation":5, "reg_iteration": [20,10,0],
+            "searcher": 0, "radder": 2, "syn_sampling": 32, "syn_metric": "mattes",
+            "max_lab_plus_one": True, "verbose": True}
 
-        basalforebrainOR(
-                templatefilename=template_image,
-                templatesegfilename=template_labels,
-                infn=input_n3,
-                model_file_name=model,
-                atlas_image_dir=brains[0:4],
-                atlas_label_dir=brainsSeg[0:4],
-                seg_params=seg_params
-                )
+        localbf = basalforebrain_segmentation(
+            target_image=ants.image_read(input_n3),
+            segmentation_numbers = wlab,
+            template = ants.image_read(template_image),
+            template_segmentation = ants.image_read(template_labels),
+            library_intensity=images_to_list(brains[0:7]),
+            library_segmentation=images_to_list(brainsSeg[0:7]),
+            seg_params = seg_params
+            )
+
+        expected_segmentation = ants.image_read("expected_bf_segmentation.nii.gz")
+        myol = ants.label_overlap_measures( expected_segmentation, localbf['probseg'] )
+        overlap_test = False
+        if myol['MeanOverlap'][0] > 0.95:
+            overlap_test=True
+
         expected_output = "basalforebrain-OR_ortho_plot.png"
         outputs = os.listdir("outputs")
         testit = expected_output in outputs
-        self.assertTrue(testit)
+        self.assertTrue(testit) and self.assertTrue(overlap_test)
 
     def tearDown(self):
         shutil.rmtree("data")
