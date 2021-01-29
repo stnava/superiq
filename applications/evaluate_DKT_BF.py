@@ -82,6 +82,7 @@ for k in range( len(brainName), len( brains ) ):
 
     # first - create a SR version of the image and the ground truth
     # NOTE: we binarize the labels
+    # NOTE: the below call would only be used for evaluation ie when we have GT
     nativeGroundTruth = ants.image_read(brainsSeg[k])
     nativeGroundTruthBin = ants.mask_image( nativeGroundTruth, nativeGroundTruth, level = wlab, binarize=True )
     gtSR = super_resolution_segmentation_per_label(
@@ -96,6 +97,12 @@ for k in range( len(brainName), len( brains ) ):
     nativeGroundTruthProbSR = gtSR['probability_images'][0]
     nativeGroundTruthBinSR = ants.threshold_image( nativeGroundTruthProbSR, 0.5, 1.0 )
 
+    # The full method involves:  (GT denotes ground truth)
+    # [0.0] use template-based mapping to estimate initial labels
+    # [1.0] run LJLF at native resolution (evaluate this wrt native res GT)
+    # [2.0] perform local simultaneous SR-Image and SR-Seg based on output of [1.0] (evaluate this wrt SR-GT)
+    # [3.0] run LJLF at SR based on [2.0] (evaluate this at SR wrt SR-GT)
+    print("NOTE: SPEED-UP POSSIBLE IF WE PASS FWD-TX COMPUTED JUST ONCE")
     # algorithm 1: native resolution LJLF
     nativeseg = basalforebrain_segmentation(
         target_image=ants.image_read(brains[k]).iMath( "Normalize"),
