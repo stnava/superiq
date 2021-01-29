@@ -61,6 +61,7 @@ def main(input_config):
     output_filename_sr = output_filename + "_SR.nii.gz"
     output_filename_sr_seg_init = output_filename  +  "_SR_seginit.nii.gz"
     output_filename_sr_seg = output_filename  +  "_SR_seg.nii.gz"
+    output_filename_ortho_plot = output_filename  +  "_ortho_plot_sr.png"
     output_filename_sr_seg_csv = output_filename  + "_SR_seg.csv"
     
     bfSR = basalforebrainSR(
@@ -74,22 +75,27 @@ def main(input_config):
             sr_params=config.sr_params,
             seg_params=config.seg_params,
     )
-    srseg = bfSR['SR_Img']  
+    sr = bfSR['SR_Img']  
     probseg = bfSR['SR_Seg'] 
-    
-
+   
     get_label_geo(
             probseg,
-            srseg, 
+            sr, 
             config.process_name,
             config.input_value,
             resolution="SR",
     )
+    
     plot_output(
-        srseg, 
-        "outputs/basalforebrain-SR_ortho_plot.png",
+        sr, 
+        output_filename_ortho_plot, 
         probseg,
     )
+    
+    ants.image_write(sr, output_filename_sr)  
+    ants.image_write(bfSR['SR_Seg_Init'], output_filename_sr_seg_init)  
+    ants.image_write(probseg, output_filename_sr_seg)  
+
     handle_outputs(
         config.input_value,
         config.output_bucket,
