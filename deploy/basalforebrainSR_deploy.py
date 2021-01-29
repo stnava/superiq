@@ -1,26 +1,11 @@
 import os
-threads
+threads = "8"
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
 os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
-import os.path
-from os import path
-import glob as glob
-
-
-import tensorflow
 import ants
-import antspynet
-import tensorflow as tf
-import glob
-import numpy as np
-import pandas as pd
-
-from superiq import super_resolution_segmentation_per_label
-from superiq import ljlf_parcellation
-from superiq import check_for_labels_in_image
+import sys
 from pipeline_utils import *
-from superiq import list_to_string
 from superiq import basalforebrainSR, basalforebrainOR
 
 
@@ -103,3 +88,7 @@ def main(input_config):
         config.process_name,
         env=config.environment,
     )
+
+if __name__ == "__main__":
+    config = sys.argv[1] 
+    main(config)
