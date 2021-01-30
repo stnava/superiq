@@ -7,6 +7,25 @@ import tempfile
 import warnings
 
 
+def images_to_list( x ):
+    """
+    Convert a list of filenames to a list of images
+
+    Arguments
+    ---------
+    x : list of filenames
+
+    Returns
+    -------
+    list of ANTsImages
+
+    """
+    outlist = []
+    for k in range(len(x)):
+        outlist.append( ants.image_read( x[k] ) )
+    return outlist
+
+
 def list_to_string(s, separator='-'):
     """
     Convert a list of numeric types to a string with the same information.
