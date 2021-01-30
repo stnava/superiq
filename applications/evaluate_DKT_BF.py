@@ -100,8 +100,11 @@ for k in range( len(brainName), len( brains ) ):
     # The full method involves:  (GT denotes ground truth)
     # [0.0] use template-based mapping to estimate initial labels
     # [1.0] run LJLF at native resolution (evaluate this wrt native res GT)
+    #   [1.1] evaluate [1.0] wrt NN-Up-GT
     # [2.0] perform local simultaneous SR-Image and SR-Seg based on output of [1.0] (evaluate this wrt SR-GT)
+    #   [2.1] evaluate [2.0] wrt NN-Up-GT
     # [3.0] run LJLF at SR based on [2.0] (evaluate this at SR wrt SR-GT)
+    #   [3.1] evaluate [3.0] this wrt NN-Up-GT
     print("NOTE: SPEED-UP POSSIBLE IF WE PASS FWD-TX COMPUTED JUST ONCE")
     # algorithm 1: native resolution LJLF
     nativeseg = basalforebrain_segmentation(
