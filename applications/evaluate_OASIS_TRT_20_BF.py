@@ -56,12 +56,14 @@ templatesegfilename = tdir + "template/adni_template_dkt_labels.nii.gz"
 if not 'low_volume' in locals():
     low_volume=False;
 
+nhigh=20
 if low_volume: # these subjects have very low volume BF relative to others
-    brains=brains[20:29]
-    brainsSeg=brainsSeg[20:29]
+    brains=brains[nhigh:len(brains)]
+    brainsSeg=brainsSeg[nhigh:len(brainsSeg)]
 else:
-    brains=brains[0:19]
-    brainsSeg=brainsSeg[0:19]
+    brains=brains[0:nhigh]
+    brainsSeg=brainsSeg[0:nhigh]
+
 
 seg_params={
     'submask_dilation': 8,
