@@ -30,6 +30,79 @@ def images_to_list( x ):
         outlist.append( ants.image_read( x[k] ) )
     return outlist
 
+
+def nativeToSuperResSeg(
+    target_image,
+    segmentation_numbers,
+    template,
+    template_segmentation,
+    library_intensity,
+    library_segmentation,
+    seg_params,
+    sr_params,
+    sr_model,
+    forward_transforms=None
+     ):
+
+    seg_params_sr={
+        'submask_dilation': seg_params['submask_dilation']*1,
+        'reg_iterations': seg_params['reg_iterations'],
+        'searcher': seg_params['searcher'],
+        'radder': seg_params['radder'],
+        'syn_sampling': seg_params['syn_sampling'],
+        'syn_metric': seg_params['syn_metric'],
+        'max_lab_plus_one': True, 'verbose': False}
+
+    if forward_transforms is None:
+        print("Registration")
+        reg = ants.registration( target_image, template, 'SyN' )
+        forward_transforms = reg['fwdtransforms']
+        initlab0 = ants.apply_transforms( target_image, template_segmentation,
+              forward_transforms, interpolator="nearestNeighbor" )
+    else:
+        initlab0 = ants.apply_transforms( target_image, template_segmentation,
+              forward_transforms, interpolator="nearestNeighbor" )
+
+    # algorithm 1: native resolution LJLF
+    nativeseg = basalforebrain_segmentation(
+            target_image=ants.iMath(target_image,"Normalize"),
+            segmentation_numbers = segmentation_numbers,
+            template = template,
+            template_segmentation = template_segmentation,
+            library_intensity=library_intensity,
+            library_segmentation=library_segmentation,
+            seg_params = seg_params,
+            forward_transforms = forward_transforms
+            )
+
+    # algorithm 2: SR on native resolution LJLF
+    srOnNativeSeg = super_resolution_segmentation_per_label(
+            imgIn = ants.iMath(target_image,"Normalize"),
+            segmentation = nativeseg['probseg'],
+            upFactor = sr_params['upFactor'],
+            sr_model = sr_model,
+            segmentation_numbers = [1],
+            dilation_amount = sr_params['dilation_amount'],
+            verbose = sr_params['verbose'] )
+    # the above gives a result that itself can be evaluated
+    # algorithm 3: super resolution LJLF
+    srseg = basalforebrain_segmentation(
+            target_image=srOnNativeSeg['super_resolution'],
+            segmentation_numbers = segmentation_numbers,
+            template = template,
+            template_segmentation = template_segmentation,
+            library_intensity=library_intensity,
+            library_segmentation=library_segmentation,
+            seg_params = seg_params_sr,
+            forward_transforms = forward_transforms
+            )
+    return {
+    'nativeSeg':nativeseg,
+    'srOnNativeSeg':srOnNativeSeg,
+    'srSeg':srseg,
+    'forward_transforms':forward_transforms
+    }
+
 # get data from here https://ndownloader.figshare.com/files/26224727
 tdir = "/Users/stnava/data/superiq_data_resources/"
 if ( not path. exists( tdir ) ):
@@ -80,6 +153,17 @@ for k in range( len(brainName), len( brains ) ):
     del brainsSegLocal[k:(k+1)]
     wlab = [75,76]
 
+    sloop = nativeToSuperResSeg(
+        target_image = ants.image_read(brains[k]),
+        segmentation_numbers = wlab,
+        template = ants.image_read(templatefilename),
+        template_segmentation = ants.image_read(templatesegfilename),
+        library_intensity=images_to_list(brainsLocal),
+        library_segmentation=images_to_list(brainsSegLocal),
+        seg_params = seg_params,
+        sr_params = sr_params,
+        sr_model = mdl )
+
     # first - create a SR version of the image and the ground truth
     # NOTE: we binarize the labels
     # NOTE: the below call would only be used for evaluation ie when we have GT
@@ -105,57 +189,16 @@ for k in range( len(brainName), len( brains ) ):
     #   [2.1] evaluate [2.0] wrt NN-Up-GT
     # [3.0] run LJLF at SR based on [2.0] (evaluate this at SR wrt SR-GT)
     #   [3.1] evaluate [3.0] this wrt NN-Up-GT
-    print("NOTE: SPEED-UP POSSIBLE IF WE PASS FWD-TX COMPUTED JUST ONCE")
-    # algorithm 1: native resolution LJLF
-    nativeseg = basalforebrain_segmentation(
-        target_image=ants.image_read(brains[k]).iMath( "Normalize"),
-        segmentation_numbers = wlab,
-        template = ants.image_read(templatefilename),
-        template_segmentation = ants.image_read(templatesegfilename),
-        library_intensity=images_to_list(brainsLocal),
-        library_segmentation=images_to_list(brainsSegLocal),
-        seg_params = seg_params
-        )
-
-    mypt = 0.25
-    nativesegLJLF = ants.threshold_image( nativeseg['probsum'], mypt, 2.0 )
-    nativeOverlap = ants.label_overlap_measures( nativeGroundTruthBin, nativeseg['probseg'] )
-
-    # algorithm 2: SR on native resolution LJLF
-    srOnNativeSeg = super_resolution_segmentation_per_label(
-            imgIn = ants.image_read(brains[k]).iMath( "Normalize"),
-            segmentation = nativeseg['probseg'],
-            upFactor = sr_params['upFactor'],
-            sr_model = mdl,
-            segmentation_numbers = [1],
-            dilation_amount = sr_params['dilation_amount'],
-            verbose = sr_params['verbose'] )
-    # the above gives a result that itself can be evaluated
-    srOnNativeSegProb = srOnNativeSeg['probability_images'][0]
-    srOnNativeSegBin = ants.threshold_image( srOnNativeSegProb, 0.5, 1.0 )
-    srOnNativeOverlap = ants.label_overlap_measures( gtSR['super_resolution_segmentation'], srOnNativeSeg['super_resolution_segmentation'] )
-
-    # algorithm 3: super resolution LJLF
-    srseg = basalforebrain_segmentation(
-        target_image=srOnNativeSeg['super_resolution'],
-        segmentation_numbers = wlab,
-        template = ants.image_read(templatefilename),
-        template_segmentation = ants.image_read(templatesegfilename),
-        library_intensity=images_to_list(brainsLocal),
-        library_segmentation=images_to_list(brainsSegLocal),
-        seg_params = seg_params_sr
-        )
-
-    mypt = 0.25
-    srsegLJLF = ants.threshold_image( srseg['probsum'], mypt, 2.0 )
-    srOverlap = ants.label_overlap_measures( gtSR['super_resolution_segmentation'], srseg['probseg'] )
+    srsegLJLF = ants.threshold_image( sloop['srSeg']['probsum'], mypt, 2.0 )
+    nativeOverlapSloop = ants.label_overlap_measures( nativeGroundTruthBin, sloop['nativeSeg']['probseg'] )
+    srOnNativeOverlapSloop = ants.label_overlap_measures( gtSR['super_resolution_segmentation'], sloop['srOnNativeSeg']['super_resolution_segmentation'] )
+    srOverlapSloop = ants.label_overlap_measures( gtSR['super_resolution_segmentation'], sloop['srSeg']['probseg'] )
     srOverlap2 = ants.label_overlap_measures( gtSR['super_resolution_segmentation'], srsegLJLF )
-
     # collect the 3 evaluation results - ready for data frame
     brainName.append( localid )
-    dicevalNativeSeg.append(nativeOverlap["MeanOverlap"][0])
-    dicevalSRNativeSeg.append( srOnNativeOverlap["MeanOverlap"][0])
-    dicevalSRSeg.append( srOverlap["MeanOverlap"][0])
+    dicevalNativeSeg.append(nativeOverlapSloop["MeanOverlap"][0])
+    dicevalSRNativeSeg.append( srOnNativeOverlapSloop["MeanOverlap"][0])
+    dicevalSRSeg.append( srOverlapSloop["MeanOverlap"][0])
     dicevalSRSeg2.append( srOverlap2["MeanOverlap"][0])
     print( brainName[k] + ": N: " + str(dicevalNativeSeg[k]) + " SRN: " +  str(dicevalSRNativeSeg[k])+ " SRN: " +  str(dicevalSRSeg[k]) )
     ################################################################################
