@@ -106,16 +106,6 @@ for k in range( len(brainName), len( brainsTest ) ):
     testseg = ants.mask_image( testseg, testseg, [91,92], binarize=True )
     print( str(k) + " " + localid)
     # first - create a SR version of the image and the ground truth
-    gtSR = super_resolution_segmentation_per_label(
-            imgIn = ants.iMath( original_image, "Normalize"),
-            segmentation = testseg, # usually, an estimate from a template, not GT
-            upFactor = sr_params['upFactor'],
-            sr_model = mdl,
-            segmentation_numbers = [1],
-            dilation_amount = sr_params['dilation_amount'],
-            verbose = sr_params['verbose']
-            )
-    nativeGroundTruthSR = gtSR['super_resolution_segmentation']
 
     # now segment it with the library
     wlab = [75,76]
@@ -131,14 +121,15 @@ for k in range( len(brainName), len( brainsTest ) ):
         sr_model = mdl )
 
     mypt = 0.5
+    srGroundTruthNN = ants.resample_image_to_target( testseg, sloop['srOnNativeSeg']['super_resolution'] , interp_type='nearestNeighbor' )
     srsegLJLF = ants.threshold_image( sloop['srSeg']['probsum'], mypt, math.inf )
     nativejlf = ants.mask_image( sloop['nativeSeg']['segmentation'], sloop['nativeSeg']['segmentation'], wlab, binarize=True)
     nativeOverlapSloop = ants.label_overlap_measures( testseg, nativejlf )
     nativejlfsr = ants.mask_image( sloop['srOnNativeSeg']['super_resolution_segmentation'], sloop['srOnNativeSeg']['super_resolution_segmentation'], wlab, binarize=True)
-    srOnNativeOverlapSloop = ants.label_overlap_measures( nativeGroundTruthSR, nativejlfsr )
+    srOnNativeOverlapSloop = ants.label_overlap_measures( srGroundTruthNN, nativejlfsr )
     srjlf = ants.mask_image( sloop['srSeg']['segmentation'], sloop['srSeg']['segmentation'], wlab, binarize=True )
-    srOverlapSloop = ants.label_overlap_measures( nativeGroundTruthSR, srjlf )
-    srOverlap2 = ants.label_overlap_measures( nativeGroundTruthSR, srsegLJLF )
+    srOverlapSloop = ants.label_overlap_measures( srGroundTruthNN, srjlf )
+    srOverlap2 = ants.label_overlap_measures( srGroundTruthNN, srsegLJLF )
     # collect the 3 evaluation results - ready for data frame
     brainName.append( localid )
     dicevalNativeSeg.append(nativeOverlapSloop["MeanOverlap"][0])
@@ -158,6 +149,6 @@ for k in range( len(brainName), len( brainsTest ) ):
 
 # these are the outputs you would write out, along with label geometry for each segmentation
 ants.image_write( sloop['srOnNativeSeg']['super_resolution'], '/tmp/tempI.nii.gz' )
-ants.image_write( nativeGroundTruthSR, '/tmp/tempGT.nii.gz' )
+ants.image_write( srGroundTruthNN, '/tmp/tempGT.nii.gz' )
 ants.image_write( sloop['srSeg']['segmentation'], '/tmp/tempSRSeg.nii.gz' )
 ants.image_write( sloop['nativeSeg']['segmentation'], '/tmp/tempORSeg.nii.gz' )
