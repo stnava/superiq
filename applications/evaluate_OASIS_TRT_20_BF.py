@@ -93,7 +93,7 @@ dicevalSRSeg = []
 dicevalSRSeg2 = []
 
 brainsTest = glob.glob(tdir+"segmentation_libraries/OASISTRT20/Brains/*")
-brainsTestSeg = glob.glob(tdir+"segmentation_libraries/Segmentations/Brains/*")
+brainsTestSeg = glob.glob(tdir+"segmentation_libraries/OASISTRT20/Segmentations/*")
 brainsTest.sort()
 brainsTestSeg.sort()
 for k in range( len(brainName), len( brainsTest ) ):
