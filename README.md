@@ -6,7 +6,7 @@ make super-resolution fly: quantitatively and at scale
 
 ### quantitative methods for super-resolution images
 
-* task-specific super-resolution
+* task-specific super-resolution (SR)
     * global tissue segmentation with priors
     * local cortical segmentation
     * hippocampus segmentation
@@ -15,7 +15,9 @@ make super-resolution fly: quantitatively and at scale
         * substantia nigra
         * caudate, putamen, etc
 
-* general purpose segmentation:
+* general purpose methodology:
+    * simultaneous SR for intensity and segmentation probability pairs
+    * super-resolution multi-atlas segmentation (SRMAS)
     * local joint label fusion for arbitrary segmentation libraries
     * local joint label fusion for single templates with augmentation
 
