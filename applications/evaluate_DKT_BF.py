@@ -39,7 +39,9 @@ brainsSeg.sort()
 templatefilename = tdir + "template/adni_template.nii.gz"
 templatesegfilename = tdir + "template/adni_template_dkt_labels.nii.gz"
 
-low_volume=False;
+if not 'low_volume' in locals():
+    low_volume=False;
+
 if low_volume: # these subjects have very low volume BF relative to others
     brains=brains[20:29]
     brainsSeg=brainsSeg[20:29]
@@ -142,7 +144,7 @@ for k in range( len(brainName), len( brains ) ):
         'diceSRNativeSeg': dicevalSRNativeSeg,
         'diceSRSeg': dicevalSRSeg }
     df = pd.DataFrame(dict)
-    df.to_csv('./bf_sr_eval.csv')
+    df.to_csv('./bf_sr_eval_lowvol_' + str(low_volume) + '.csv' )
     ################################################################################
 
 # these are the outputs you would write out, along with label geometry for each segmentation
