@@ -122,14 +122,14 @@ def basalforebrain_segmentation(
     probs = locseg['ljlf']['ljlf']['probabilityimages']
     probability_labels = locseg['ljlf']['ljlf']['segmentation_numbers']
     # find proper labels
-#    whichprob75 = probability_labels.index(segmentation_numbers[0])
-#    whichprob76 = probability_labels.index(segmentation_numbers[1])
-#    probsum = ants.resample_image_to_target(probs[whichprob75], target_image ) + ants.resample_image_to_target(probs[whichprob76], target_image )
+    whichprob75 = probability_labels.index(segmentation_numbers[0])
+    whichprob76 = probability_labels.index(segmentation_numbers[1])
+    probsum = ants.resample_image_to_target(probs[whichprob75], target_image ) + ants.resample_image_to_target(probs[whichprob76], target_image )
 #    probseg = ants.threshold_image( probsum, 0.3, 1.0 )
     mygeo = ants.label_geometry_measures( locseg['ljlf']['ljlf']['segmentation'], locseg['ljlf']['ljlf']['segmentation'] )
     return {
     "segmentation":locseg['ljlf']['ljlf']['segmentation'],
-    "probability_images":probseg,
+    "probability_images":probsum,
     "labelgeo":mygeo }
 
 

@@ -30,7 +30,7 @@ from superiq import native_to_superres_segmentation
 # get data from here https://ndownloader.figshare.com/files/26224727
 tdir = "/Users/stnava/data/superiq_data_resources/"
 if ( not path. exists( tdir ) ):
-	raise RuntimeError('Failed to find the data directory')
+    raise RuntimeError('Failed to find the data directory')
 
 brains = glob.glob(tdir+"segmentation_libraries/OASIS30/Brains/*")
 brains.sort()
@@ -86,7 +86,7 @@ for k in range( len(brainName), len( brains ) ):
     brainsSegLocal=brainsSeg.copy()
     del brainsLocal[k:(k+1)]
     del brainsSegLocal[k:(k+1)]
-    wlab = [75,76]
+    wlab = [47,116,122,154,170] # [75,76]
     original_image = ants.image_read(brains[k])
     sloop = native_to_superres_segmentation(
         target_image = original_image,
