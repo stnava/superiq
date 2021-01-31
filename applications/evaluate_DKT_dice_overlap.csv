@@ -145,7 +145,7 @@ for k in range( len(brainName), len( brains ) ):
         'diceSRNativeSeg': dicevalSRNativeSeg,
         'diceSRSeg': dicevalSRSeg }
     df = pd.DataFrame(dict)
-    df.to_csv('./bf_sr_eval_lowvol_' + str(low_volume) + '.csv' )
+    df.to_csv('./cortex_sr_eval_lowvol_' + str(low_volume) + '.csv' )
     ################################################################################
 
 # these are the outputs you would write out, along with label geometry for each segmentation
