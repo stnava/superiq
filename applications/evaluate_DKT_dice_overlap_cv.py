@@ -25,6 +25,7 @@ from superiq import check_for_labels_in_image
 from superiq import sort_library_by_similarity
 from superiq import basalforebrain_segmentation
 from superiq import native_to_superres_segmentation
+from superiq import list_to_string
 
 
 # get data from here https://ndownloader.figshare.com/files/26224727
@@ -78,7 +79,11 @@ dicevalNativeSeg = []
 dicevalSRNativeSeg = []
 dicevalSRSeg = []
 dicevalSRSeg2 = []
-
+wlab = [75,76] # basal forebrain
+wlab = [36,55,57] # for PPMI
+wlab = [47,116,122,154,170] # eisai cortex
+evalfn='./dkt_eval' + list_to_string( wlab ) + '.csv'
+print( "Labels:" + list_to_string( wlab ) + " " + evalfn )
 for k in range( len(brainName), len( brains ) ):
     localid=os.path.splitext( os.path.splitext( os.path.basename( brains[k]) )[0])[0]
     print( str(k) + " " + localid)
@@ -86,7 +91,6 @@ for k in range( len(brainName), len( brains ) ):
     brainsSegLocal=brainsSeg.copy()
     del brainsLocal[k:(k+1)]
     del brainsSegLocal[k:(k+1)]
-    wlab = [47,116,122,154,170] # [75,76]
     original_image = ants.image_read(brains[k])
     sloop = native_to_superres_segmentation(
         target_image = original_image,
@@ -145,7 +149,7 @@ for k in range( len(brainName), len( brains ) ):
         'diceSRNativeSeg': dicevalSRNativeSeg,
         'diceSRSeg': dicevalSRSeg }
     df = pd.DataFrame(dict)
-    df.to_csv('./cortex_sr_eval_lowvol_' + str(low_volume) + '.csv' )
+    df.to_csv( evalfn )
     ################################################################################
 
 # these are the outputs you would write out, along with label geometry for each segmentation
