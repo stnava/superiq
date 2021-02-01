@@ -24,7 +24,7 @@ from superiq import images_to_list
 from superiq import check_for_labels_in_image
 from superiq import sort_library_by_similarity
 from superiq import basalforebrain_segmentation
-from superiq import native_to_superres_segmentation
+from superiq import native_to_superres_ljlf_segmentation
 from superiq import list_to_string
 
 
@@ -92,7 +92,7 @@ for k in range( len(brainName), len( brains ) ):
     del brainsLocal[k:(k+1)]
     del brainsSegLocal[k:(k+1)]
     original_image = ants.image_read(brains[k])
-    sloop = native_to_superres_segmentation(
+    sloop = native_to_superres_ljlf_segmentation(
         target_image = original_image,
         segmentation_numbers = wlab,
         template = ants.image_read(templatefilename),

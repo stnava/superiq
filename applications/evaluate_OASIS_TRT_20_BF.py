@@ -24,7 +24,7 @@ from superiq import images_to_list
 from superiq import check_for_labels_in_image
 from superiq import sort_library_by_similarity
 from superiq import basalforebrain_segmentation
-from superiq import native_to_superres_segmentation
+from superiq import native_to_superres_ljlf_segmentation
 
 def splitall(path):
     allparts = []
@@ -109,7 +109,7 @@ for k in range( len(brainName), len( brainsTest ) ):
 
     # now segment it with the library
     wlab = [75,76]
-    sloop = native_to_superres_segmentation(
+    sloop = native_to_superres_ljlf_segmentation(
         target_image = original_image,
         segmentation_numbers = wlab,
         template = ants.image_read(templatefilename),
