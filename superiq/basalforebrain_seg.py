@@ -260,7 +260,7 @@ def ljlf_segmentation(
 
 
 
-def native_to_superres_segmentation(
+def native_to_superres_ljlf_segmentation(
     target_image,
     segmentation_numbers,
     template,
@@ -327,7 +327,7 @@ def native_to_superres_segmentation(
 
     Example
     -------
-    >>> native_to_superres_segmentation(
+    >>> native_to_superres_ljlf_segmentation(
             target_image=ants.image_read("data/input_n3_image.nii.gz"),
             template=ants.image_read("data/template_image.nii.gz"),
             template_segmentation=ants.image_read("data/template_label_image.nii.gz"),
