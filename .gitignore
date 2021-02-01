@@ -16,6 +16,7 @@ models/*
 *.so
 
 # Distribution / packaging
+applications/fix_low_vol_DKT.py
 .Python
 build/
 develop-eggs/

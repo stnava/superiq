@@ -40,17 +40,6 @@ brainsSeg.sort()
 templatefilename = tdir + "template/adni_template.nii.gz"
 templatesegfilename = tdir + "template/adni_template_dkt_labels.nii.gz"
 
-if not 'low_volume' in locals():
-    low_volume=False;
-
-nhigh=20
-if low_volume: # these subjects have very low volume BF relative to others
-    brains=brains[nhigh:len(brains)]
-    brainsSeg=brainsSeg[nhigh:len(brainsSeg)]
-else:
-    brains=brains[0:nhigh]
-    brainsSeg=brainsSeg[0:nhigh]
-
 seg_params={
     'submask_dilation': 8,
     'reg_iterations': [100, 100, 20],
@@ -79,11 +68,12 @@ dicevalNativeSeg = []
 dicevalSRNativeSeg = []
 dicevalSRSeg = []
 dicevalSRSeg2 = []
-wlab = [75,76] # basal forebrain
 wlab = [36,55,57] # for PPMI
 wlab = [47,116,122,154,170] # eisai cortex
+wlab = [75,76] # basal forebrain
 evalfn='./dkt_eval' + list_to_string( wlab ) + '.csv'
-print( "Labels:" + list_to_string( wlab ) + " " + evalfn )
+print( "Labels:" + list_to_string( wlab ) + " " + evalfn, " : n : ", len( brains ) )
+# full eval  here
 for k in range( len(brainName), len( brains ) ):
     localid=os.path.splitext( os.path.splitext( os.path.basename( brains[k]) )[0])[0]
     print( str(k) + " " + localid)
