@@ -94,7 +94,7 @@ def main(input_config):
     SRNSdf = ants.label_geometry_measures(srOnNativeSeg)
     SRNSdf.to_csv(output_filename_srOnNativeSeg_csv, index=False) 
     ants.plot_ortho(
-            ants.crop_image(sr, srOnNativeSeg),
+            ants.crop_image(input_image, srOnNativeSeg),
             overlay=ants.crop_image(srOnNativeSeg, srOnNativeSeg),
             flat=True,
             filename=output_filename_ortho_plot_srOnNativeSeg,
