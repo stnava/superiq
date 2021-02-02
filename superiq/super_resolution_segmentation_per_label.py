@@ -200,8 +200,8 @@ def super_resolution_segmentation_per_label(
     upFactor : list
         the upsampling factors associated with the super-resolution model
 
-    sr_model : tensorflow model or None
-        for computing super-resolution
+    sr_model : tensorflow model or String
+        for computing super-resolution; String denotes an interpolation type
 
     segmentation_numbers : list of target segmentation labels
         list containing integer segmentation labels
@@ -275,44 +275,55 @@ def super_resolution_segmentation_per_label(
             imgc = imgc * 255 - 127.5 # for SR
             imgch = ants.crop_image( binseg, binsegdil )
             imgch = ants.iMath( imgch, "Normalize" ) * 255 - 127.5 # for SR
-            myarr = np.stack( [imgc.numpy(),imgch.numpy()],axis=3 )
-            newshape = np.concatenate( [ [1],np.asarray( myarr.shape )] )
-            myarr = myarr.reshape( newshape )
-            pred = sr_model.predict( myarr )
-            imgsr = ants.from_numpy( tf.squeeze( pred[0] ).numpy())
-            imgsr = ants.copy_image_info( imgc, imgsr )
-            newspc = ( np.asarray( ants.get_spacing( imgsr ) ) * 0.5 ).tolist()
-            ants.set_spacing( imgsr,  newspc )
-            imgsrh = ants.from_numpy( tf.squeeze( pred[1] ).numpy())
-            imgsrh = ants.copy_image_info( imgc, imgsrh )
-            ants.set_spacing( imgsrh,  newspc )
-            if locallab == segmentation_numbers[0]:
-                imgsegjoin = imgup * 0.0
-            # NOTE: this only works because we use sigmoid activation with binary labels
-            # NOTE: we could also compute the minimum probability in the label and run
-            # SR on the probability images
-            if ( imgsrh.max() < 0.9 ):
-                imgsrhb = ants.threshold_image( imgsrh, 0.5, 1.0 )
-                # FIXME - do we get largest or not?
-#                imgsrhb = ants.threshold_image( imgsrh, 0.5, 1.0 ).iMath("GetLargestComponent")
+            if type( sr_model ) == type(""): # this is just for testing
+                if locallab == segmentation_numbers[0]:
+                    imgsegjoin = imgup * 0.0
+                binsegup = ants.resample_image_to_target( binseg, imgup, interp_type='nearestNeighbor' )
+                temp = binsegup * locallab
+                temp[ (temp > 0) * (imgsegjoin > 0) ] = 0 # FIXME zeroes out uncertain boundaries
+                selector = (imgsegjoin == 0) * (temp > 0) # FIXME - this introduces some dependencies on ordering
+                imgsegjoin[ selector ] = imgsegjoin[ selector ] + temp[ selector ]
+                tempgeo = ants.label_geometry_measures( binsegup )
+                seggeom.append( tempgeo )
             else:
-                imgsrhb = ants.iMath( imgsrh, "Normalize" )
-                imgsrhb = ants.threshold_image( imgsrhb, 0.5, 1.0 )
-                warnings.warn( "SR-per-label-prob:" + str( locallab ) + ' is small' )
-            problist.append( imgsrh )
-            temp = ants.resample_image_to_target( imgsrhb * locallab, imgup, interp_type='nearestNeighbor' )
-            temp[ (temp > 0) * (imgsegjoin > 0) ] = 0 # FIXME zeroes out uncertain boundaries
-            selector = (imgsegjoin == 0) * (temp > 0) # FIXME - this introduces some dependencies on ordering
-            imgsegjoin[ selector ] = imgsegjoin[ selector ] + temp[ selector ]
-            imgsr = antspynet.regression_match_image( imgsr, ants.resample_image_to_target(imgup,imgsr) )
-            contribtoavg = ants.resample_image_to_target( imgsr*0+1, imgup, interp_type='nearestNeighbor' )
-            weightedavg = weightedavg + contribtoavg
-            imgsrfull = imgsrfull + ants.resample_image_to_target( imgsr, imgup, interp_type='nearestNeighbor' )
-            if  imgsrhb.max() > imgsrhb.min():
-                tempgeo = ants.label_geometry_measures( imgsrhb )
-            else:
-                tempgeo = "NA"
-            seggeom.append( tempgeo )
+                myarr = np.stack( [imgc.numpy(),imgch.numpy()],axis=3 )
+                newshape = np.concatenate( [ [1],np.asarray( myarr.shape )] )
+                myarr = myarr.reshape( newshape )
+                pred = sr_model.predict( myarr )
+                imgsr = ants.from_numpy( tf.squeeze( pred[0] ).numpy())
+                imgsr = ants.copy_image_info( imgc, imgsr )
+                newspc = ( np.asarray( ants.get_spacing( imgsr ) ) * 0.5 ).tolist()
+                ants.set_spacing( imgsr,  newspc )
+                imgsrh = ants.from_numpy( tf.squeeze( pred[1] ).numpy())
+                imgsrh = ants.copy_image_info( imgc, imgsrh )
+                ants.set_spacing( imgsrh,  newspc )
+                if locallab == segmentation_numbers[0]:
+                    imgsegjoin = imgup * 0.0
+                # NOTE: this only works because we use sigmoid activation with binary labels
+                # NOTE: we could also compute the minimum probability in the label and run
+                # SR on the probability images
+                if ( imgsrh.max() < 0.9 ):
+                    imgsrhb = ants.threshold_image( imgsrh, 0.5, 1.0 )
+                    # FIXME - do we get largest or not?
+    #                imgsrhb = ants.threshold_image( imgsrh, 0.5, 1.0 ).iMath("GetLargestComponent")
+                else:
+                    imgsrhb = ants.iMath( imgsrh, "Normalize" )
+                    imgsrhb = ants.threshold_image( imgsrhb, 0.5, 1.0 )
+                    warnings.warn( "SR-per-label-prob:" + str( locallab ) + ' is small' )
+                problist.append( imgsrh )
+                temp = ants.resample_image_to_target( imgsrhb * locallab, imgup, interp_type='nearestNeighbor' )
+                temp[ (temp > 0) * (imgsegjoin > 0) ] = 0 # FIXME zeroes out uncertain boundaries
+                selector = (imgsegjoin == 0) * (temp > 0) # FIXME - this introduces some dependencies on ordering
+                imgsegjoin[ selector ] = imgsegjoin[ selector ] + temp[ selector ]
+                imgsr = antspynet.regression_match_image( imgsr, ants.resample_image_to_target(imgup,imgsr) )
+                contribtoavg = ants.resample_image_to_target( imgsr*0+1, imgup, interp_type='nearestNeighbor' )
+                weightedavg = weightedavg + contribtoavg
+                imgsrfull = imgsrfull + ants.resample_image_to_target( imgsr, imgup, interp_type='nearestNeighbor' )
+                if  imgsrhb.max() > imgsrhb.min():
+                    tempgeo = ants.label_geometry_measures( imgsrhb )
+                else:
+                    tempgeo = "NA"
+                seggeom.append( tempgeo )
 
     imgsrfull2 = imgsrfull
     selector = imgsrfull == 0
@@ -520,9 +531,9 @@ def ljlf_parcellation_one_template(
     searcher=1,  # double this for SR
     radder=2,  # double this for SR
     reg_iterations = [100,100,5],
-    syn_sampling=2,
-    syn_metric='CC',
-    max_lab_plus_one=False,
+    syn_sampling=32,
+    syn_metric='mattes',
+    max_lab_plus_one=True,
     output_prefix=None,
     verbose=False,
 ):
@@ -607,8 +618,10 @@ def ljlf_parcellation_one_template(
     libraryL = []
     for x in range(templateRepeats):
         temp = ants.iMath( template, "Normalize" )
-        temp = ants.add_noise_to_image( temp, "additivegaussian", [0,0.1] )
+        mystd = 0.1 * temp.std()
+        temp = ants.add_noise_to_image( temp, "additivegaussian", [0,mystd] )
         libraryI.append( temp )
+        temp = ants.image_clone( templateLabels )
 #        temp = ants.mask_image( templateLabels, templateLabels, segmentation_numbers )
         libraryL.append( temp )
 
