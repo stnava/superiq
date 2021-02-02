@@ -3,6 +3,8 @@ threads = "16"
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
 os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
+import tensorflow as tf
+
 import ants
 import sys
 from superiq.pipeline_utils import *
@@ -44,7 +46,9 @@ def main(input_config):
         raise Exception("Label missing from the template")
     
     output_filename = "outputs/" + config.output_file_prefix 
-    
+    if not os.path.exists("outputs"):
+        os.makedirs('outputs')
+
     output_filename_sr = output_filename + "_SR.nii.gz"
     output_filename_srOnNativeSeg = output_filename  +  "_srOnNativeSeg.nii.gz"
     output_filename_sr_seg = output_filename  +  "_SR_seg.nii.gz"
