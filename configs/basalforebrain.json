@@ -3,7 +3,7 @@
     "aws_profile": "role",
     "job_definition" : "superiq_basalforebrain",
     "job_queue" : "superiq_basalforebrain_dev",
-    "skip_repeats": false,
+    "skip_repeats": true,
     "parameters": {
         "environment" : "prod",
         "process_name": "basalforebrain",
@@ -37,6 +37,7 @@
         },
         "output_file_prefix": "basalforebrain",    
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "superres-pipeline-20210202/"
+        "output_prefix": "superres-pipeline-20210202/",
+        "output_suffix": "-basalforebrain-basalforebrain_srOnNativeSeg"
     }
 }
