@@ -1,5 +1,5 @@
 import os
-threads = "32"
+threads = "16"
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
 os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
