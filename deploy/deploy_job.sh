@@ -25,7 +25,7 @@ docker tag $container_name $repo_image && \
         "image": "'"${repo_image_latest}"'",
         "vcpus": '"${cpus}"',
         "memory": '"${memory_in_gb}"',
-        "command": [ "python", $script_path, "Ref::config" ],
+        "command": [ "python", "'"${script_path}"'", "Ref::config" ],
         "jobRoleArn": "arn:aws:iam::651875258113:role/'"${job_role}"'",
         "volumes": [],
         "environment": [],
