@@ -79,11 +79,11 @@ def main(input_config):
             sr,  
             output_filename_sr,
     )
-    ants.plot_ortho(
-            ants.crop_image(sr),
-            flat=True,
-            filename=output_filename_ortho_plot_sr,
-    )
+    #ants.plot_ortho(
+    #        ants.crop_image(sr),
+    #        flat=True,
+    #        filename=output_filename_ortho_plot_sr,
+    #)
 
     # SR on native Seg
     srOnNativeSeg = output['srOnNativeSeg']['super_resolution_segmentation']
@@ -93,12 +93,12 @@ def main(input_config):
     )
     SRNSdf = ants.label_geometry_measures(srOnNativeSeg)
     SRNSdf.to_csv(output_filename_srOnNativeSeg_csv, index=False) 
-    ants.plot_ortho(
-            ants.crop_image(input_image, srOnNativeSeg),
-            overlay=ants.crop_image(srOnNativeSeg, srOnNativeSeg),
-            flat=True,
-            filename=output_filename_ortho_plot_srOnNativeSeg,
-    )
+    #ants.plot_ortho(
+    #        ants.crop_image(input_image, srOnNativeSeg),
+    #        overlay=ants.crop_image(srOnNativeSeg, srOnNativeSeg),
+    #        flat=True,
+    #        filename=output_filename_ortho_plot_srOnNativeSeg,
+    #)
 
     # SR Seg
     srSeg = output['srSeg']['segmentation']
@@ -108,12 +108,12 @@ def main(input_config):
     )
     SRdf = ants.label_geometry_measures(srSeg)
     SRdf.to_csv(output_filename_sr_seg_csv, index=False) 
-    ants.plot_ortho(
-            ants.crop_image(sr, srSeg),
-            overlay=ants.crop_image(srSeg, srSeg),
-            flat=True,
-            filename=output_filename_ortho_plot_srseg,
-    )
+    #ants.plot_ortho(
+    #        ants.crop_image(sr, srSeg),
+    #        overlay=ants.crop_image(srSeg, srSeg),
+    #        flat=True,
+    #        filename=output_filename_ortho_plot_srseg,
+    #)
    
     # Native Seg
     nativeSeg = output['nativeSeg']['segmentation']
@@ -123,12 +123,12 @@ def main(input_config):
     )
     NRdf = ants.label_geometry_measures(nativeSeg)
     NRdf.to_csv(output_filename_nr_seg_csv, index=False) 
-    ants.plot_ortho(
-            ants.crop_image(input_image, nativeSeg),
-            overlay=ants.crop_image(nativeSeg, nativeSeg),
-            flat=True,
-            filename=output_filename_ortho_plot_nrseg,
-    )
+    #ants.plot_ortho(
+    #        ants.crop_image(input_image, nativeSeg),
+    #        overlay=ants.crop_image(nativeSeg, nativeSeg),
+    #        flat=True,
+    #        filename=output_filename_ortho_plot_nrseg,
+    #)
    
 
     
