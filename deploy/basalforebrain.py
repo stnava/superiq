@@ -59,61 +59,78 @@ def main(input_config):
     output_filename_nr_seg_csv = output_filename  + "_NR_seg.csv"
     output_filename_ortho_plot_sr = output_filename  +  "_ortho_plot_SR.png"
     output_filename_ortho_plot_srOnNativeSeg = output_filename  +  "_ortho_plot_srOnNativeSeg.png"
-    output_filename_ortho_plot_nr = output_filename  +  "_ortho_plot_NR.png"
+    output_filename_ortho_plot_nrseg = output_filename  +  "_ortho_plot_NRseg.png"
+    output_filename_ortho_plot_srseg = output_filename  +  "_ortho_plot_SRseg.png"
     
     output = native_to_superres_ljlf_segmentation(
             target_image = input_image, # n3 image
             segmentation_numbers = wlab,
             template = template,
             template_segmentation = templateL,
-            library_intensity = brains,
-            library_segmentation = brainsSeg,
+            library_intensity = brains[0:2],
+            library_segmentation = brainsSeg[0:2],
             seg_params = config.seg_params,
             sr_params = config.sr_params,
             sr_model = mdl,
     )
-  
-    sr = output['srOnNativeSeg']['super_resolution'], 
+    # SR Image
+    sr = output['srOnNativeSeg']['super_resolution']
     ants.image_write(
-            output['srOnNativeSeg']['super_resolution'], 
+            sr,  
             output_filename_sr,
     )
-    
-    ants.image_write(
-            output['srOnNativeSeg']['super_resolution_segmentation'], 
-            output_filename_srOnNativeSeg,
-    )
-    SRNSdf = ants.label_geometry_measures(output['srOnNativeSeg']['super_resolution_segmentation'])
-    SRNSdf.to_csv(output_filename_srOnNativeSeg_csv, index=False) 
-    plot_output(
-        sr,
-        output_filename_ortho_plot_srOnNativeSeg,
-        output['srOnNativeSeg']['super_resolution_segmentation'], 
+    ants.plot_ortho(
+            ants.crop_image(sr),
+            flat=True,
+            filename=output_filename_ortho_plot_sr,
     )
 
+    # SR on native Seg
+    srOnNativeSeg = output['srOnNativeSeg']['super_resolution_segmentation']
     ants.image_write(
-            output['srSeg'],
+            srOnNativeSeg, 
+            output_filename_srOnNativeSeg,
+    )
+    SRNSdf = ants.label_geometry_measures(srOnNativeSeg)
+    SRNSdf.to_csv(output_filename_srOnNativeSeg_csv, index=False) 
+    ants.plot_ortho(
+            ants.crop_image(sr, srOnNativeSeg),
+            overlay=ants.crop_image(srOnNativeSeg, srOnNativeSeg),
+            flat=True,
+            filename=output_filename_ortho_plot_srOnNativeSeg,
+    )
+
+    # SR Seg
+    srSeg = output['srSeg']['segmentation']
+    ants.image_write(
+            srSeg, 
             output_filename_sr_seg,
     )
-    SRdf = ants.label_geometry_measures(output['srSeg'])
+    SRdf = ants.label_geometry_measures(srSeg)
     SRdf.to_csv(output_filename_sr_seg_csv, index=False) 
-    plot_output(
-        sr,
-        output_filename_ortho_plot_sr,
-        output['srSeg'], 
+    ants.plot_ortho(
+            ants.crop_image(sr, srSeg),
+            overlay=ants.crop_image(srSeg, srSeg),
+            flat=True,
+            filename=output_filename_ortho_plot_srseg,
     )
-    
+   
+    # Native Seg
+    nativeSeg = output['nativeSeg']['segmentation']
     ants.image_write(
-            output['nativeSeg'],
+            nativeSeg, 
             output_filename_nr_seg,
     )
-    NRdf = ants.label_geometry_measures(output['nativeSeg'])
+    NRdf = ants.label_geometry_measures(nativeSeg)
     NRdf.to_csv(output_filename_nr_seg_csv, index=False) 
-    plot_output(
-        input_image,
-        output_filename_ortho_plot_nr,
-        output['nativeSeg'],
+    ants.plot_ortho(
+            ants.crop_image(input_image, nativeSeg),
+            overlay=ants.crop_image(nativeSeg, nativeSeg),
+            flat=True,
+            filename=output_filename_ortho_plot_nrseg,
     )
+   
+
     
     handle_outputs(
         config.input_value,
