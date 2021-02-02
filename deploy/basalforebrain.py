@@ -137,7 +137,7 @@ def main(input_config):
         config.output_bucket,
         config.output_prefix,
         config.process_name,
-        env=config.environment,
+        #env=config.environment,
     )
 
 if __name__ == "__main__":
