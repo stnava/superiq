@@ -10,6 +10,7 @@ models/*
 *data*
 *.nii.gz*
 *.swp
+*.csv
 
 
 # C extensions
