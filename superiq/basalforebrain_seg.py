@@ -341,10 +341,10 @@ def native_to_superres_ljlf_segmentation(
     """
 
     seg_params_sr={
-        'submask_dilation': seg_params['submask_dilation']*1,
-        'reg_iterations': seg_params['reg_iterations'],
+        'submask_dilation': seg_params['submask_dilation']*2,
+        'reg_iterations': [100, 100, 100, 20],
         'searcher': seg_params['searcher'],
-        'radder': seg_params['radder'],
+        'radder': seg_params['radder']*2,
         'syn_sampling': seg_params['syn_sampling'],
         'syn_metric': seg_params['syn_metric'],
         'max_lab_plus_one': True, 'verbose': False}
