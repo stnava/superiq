@@ -288,25 +288,3 @@ def basalforebrainOR(
         outputs['OR_PostSeg_SR'] = srseg['super_resolution_segmentation']
     
     return outputs
-
-     
-    # Keep for reference but do not belong here
-    #get_label_geo(
-    #        probseg,
-    #        srseg['super_resolution'],
-    #        config.process_name,
-    #        config.input_value,
-    #        resolution="SR",
-    #)
-    #plot_output(
-    #    srseg['super_resolution'],
-    #    "outputs/basalforebrain-SR_ortho_plot.png",
-    #    probseg,
-    #)
-    #handle_outputs(
-    #    config.input_value,
-    #    config.output_bucket,
-    #    config.output_prefix,
-    #    config.process_name,
-    #    env=config.environment,
-    #)

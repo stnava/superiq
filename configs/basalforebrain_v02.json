@@ -28,7 +28,17 @@
             "syn_sampling": 32,
             "syn_metric": "mattes",
             "max_lab_plus_one": true,
-            "verbose": true
+            "verbose": false
+        },
+        "seg_params_sr": {
+            "submask_dilation": 20,
+            "reg_iterations": [100,100,100,20],
+            "searcher": 0,
+            "radder": 4,
+            "syn_sampling": 32,
+            "syn_metric": "mattes",
+            "max_lab_plus_one": true,
+            "verbose": false
         },
         "sr_params":{
             "upFactor": [2,2,2],

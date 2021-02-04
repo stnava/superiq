@@ -71,6 +71,7 @@ def main(input_config):
             library_intensity = brains,
             library_segmentation = brainsSeg,
             seg_params = config.seg_params,
+            seg_params_sr = config.seg_params_sr, 
             sr_params = config.sr_params,
             sr_model = mdl,
     )
