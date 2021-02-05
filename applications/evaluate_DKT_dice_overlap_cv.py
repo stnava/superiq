@@ -35,7 +35,7 @@ if ( not path. exists( tdir ) ):
 
 brains = glob.glob(tdir+"segmentation_libraries/OASIS30/Brains/*")
 brains.sort()
-brainsSeg = glob.glob(tdir+"segmentation_libraries/OASIS30/Segmentations/*")
+brainsSeg = glob.glob(tdir+"segmentation_libraries/OASIS30/SegmentationsJLFOR/*")
 brainsSeg.sort()
 templatefilename = tdir + "template/adni_template.nii.gz"
 templatesegfilename = tdir + "template/adni_template_dkt_labels.nii.gz"
@@ -47,7 +47,7 @@ seg_params={
     'radder': 2,
     'syn_sampling': 32,
     'syn_metric': 'mattes',
-    'max_lab_plus_one': True, 'verbose': True}
+    'max_lab_plus_one': True, 'verbose': False}
 
 seg_params_sr={
     'submask_dilation': seg_params['submask_dilation']*1,
@@ -56,7 +56,7 @@ seg_params_sr={
     'radder': seg_params['radder'],
     'syn_sampling': seg_params['syn_sampling'],
     'syn_metric': seg_params['syn_metric'],
-    'max_lab_plus_one': True, 'verbose': True}
+    'max_lab_plus_one': True, 'verbose': False}
 
 sr_params={"upFactor": [2,2,2], "dilation_amount": seg_params["submask_dilation"], "verbose":True}
 mdl = tf.keras.models.load_model("models/SEGSR_32_ANINN222_3.h5")
@@ -90,6 +90,7 @@ for k in range( len(brainName), len( brains ) ):
         library_intensity=images_to_list(brainsLocal),
         library_segmentation=images_to_list(brainsSegLocal),
         seg_params = seg_params,
+        seg_params_sr = seg_params_sr,
         sr_params = sr_params,
         sr_model = mdl )
 

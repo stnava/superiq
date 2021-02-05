@@ -308,6 +308,13 @@ def native_to_superres_ljlf_segmentation(
             "searcher": int, "radder": int, "syn_sampling": int, "syn_metric": string,
             "max_lab_plus_one": bool, "verbose": bool}
 
+    seg_params_sr : dict
+        dict containing the variable parameters for the ljlf parcellation call at super-resolution.
+        The parameters are:
+            {"submask_dilation":int, "reg_iteration": list,
+            "searcher": int, "radder": int, "syn_sampling": int, "syn_metric": string,
+            "max_lab_plus_one": bool, "verbose": bool}
+
     sr_params : dict
         dict containing the variable parameters for the super-resolution call.
         Example parameters are:
@@ -374,15 +381,17 @@ def native_to_superres_ljlf_segmentation(
             verbose = sr_params['verbose'] )
     # the above gives a result that itself can be evaluated
     # algorithm 3: super resolution LJLF
+    library_segmentation.append(nativeseg['segmentation'] )
+    library_intensity.append( srOnNativeSeg['super_resolution'] )
     srseg = ljlf_segmentation(
             target_image=srOnNativeSeg['super_resolution'],
             segmentation_numbers = segmentation_numbers,
-            template = template,
-            template_segmentation = template_segmentation,
+            template = srOnNativeSeg['super_resolution'],
+            template_segmentation = nativeseg['segmentation'],
             library_intensity=library_intensity,
             library_segmentation=library_segmentation,
             seg_params = seg_params_sr,
-            forward_transforms = forward_transforms
+            forward_transforms = []
             )
     return {
     'nativeSeg':nativeseg,
