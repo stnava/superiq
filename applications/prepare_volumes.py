@@ -6,13 +6,16 @@ import boto3
 
 bucket = "eisai-basalforebrainsuperres2"
 metadata = "metadata/full_metadata.csv"
-prefix = "superres-pipeline-20210202/ADNI/"
-stack_filename = 'stacked_bf_volumes.csv'
-expanded_filename = 'expanded_bf_volumes.csv'
-pivoted_filename = 'pivoted_bf_volumes.csv'
+version = "v03"
+prefix = f"superres-pipeline-{version}/ADNI/"
+stack_filename = f'stacked_bf_volumes_{version}.csv'
+expanded_filename = f'expanded_bf_volumes_{version}.csv'
+pivoted_filename = f'pivoted_bf_volumes_{version}.csv'
+merge_filename = f"data_w_metadata_{version}.csv"
+s3_prefix = "volume_measures/"
 s3 = boto3.client('s3')
 
-stack = False
+stack = True
 expand = False
 pivot =  True
 merge = True
@@ -58,28 +61,28 @@ if stack:
     
     stacked = pd.concat(dfs)
     stacked.to_csv(stack_filename, index=False)
-    s3.upload_file(stack_filename, bucket, stack_filename)
+    #s3.upload_file(stack_filename, bucket, stack_filename)
 
-if expand:
-    lgms = pd.read_csv(stack_filename)
-    lgms['Name'] = [i.split('.')[0] for i in lgms['Name']]
-    new_rows = []
-    for i,r in lgms.iterrows():
-        label = int(r['Label'])
-        fields = ['VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared'] 
-        select_data = r[fields] 
-        values = select_data.values
-        field_values = zip(fields, values)
-        for f in field_values:
-            new_df = {}
-            new_df['Measure'] = f[0]
-            new_df['Value'] = f[1]
-            new_df['Label'] = label
-            new_df = pd.DataFrame(new_df, index=[0])
-            new_rows.append(new_df)
-    new_df = pd.concat(new_rows)
-    new_df.to_csv(expanded_filename, index=False)
-    s3.upload_file(expanded_filename, bucket, expanded_filename)
+#if expand:
+#    lgms = pd.read_csv(stack_filename)
+#    lgms['Name'] = [i.split('.')[0] for i in lgms['Name']]
+#    new_rows = []
+#    for i,r in lgms.iterrows():
+#        label = int(r['Label'])
+#        fields = ['VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared'] 
+#        select_data = r[fields] 
+#        values = select_data.values
+#        field_values = zip(fields, values)
+#        for f in field_values:
+#            new_df = {}
+#            new_df['Measure'] = f[0]
+#            new_df['Value'] = f[1]
+#            new_df['Label'] = label
+#            new_df = pd.DataFrame(new_df, index=[0])
+#            new_rows.append(new_df)
+#    new_df = pd.concat(new_rows)
+#    new_df.to_csv(expanded_filename, index=False)
+#    s3.upload_file(expanded_filename, bucket, expanded_filename)
 
 if pivot:
     df = pd.read_csv(stack_filename)
@@ -100,7 +103,7 @@ if pivot:
 
     final_csv['Repeat'] = [str(i).zfill(3) for i in final_csv['Repeat']]
     final_csv.to_csv(pivoted_filename, index=False) 
-    s3.upload_file(pivoted_filename, bucket, pivoted_filename)    
+    #s3.upload_file(pivoted_filename, bucket, pivoted_filename)    
 
 if merge:
     data = pd.read_csv(pivoted_filename) 
@@ -108,7 +111,6 @@ if merge:
     metadf = pd.read_csv(meta)
     os.remove(meta) 
     merge = pd.merge(metadf, data, how="right", left_on="new_filename", right_on="OriginalOutput")
-    merge_filename = "data_w_metadata.csv"
     merge.to_csv(merge_filename, index=False)
-    s3.upload_file(merge_filename, bucket, merge_filename)
+    s3.upload_file(merge_filename, bucket, s3_prefix + merge_filename)
 

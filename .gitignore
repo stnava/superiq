@@ -7,7 +7,7 @@ __pycache__/
 outputs3*
 *outputs*
 models/* 
-*data*
+*data/*
 *.nii.gz*
 *.swp
 *.csv
