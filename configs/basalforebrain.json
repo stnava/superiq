@@ -30,6 +30,16 @@
             "max_lab_plus_one": true,
             "verbose": true
         },
+        "seg_params_sr": { 
+            "submask_dilation": 8,
+            "reg_iterations": [100,100,20],
+            "searcher": 1,
+            "radder": 2,
+            "syn_sampling": 32,
+            "syn_metric": "mattes",
+            "max_lab_plus_one": true,
+            "verbose": true
+        },
         "sr_params":{
             "upFactor": [2,2,2],
             "dilation_amount": 8,
@@ -37,7 +47,7 @@
         },
         "output_file_prefix": "basalforebrain",    
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "superres-pipeline-20210202/",
+        "output_prefix": "superres-pipeline-v01/",
         "output_suffix": "-basalforebrain-basalforebrain_srOnNativeSeg"
     }
 }
