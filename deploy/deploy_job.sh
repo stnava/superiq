@@ -4,7 +4,7 @@ memory_in_gb="$(($3 * 1000))"
 script_path=$4
 antspy_hash="36e273f166e97f5b46c318ced9ed5fd6a0b50d58"
 antspynet_hash="5d359e8cc8ac4e3d407e01c1fc89697ae929b967"
-superiq_hash="bd0228bb9f5fa3109805acc59bce61e602326813"
+superiq_hash=$(git rev-parse HEAD)
 
 repo="651875258113.dkr.ecr.us-east-1.amazonaws.com"
 repo_image="${repo}/${container_name}"
@@ -36,7 +36,11 @@ docker tag $container_name $repo_image && \
         "command": [ "python", "'"${script_path}"'", "Ref::config" ],
         "jobRoleArn": "arn:aws:iam::651875258113:role/'"${job_role}"'",
         "volumes": [],
-        "environment": [],
+        "environment": [
+            "antspy_hash":"'"$antspy_hash"'", 
+            "antspynet_hash":"'"$antspynet_hash"'", 
+            "superiq_hash":"'"$superiq_hash"'", 
+            ],
         "mountPoints": [],
         "ulimits": [],
         "resourceRequirements": []
