@@ -1,7 +1,10 @@
-container_name="superiq_$1"
+container_name="$1"
 cpus=$2
 memory_in_gb="$(($3 * 1000))"
 script_path=$4
+antspy_hash=
+antspynet_hash=
+superiq_hash=
 
 repo="651875258113.dkr.ecr.us-east-1.amazonaws.com"
 repo_image="${repo}/${container_name}"
