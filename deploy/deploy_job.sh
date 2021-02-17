@@ -37,10 +37,10 @@ docker tag $container_name $repo_image && \
         "jobRoleArn": "arn:aws:iam::651875258113:role/'"${job_role}"'",
         "volumes": [],
         "environment": [
-            "antspy_hash":"'"$antspy_hash"'", 
-            "antspynet_hash":"'"$antspynet_hash"'", 
-            "superiq_hash":"'"$superiq_hash"'", 
-            ],
+            {"name": "antspy_hash", "value": "'"${antspy_hash}"'"}, 
+            {"name": "antspynet_hash", "value": "'"${antspynet_hash}"'"}, 
+            {"name": "superiq_hash", "value": "'"${superiq_hash}"'"}
+        ],
         "mountPoints": [],
         "ulimits": [],
         "resourceRequirements": []
