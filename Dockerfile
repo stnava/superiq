@@ -11,13 +11,21 @@ RUN pip install numpy keras boto3
 RUN pip install --upgrade tensorflow tensorflow-probability 
 
 ADD ext ext
-RUN python ext/get_latest.py 
+
+ARG antspy_hash
+RUN python ext/get_commit.py antspy $antspy_hash
 RUN pip install ext/antspyx* 
+
+ARG antspynet_hash
+RUN python ext/get_commit.py antspynet $antspynet_hash
 RUN pip install ext/antspynet* 
+
+ARG superiq_hash
+RUN python -m pip install git+https://github.com/stnava/superiq.git@$superiq_hash
 
 COPY . src
 WORKDIR src
-RUN python setup.py install
+#RUN python setup.py install
 
 #ENV TF_NUM_INTEROP_THREADS=8
 #ENV TF_NUM_INTRAOP_THREADS=8
