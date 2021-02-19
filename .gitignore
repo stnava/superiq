@@ -11,7 +11,8 @@ models/*
 *.nii.gz*
 *.swp
 *.csv
-
+*env
+*.whl
 
 # C extensions
 *.so
