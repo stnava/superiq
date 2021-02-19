@@ -14,5 +14,4 @@ from .super_resolution_segmentation_per_label import images_to_list
 from .basalforebrain_seg import basalforebrain_segmentation
 from .basalforebrain_seg import ljlf_segmentation
 from .basalforebrain_seg import native_to_superres_ljlf_segmentation
-from .basalforebrain import basalforebrainSR, basalforebrainOR
 from .pipeline_utils import *
