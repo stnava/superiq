@@ -86,7 +86,7 @@ class LoadConfig:
         return f"config: {self.__dict__}"
 
 
-def handle_outputs(input_path, output_bucket, output_prefix, process_name, env="prod"):
+def handle_outputs(input_path, output_bucket, output_prefix, process_name, env="prod", local_output_dir="outputs"):
     """
     Uploads all files in the outputs dir to the appropriate location on s3
 
@@ -120,13 +120,13 @@ def handle_outputs(input_path, output_bucket, output_prefix, process_name, env="
     "data/ADNI-002_S_0413-20060224-T1w-000.nii.gz -> 
         output_data/ADNI/002_S_0413/20060224/T1w/000/my_process/ADNI-002_S_0413-20060224-T1w-000-my_process-new_data.nii.gz"
     """
-    outputs = [i for i in os.listdir('outputs')]
+    outputs = [i for i in os.listdir(local_output_dir)]
     path, basename = derive_s3_path(input_path)
     prefix = output_prefix + path + process_name + '/'
     s3 = boto3.client('s3')
     for output in outputs:
         filename = output.split('/')[-1]
-        outpath =  "outputs/" + output
+        outpath = local_output_dir + "/" + output
         obj_name = basename + '-' + process_name + '-' + filename
         obj_path = prefix + obj_name
         print(f"{outpath} -> {obj_path}") 
@@ -136,7 +136,7 @@ def handle_outputs(input_path, output_bucket, output_prefix, process_name, env="
                     output_bucket,
                     obj_path,
             )
-
+    
 
 def get_pipeline_data(filename, initial_image_key, bucket, prefix):
     """
@@ -182,19 +182,6 @@ def get_pipeline_data(filename, initial_image_key, bucket, prefix):
         key = key[0]
         local = get_s3_object(bucket, key, "data")
         return local
-
-
-def get_library(bucket, prefix, local_path):
-    s3 = boto3.client('s3')
-    keys = list_images(bucket, prefix)
-    for k in keys:
-        basename = k.split('/')[-1]
-        local = local_path + basename
-        s3.download_file(
-            bucket,
-            k,
-            local
-        )
 
 
 def derive_s3_path(image_path):
@@ -379,12 +366,3 @@ def plot_output(img, output_path, overlay=None):
                 filename=output_path,
         )
 
-
-def dev_output(image, filename):
-    """ Output an ants image object to s3 for dev testing """
-    s3 = boto3.client('s3')
-    tmp_file = f'/tmp/{filename}.nii.gz'
-    ants.image_write(image, tmp_file)
-    output_bucket = 'invicro-test-outputs'
-    output_key = f'bf/{filename}' 
-    s3.upload_file(tmp_file, output_bucket, output_key)
