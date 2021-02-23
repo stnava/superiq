@@ -63,16 +63,6 @@ brainsSeg.sort()
 brainsSeg = [ants.image_read(i) for i in brainsSeg]
 
 
-# Pull from s3
-brains = glob.glob(tdir+"segmentation_libraries/OASIS30/Brains/*")
-brains.sort()
-brainsSeg = glob.glob(tdir+"segmentation_libraries/OASIS30/SegmentationsJLFOR/*")
-brainsSeg.sort()
-
-# Pull from s3
-templatefilename = tdir + "template/adni_template.nii.gz"
-templatesegfilename = tdir + "template/adni_template_dkt_labels.nii.gz"
-
 # Will vary by tool
 seg_params={
     'submask_dilation': 8,
@@ -144,8 +134,8 @@ def leave_one_out_cross_validation(
         del brainsSegLocal[k:(k+1)]
         original_image = ants.image_read(atlas_images[k])
         evaluation_parameters['target_image'] = original_image 
-        evaluation_parameters['library_intensity'] = images_to_list(brainsLocal)
-        evaluation_parameters['library_segmentation'] = images_to_list(brainsSegLocal)
+        evaluation_parameters['library_intensity'] = brainsLocal
+        evaluation_parameters['library_segmentation'] = brainsSegLocal
 
         #sloop = native_to_superres_ljlf_segmentation(
         sloop = evaluation_function(**evaluation_parameters)
@@ -207,6 +197,13 @@ def leave_one_out_cross_validation(
         df.to_csv( evalfn )
         break 
         ################################################################################
+
+leave_one_out_cross_validation(
+    native_to_superres_ljlf_segmentation,
+    native_to_superres_ljlf_segmentation_params,
+    brains,
+    brainsSeg,
+)
 
 # these are the outputs you would write out, along with label geometry for each segmentation
 #ants.image_write( sloop['srOnNativeSeg']['super_resolution'], '/tmp/tempI.nii.gz' )
