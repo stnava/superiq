@@ -34,6 +34,8 @@ tdir = "/home/ec2-user/superiq/validation"
 if ( not path. exists( tdir ) ):
     raise RuntimeError('Failed to find the data directory')
 
+print("====> Getting remote data")
+
 template_bucket = "invicro-pipeline-inputs"
 template_key = "adni_templates/adni_template.nii.gz"
 template_label_key = "adni_templates/adni_template_dkt_labels.nii.gz"
@@ -102,8 +104,8 @@ wlab = [75,76] # basal forebrain
 native_to_superres_ljlf_segmentation_params = {
     "target_image": "",
     "segmentation_numbers": wlab,
-    "template": templatefilename,
-    "template_segmenation": templatesegfilename,
+    "template": template,
+    "template_segmenation": templateL,
     "library_intensity": "",
     "library_segmentation": "",
     "seg_params": seg_params,
@@ -114,7 +116,7 @@ native_to_superres_ljlf_segmentation_params = {
 }
 
 
-
+print("====> Starting Validation")
 def leave_one_out_cross_validation(
     evaluation_function,
     evaluation_parameters,
@@ -124,7 +126,8 @@ def leave_one_out_cross_validation(
     records = []
     for k in range(len(atlas_images)):
         # Get the name of the target 
-        localid=os.path.splitext( os.path.splitext( os.path.basename( atlas_images[k]) )[0])[0]
+        #localid=os.path.splitext( os.path.splitext( os.path.basename( atlas_images[k]) )[0])[0]
+        localid='test'
         print( str(k) + " " + localid)
     
         brainsLocal=atlas_images.copy()
