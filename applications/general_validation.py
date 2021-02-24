@@ -92,16 +92,7 @@ sr_params={"upFactor": [2,2,2], "dilation_amount": seg_params["submask_dilation"
 #wlab = [47,116,122,154,170] # eisai cortex
 wlab = [75,76] # basal forebrain
 
-# store output data
-#brainName = []
-#dicevalNativeSeg = []
-#dicevalSRNativeSeg = []
-#dicevalSRSeg = []
-#dicevalSRSeg2 = []
-#evalfn='./dkt_eval' + list_to_string( wlab ) + '.csv'
-#print( "Labels:" + list_to_string( wlab ) + " " + evalfn, " : n : ", len( brains ) )
-
-
+# An example parameters argument
 native_to_superres_ljlf_segmentation_params = {
     "target_image": "",
     "segmentation_numbers": wlab,
@@ -135,6 +126,7 @@ def leave_one_out_cross_validation(
         brainsLocal=[ants.image_read(i) for i in atlas_images_path]
         #brainsSegLocal=atlas_labels_path
         brainsSegLocal=[ants.image_read(i) for i in atlas_labels_path]
+        nativeGroundTruth = brainsLocal[k]
         # Remove the target brain from the atlas set 
         del brainsLocal[k]
         del brainsSegLocal[k]
@@ -150,7 +142,7 @@ def leave_one_out_cross_validation(
         # NOTE: we binarize the labels
         # NOTE: the below call would only be used for evaluation ie when we have GT
         #nativeGroundTruth = ants.image_read(brainsSeg[k])
-        nativeGroundTruth = brainsSeg[k]
+        wlab = evaluation_parameters['segmentation_numbers']
         nativeGroundTruth = ants.mask_image( nativeGroundTruth, nativeGroundTruth, level = wlab, binarize=False )
         sr_params = evaluation_parameters['sr_params'] 
         gtSR = super_resolution_segmentation_per_label(
@@ -166,21 +158,13 @@ def leave_one_out_cross_validation(
         nativeGroundTruthSR = gtSR['super_resolution_segmentation']
         nativeGroundTruthBinSR = ants.mask_image( nativeGroundTruthSR, nativeGroundTruthSR, wlab, binarize=True)
     
-        # The full method involves:  (GT denotes ground truth)
-        # [0.0] use template-based mapping to estimate initial labels
-        # [1.0] run LJLF at native resolution (evaluate this wrt native res GT)
-        #   [1.1] evaluate [1.0] wrt NN-Up-GT
-        # [2.0] perform local simultaneous SR-Image and SR-Seg based on output of [1.0] (evaluate this wrt SR-GT)
-        #   [2.1] evaluate [2.0] wrt NN-Up-GT
-        # [3.0] run LJLF at SR based on [2.0] (evaluate this at SR wrt SR-GT)
-        #   [3.1] evaluate [3.0] this wrt NN-Up-GT
         mypt = 0.5
         srsegLJLF = ants.threshold_image( sloop['srSeg']['probsum'], mypt, math.inf )
         nativeOverlapSloop = ants.label_overlap_measures( nativeGroundTruth, sloop['nativeSeg']['segmentation'] )
         srOnNativeOverlapSloop = ants.label_overlap_measures( nativeGroundTruthSR, sloop['srOnNativeSeg']['super_resolution_segmentation'] )
         srOverlapSloop = ants.label_overlap_measures( nativeGroundTruthSR, sloop['srSeg']['segmentation'] )
         srOverlap2 = ants.label_overlap_measures( nativeGroundTruthBinSR, srsegLJLF )
-        # collect the 3 evaluation results - ready for data frame
+        
         brainName = []
         dicevalNativeSeg = []
         dicevalSRNativeSeg = []
@@ -193,7 +177,7 @@ def leave_one_out_cross_validation(
         dicevalSRSeg.append( srOverlapSloop["MeanOverlap"][0])
         dicevalSRSeg2.append( srOverlap2["MeanOverlap"][0])
         print( brainName[k] + ": N: " + str(dicevalNativeSeg[k]) + " SRN: " +  str(dicevalSRNativeSeg[k])+ " SRN: " +  str(dicevalSRSeg[k]) )
-        ################################################################################
+        
         dict = {
             'name': brainName,
             'diceNativeSeg': dicevalNativeSeg,
@@ -201,16 +185,14 @@ def leave_one_out_cross_validation(
             'diceSRSeg': dicevalSRSeg }
         df = pd.DataFrame(dict)
         records.append(df) 
-        #evalfn='./dkt_eval' + list_to_string( wlab ) + '.csv'
-        #df.to_csv( evalfn )
-        #break 
-        ################################################################################
+    
     validation = pd.concat(records)
     if output_path is None:
         evalfn= './dkt_eval' + list_to_string( wlab ) + '.csv'
     else:
         evalfn= output_path + '/dkt_eval' + list_to_string( wlab ) + '.csv'
     validation.to_csv(evalfn, index=False)    
+
 
 leave_one_out_cross_validation(
     native_to_superres_ljlf_segmentation,
