@@ -1,5 +1,6 @@
 import os
 # set number of threads - this should be optimized for your compute instance
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = "3"
 mynt="16"
 os.environ["TF_NUM_INTEROP_THREADS"] = mynt
 os.environ["TF_NUM_INTRAOP_THREADS"] = mynt
@@ -105,7 +106,7 @@ native_to_superres_ljlf_segmentation_params = {
     "target_image": "",
     "segmentation_numbers": wlab,
     "template": template,
-    "template_segmenation": templateL,
+    "template_segmentation": templateL,
     "library_intensity": "",
     "library_segmentation": "",
     "seg_params": seg_params,
@@ -135,7 +136,7 @@ def leave_one_out_cross_validation(
         # Remove the target brain from the atlas set 
         del brainsLocal[k:(k+1)]
         del brainsSegLocal[k:(k+1)]
-        original_image = ants.image_read(atlas_images[k])
+        original_image = atlas_images[k]
         evaluation_parameters['target_image'] = original_image 
         evaluation_parameters['library_intensity'] = brainsLocal
         evaluation_parameters['library_segmentation'] = brainsSegLocal
@@ -146,7 +147,8 @@ def leave_one_out_cross_validation(
         # first - create a SR version of the image and the ground truth
         # NOTE: we binarize the labels
         # NOTE: the below call would only be used for evaluation ie when we have GT
-        nativeGroundTruth = ants.image_read(brainsSeg[k])
+        #nativeGroundTruth = ants.image_read(brainsSeg[k])
+        nativeGroundTruth = brainsSeg[k]
         nativeGroundTruth = ants.mask_image( nativeGroundTruth, nativeGroundTruth, level = wlab, binarize=False )
         sr_params = evaluation_parameters['sr_params'] 
         gtSR = super_resolution_segmentation_per_label(
