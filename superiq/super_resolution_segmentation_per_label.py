@@ -458,7 +458,7 @@ def ljlf_parcellation(
             temp = library_segmentation[x]
 #            temp = ants.mask_image( temp, temp, segmentation_numbers )
             if not check_for_labels_in_image( segmentation_numbers, temp ):
-                warnings.warn( "segmentation_numbers do not exist in" + fn )
+                warnings.warn( "segmentation_numbers do not exist")
             libraryL.append( temp )
 
     ################################################################################
