@@ -138,7 +138,7 @@ def leave_one_out_cross_validation(
         # Remove the target brain from the atlas set 
         del brainsLocal[k]
         del brainsSegLocal[k]
-        original_image = brainsLocal[k]
+        original_image = brainLocal[k]
         evaluation_parameters['target_image'] = original_image 
         evaluation_parameters['library_intensity'] = brainsLocal
         evaluation_parameters['library_segmentation'] = brainsSegLocal
