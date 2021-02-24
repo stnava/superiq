@@ -54,7 +54,7 @@ def run_example():
     templateL = ants.image_read(templateL)
     
     model_path = get_s3_object(model_bucket, model_key, tdir)
-    mdl = tf.keras.models.load_model(model_path)
+    #mdl = tf.keras.models.load_model(model_path)
     
     atlas_image_keys = list_images(atlas_bucket, atlas_image_prefix)
     brains = [get_s3_object(atlas_bucket, k, tdir) for k in atlas_image_keys]
@@ -104,7 +104,7 @@ def run_example():
         "seg_params": seg_params,
         "seg_params_sr": seg_params_sr,
         "sr_params": sr_params,
-        "sr_model": mdl,
+        "sr_model_path": model_path,
         "forward_transforms": None,
     }
     
@@ -248,11 +248,12 @@ def cross_validation(
     nativeGroundTruth = evaluation_parameters['nativeGroundTruth']
     nativeGroundTruth = ants.mask_image( nativeGroundTruth, nativeGroundTruth, level = wlab, binarize=False )
     sr_params = evaluation_parameters['sr_params'] 
+    mdl = tf.keras.models.load_model(evaluation_parameters['sr_model_path'])
     gtSR = super_resolution_segmentation_per_label(
             imgIn = ants.iMath( original_image, "Normalize"),
             segmentation = nativeGroundTruth, # usually, an estimate from a template, not GT
             upFactor = sr_params['upFactor'],
-            sr_model = evaluation_parameters['sr_model'],
+            sr_model = mdl,
             segmentation_numbers = evaluation_parameters['segmentation_numbers'],
             dilation_amount = sr_params['dilation_amount'],
             verbose = sr_params['verbose']
@@ -313,7 +314,6 @@ def leave_one_out_cross_validation(
         atlas_labels_path,
     )
     pools = pools[0:1]
-    print(type(pools))
     with mp.Pool(multiproc_pools) as p:
         results = p.map(cross_validation, pools)
      
