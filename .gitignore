@@ -10,6 +10,7 @@ models/*
 *data/*
 *.nii.gz*
 *.swp
+*.h5
 *.csv
 *env
 *.whl
