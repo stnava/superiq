@@ -15,3 +15,7 @@ from .basalforebrain_seg import basalforebrain_segmentation
 from .basalforebrain_seg import ljlf_segmentation
 from .basalforebrain_seg import native_to_superres_ljlf_segmentation
 from .pipeline_utils import *
+from .segmentation_validation import leave_one_out_cross_validation
+from .segmentation_validation import test_validation
+from .segmentation_validation import make_validation_pools
+from .segmentation_validation import cross_validation
