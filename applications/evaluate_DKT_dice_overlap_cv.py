@@ -142,9 +142,8 @@ for k in range( len(brainName), len( brains ) ):
     df = pd.DataFrame(dict)
     df.to_csv( evalfn )
     ################################################################################
-
-# these are the outputs you would write out, along with label geometry for each segmentation
-ants.image_write( sloop['srOnNativeSeg']['super_resolution'], '/tmp/tempI.nii.gz' )
-ants.image_write( nativeGroundTruthSR, '/tmp/tempGT.nii.gz' )
-ants.image_write( sloop['srSeg']['segmentation'], '/tmp/tempSRSeg.nii.gz' )
-ants.image_write( sloop['nativeSeg']['segmentation'], '/tmp/tempORSeg.nii.gz' )
+    # these are the outputs you would write out, along with label geometry for each segmentation
+    ants.image_write( sloop['srOnNativeSeg']['super_resolution'], '/tmp/tempI.nii.gz' )
+    ants.image_write( nativeGroundTruthSR, '/tmp/tempGT.nii.gz' )
+    ants.image_write( sloop['srSeg']['segmentation'], '/tmp/tempSRSeg.nii.gz' )
+    ants.image_write( sloop['nativeSeg']['segmentation'], '/tmp/tempORSeg.nii.gz' )

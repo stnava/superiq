@@ -355,6 +355,7 @@ def ljlf_parcellation(
     syn_sampling=2,
     syn_metric='CC',
     max_lab_plus_one=False,
+    localtx = "Affine",
     output_prefix=None,
     verbose=False,
 ):
@@ -406,6 +407,9 @@ def ljlf_parcellation(
 
     max_lab_plus_one : boolean
         set True if you are having problems with background segmentation labels
+
+    localtx : string
+        type of local transformation
 
     output_prefix : string
         the location of the output; should be both a directory and prefix filename
@@ -485,7 +489,6 @@ def ljlf_parcellation(
     initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
     jlfmask = imgc * 0 + 1
     deftx = "SyN"
-    loctx = "Similarity"
     ljlf = ants.local_joint_label_fusion(
         target_image=imgc,
         which_labels=segmentation_numbers,
@@ -497,7 +500,7 @@ def ljlf_parcellation(
         rad=radder,  # should keep 2 at low-res and search 2 to 4 at high-res
         atlas_list=libraryI,
         label_list=libraryL,
-        local_mask_transform=loctx,
+        local_mask_transform=localtx,
         reg_iterations=reg_iterations,
         syn_sampling=syn_sampling,
         syn_metric=syn_metric,
@@ -642,7 +645,7 @@ def ljlf_parcellation_one_template(
     initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
     jlfmask = imgc * 0 + 1
     deftx = "SyN"
-    loctx = "Similarity"
+    localtx = "Similarity"
     ljlf = ants.local_joint_label_fusion(
         target_image=imgc,
         which_labels=segmentation_numbers,
@@ -654,7 +657,7 @@ def ljlf_parcellation_one_template(
         rad=radder,  # should keep 2 at low-res and search 2 to 4 at high-res
         atlas_list=libraryI,
         label_list=libraryL,
-        local_mask_transform=loctx,
+        local_mask_transform=localtx,
         reg_iterations=reg_iterations,
         syn_sampling=syn_sampling,
         syn_metric=syn_metric,
