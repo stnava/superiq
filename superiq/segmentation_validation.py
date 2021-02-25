@@ -132,11 +132,6 @@ def make_validation_pools(
     brainsSegLocal=atlas_labels_path
     pools = []
     for k in range(len(brainsLocal)):
-        # Get the name of the target 
-        localid=os.path.splitext(os.path.splitext(os.path.basename(brainsLocal[k]))[0])[0]
-        print("Pool: " + str(k) + " " + localid)
-        #brainsLocal=[ants.image_read(i) for i in atlas_images_path]
-        #brainsSegLocal=[ants.image_read(i) for i in atlas_labels_path]
         original_image = brainsLocal[k]
         nativeGroundTruth = brainsSegLocal[k]
         # Remove the target brain from the atlas set 
