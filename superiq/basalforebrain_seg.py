@@ -146,6 +146,7 @@ def ljlf_segmentation(
             "searcher": 2, "radder": 3, "syn_sampling": 2, "syn_metric": "CC",
             "max_lab_plus_one": False, "verbose": True},
         forward_transforms=None,
+        localtx='Affine',
         output_filename=None,
         ):
     """
@@ -233,6 +234,7 @@ def ljlf_segmentation(
             syn_sampling=seg_params['syn_sampling'],
             syn_metric=seg_params['syn_metric'],
             max_lab_plus_one=seg_params['max_lab_plus_one'],
+            localtx=localtx,
             output_prefix=output_filename,
             verbose=seg_params['verbose'],
         )
@@ -271,6 +273,7 @@ def native_to_superres_ljlf_segmentation(
     seg_params_sr,
     sr_params,
     sr_model,
+    localtx='Affine',
     forward_transforms=None
      ):
     """
@@ -330,6 +333,9 @@ def native_to_superres_ljlf_segmentation(
         output of ants.registration (optional). if not present, registration
         is computed within the function.
 
+    localtx : string
+        passed to local joint_label_fusion - transform type for local alignment
+
     output_filename : string
         passed to joint_label_fusion - stores its output
 
@@ -367,6 +373,7 @@ def native_to_superres_ljlf_segmentation(
             library_intensity=library_intensity,
             library_segmentation=library_segmentation,
             seg_params = seg_params,
+            localtx = localtx,
             forward_transforms = forward_transforms
             )
 
