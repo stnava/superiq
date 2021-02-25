@@ -30,7 +30,7 @@ from superiq import native_to_superres_ljlf_segmentation
 from superiq import list_to_string
 from superiq.pipeline_utils import *
 
-def run_example():
+def test_validation():
     # Change this
     tdir = "/home/ec2-user/superiq/validation"
     if ( not path. exists( tdir ) ):
@@ -258,7 +258,7 @@ def leave_one_out_cross_validation(
         atlas_images_path,
         atlas_labels_path,
     )
-    print("====> Running cross validation")
+    print(f"====> Running cross validation on {len(pools)} pools")
     with mp.Pool(multiproc_pools) as p:
         results = p.map(cross_validation, pools)
 
@@ -274,7 +274,7 @@ def leave_one_out_cross_validation(
 
 
 if __name__ == "__main__":
-    run_example()
+    test_validation()
 
 # these are the outputs you would write out, along with label geometry for each segmentation
 #ants.image_write( sloop['srOnNativeSeg']['super_resolution'], '/tmp/tempI.nii.gz' )
