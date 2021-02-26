@@ -2,8 +2,8 @@ container_name="$1"
 cpus=$2
 memory_in_gb="$(($3 * 1000))"
 script_path=$4
-antspy_hash="36e273f166e97f5b46c318ced9ed5fd6a0b50d58"
-antspynet_hash="5d359e8cc8ac4e3d407e01c1fc89697ae929b967"
+antspy_hash="58473904ed30c9ae5990d63f015e58f3db9ea1be"
+antspynet_hash="102fd30b2f0a099cad55af456639d442dde1e237"
 superiq_hash=$(git rev-parse HEAD)
 
 repo="651875258113.dkr.ecr.us-east-1.amazonaws.com"
