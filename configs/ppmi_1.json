@@ -7,10 +7,10 @@
     "parameters": {
         "environment" : "prod",
         "process_name": "ppmi",
-        "input_bucket" : "ppmi",
+        "input_bucket" : "ppmi-image-data",
         "input_value" : "tests/ADNI_test/002_S_4473/20140227/T1w/000/ADNI-002_S_4473-20140227-T1w-000.nii.gz",
-        "pipeline_bucket": "eisai-basalforebrainsuperres2",
-        "pipeline_prefix": "superres-pipeline/",
+        "pipeline_bucket": "mjff-ppmi",
+        "pipeline_prefix": "superres-pipeline-v01/",
         "template_bucket": "invicro-pipeline-inputs",
         "template_key": "adni_templates/adni_template.nii.gz",
         "template_label_key" : "adni_templates/adni_template_dkt_labels.nii.gz",
@@ -19,7 +19,7 @@
         "atlas_bucket": "invicro-pipeline-inputs",
         "atlas_image_prefix": "OASIS30/Brains/", 
         "atlas_label_prefix": "OASIS30/Segmentations/", 
-        "wlab": [75, 76],
+        "wlab": [36,55,57],
         "seg_params": { 
             "submask_dilation": 8,
             "reg_iterations": [100,100,20],
@@ -45,9 +45,9 @@
             "dilation_amount": 8,
             "verbose": true
         },
-        "output_file_prefix": "basalforebrain",    
-        "output_bucket" : "eisai-basalforebrainsuperres2",
+        "output_file_prefix": "ppmi",    
+        "output_bucket" : "mjff-ppmi",
         "output_prefix": "superres-pipeline-v01/",
-        "output_suffix": "-basalforebrain-basalforebrain_srOnNativeSeg"
+        "output_suffix": "-ppmi-ppmi_srOnNativeSeg"
     }
 }
