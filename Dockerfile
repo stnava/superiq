@@ -10,8 +10,6 @@ ARG AWS_SECRET_ACCESS_KEY
 RUN pip install numpy keras boto3 
 RUN pip install --upgrade tensorflow tensorflow-probability 
 
-ADD ext ext
-
 ARG antspy_hash
 RUN pip install git+https://github.com/ANTsX/ANTsPy.git@$antspy_hash
 #RUN python ext/get_commit.py antspy $antspy_hash
