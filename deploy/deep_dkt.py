@@ -35,8 +35,7 @@ def main(input_config):
     sr_model = get_s3_object(config.model_bucket, config.model_key, "/data")
     #mdl = tf.keras.models.load_model(model_path) 
 
-
-    output_path = "/outputs/" + config.output_file_prefix 
+    output_path = "/outputs/"
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
@@ -56,6 +55,7 @@ def main(input_config):
         config.output_bucket,
         config.output_prefix,
         config.process_name,
+        output_path,
     )
 
 if __name__ == "__main__":

@@ -54,7 +54,7 @@ def deep_dkt(
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-    output_filename = output_path + "deep_dkt_" + list_to_string(segmentation_numbers)
+    output_filename = output_path + "deep_dkt_Labels" + list_to_string(segmentation_numbers)
     print(output_filename)
     output_filename_native = output_filename + "_OR_seg.nii.gz"
     output_filename_native_csv = output_filename + "_OR_seg.csv"
