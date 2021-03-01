@@ -32,7 +32,7 @@ def deep_dkt(
     dkt = antspynet.desikan_killiany_tourville_labeling(
         rigi,
         do_preprocessing=False,
-        return_probability_images=True
+        return_probability_images=True,
     ) # FIXME - use probability images later
 
 
