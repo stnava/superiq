@@ -138,7 +138,7 @@ def handle_outputs(input_path, output_bucket, output_prefix, process_name, env="
             )
     
 
-def get_pipeline_data(filename, initial_image_key, bucket, prefix):
+def get_pipeline_data(filename, initial_image_key, bucket, prefix, local_dir="data"):
     """
     Retrieve data ending with a certain name from s3 based on the original input image
 
@@ -155,6 +155,9 @@ def get_pipeline_data(filename, initial_image_key, bucket, prefix):
 
     prefix : string
         the prefix in the bucekt under with the object to match resides
+
+    local_dir : string
+        the folder to place the output
 
     Return
     ------
@@ -180,7 +183,7 @@ def get_pipeline_data(filename, initial_image_key, bucket, prefix):
         raise ValueError(f'{len(key)} objects were found with that suffix')
     else:
         key = key[0]
-        local = get_s3_object(bucket, key, "data")
+        local = get_s3_object(bucket, key, local_dir)
         return local
 
 
