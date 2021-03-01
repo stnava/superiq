@@ -45,8 +45,16 @@ class TestDeepDKT(unittest.TestCase):
             "output_path": "/tmp/deep_dkt/",
         }
         output = superiq.deep_dkt(**input_params)
-        print(output) 
+        print(output)
+        handle_outputs(
+            self.original_image,
+            "eisai-basalforebrainsuperres2",
+            "superres-pipeline-dkt/",
+            'deep_dkt',
+            output
+        )
         self.assertTrue(output)
+
 
 
 if __name__ == "__main__":
