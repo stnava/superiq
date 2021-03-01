@@ -48,7 +48,7 @@ def main(input_config):
         "output_path": output_path,
     }
 
-
+    output = deep_dkt(**input_params)
 
     handle_outputs(
         config.input_value,
