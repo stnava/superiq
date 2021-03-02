@@ -23,16 +23,16 @@ pivot =  True
 merge = True
 
 def get_files(k):
-    bucket = "eisai-basalforebrainsuperres2"
-    path = get_s3_object(bucket, k, "tmp") 
+    bucket = "eisai-basalforebrainsuperres2" # Param
+    path = get_s3_object(bucket, k, "tmp")
     df = pd.read_csv(path)
-    fields = ["Label", 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared'] 
-    df = df[fields]      
+    fields = ["Label", 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']
+    df = df[fields]
     new_rows = []
     for i,r in df.iterrows():
         label = int(r['Label'])
-        fields = ['VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared'] 
-        select_data = r[fields] 
+        fields = ['VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']
+        select_data = r[fields]
         values = select_data.values
         field_values = zip(fields, values)
         for f in field_values:
@@ -51,25 +51,25 @@ def get_files(k):
     for i in zip_list:
         df[i[0]] = i[1]
     df['OriginalOutput'] = "-".join(split[:5]) + ".nii.gz"
-    os.remove(path) 
-    return df 
+    os.remove(path)
+    return df
 
 if stack:
     keys = list_images(bucket, prefix)
-    
     keys = [i for i in keys if ".csv" in i]
+
     with mp.Pool() as p:
         dfs = p.map(get_files, keys)
     #for k in keys:
-    #    path = get_s3_object(bucket, k, "tmp") 
+    #    path = get_s3_object(bucket, k, "tmp")
     #    df = pd.read_csv(path)
-    #    fields = ["Label", 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared'] 
-    #    df = df[fields]      
+    #    fields = ["Label", 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']
+    #    df = df[fields]
     #    new_rows = []
     #    for i,r in df.iterrows():
     #        label = int(r['Label'])
-    #        fields = ['VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared'] 
-    #        select_data = r[fields] 
+    #        fields = ['VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']
+    #        select_data = r[fields]
     #        values = select_data.values
     #        field_values = zip(fields, values)
     #        for f in field_values:
@@ -89,8 +89,8 @@ if stack:
     #        df[i[0]] = i[1]
     #    df['OriginalOutput'] = "-".join(split[:5]) + ".nii.gz"
     #    dfs.append(df)
-    #    os.remove(path) 
-    
+    #    os.remove(path)
+
     stacked = pd.concat(dfs)
     stacked.to_csv(stack_filename, index=False)
 
@@ -100,27 +100,27 @@ if pivot:
     df['Name'] = [i.split('.')[0] for i in df['Name']]
     pivoted = df.pivot(
         index=['Project','Subject','Date', 'Modality', 'Repeat', "OriginalOutput"],
-        columns=['Measure', 'Label', 'Process','Name']) 
-    
+        columns=['Measure', 'Label', 'Process','Name'])
+
     columns = []
     for c in pivoted.columns:
         cols = [str(i) for i in c]
         column_name = '-'.join(cols[1:])
         columns.append(column_name)
-    
+
     pivoted.columns = columns
     pivoted.reset_index(inplace=True)
-    final_csv = pivoted 
+    final_csv = pivoted
 
     final_csv['Repeat'] = [str(i).zfill(3) for i in final_csv['Repeat']]
-    final_csv.to_csv(pivoted_filename, index=False) 
-    #s3.upload_file(pivoted_filename, bucket, pivoted_filename)    
+    final_csv.to_csv(pivoted_filename, index=False)
+    #s3.upload_file(pivoted_filename, bucket, pivoted_filename)
 
 if merge:
-    data = pd.read_csv(pivoted_filename) 
+    data = pd.read_csv(pivoted_filename)
     meta = get_s3_object(bucket, metadata, "tmp")
     metadf = pd.read_csv(meta)
-    os.remove(meta) 
+    os.remove(meta)
     merge = pd.merge(metadf, data, how="right", left_on="filename", right_on="OriginalOutput",suffixes=("","_x"))
     merge.drop(['Repeat_x'], inplace=True, axis=1)
     merge.to_csv(merge_filename, index=False)
