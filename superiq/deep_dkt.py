@@ -60,6 +60,7 @@ def deep_dkt(
     output_filename_native_csv = output_filename + "_OR_seg.csv"
     ants.image_write( segorigspace, output_filename_native )
     label_data = ants.label_geometry_measures(segorigspace, img)
+    label_data = label_data.loc[label_data['Label'].isin(segmentation_numbers)]
     label_data.to_csv(output_filename_native_csv, index=False)
 
     output_filename_sr = output_filename + "_SR.nii.gz"
