@@ -63,12 +63,15 @@ class VolumeData:
         df = pd.concat(new_rows)
         filename = path.split('/')[-1]
         split = filename.split('-')
-        name_list = ["Project", "Subject", "Date", "Modality", "Repeat", "Process", "Name"]
+        name_list = ["Project", "Subject", "Date", "Modality", "Repeat", "Process"]
         zip_list = zip(name_list, split)
         for i in zip_list:
             df[i[0]] = i[1]
         df['OriginalOutput'] = "-".join(split[:5]) + ".nii.gz"
-        df['Key'] = k
+        if  "_OR_" in k:
+            df['Resolution'] = "OR"
+        else:
+            df['Resolution'] = "SR"
         os.remove(path)
         return df
 
@@ -99,10 +102,10 @@ class VolumeData:
             local_file = None
         if local_file is None:
             df = pd.read_csv(stack_filename)
-            df['Name'] = [i.split('.')[0] for i in df['Name']]
+            #df['Name'] = [i.split('.')[0] for i in df['Name']]
             pivoted = df.pivot(
-                index=['Project','Subject','Date', 'Modality', 'Repeat', "Name","OriginalOutput", "Key"],
-                columns=['Measure', 'Label', 'Process'])
+                index=['Project','Subject','Date', 'Modality', 'Repeat',"OriginalOutput"],
+                columns=['Measure', 'Label',"Resolution",'Process'])
 
             columns = []
             for c in pivoted.columns:
@@ -121,20 +124,33 @@ class VolumeData:
             print("====> Cached pivoted_volumes found, skipping")
         return pivot_filename
 
-    def merge_data_with_metadata(self, pivoted_filename, metadata_key):
+    def merge_data_with_metadata(self,
+                                 pivoted_filename,
+                                 metadata_key,
+                                 merge_filename,
+                                 on=['filename','OriginalOutput'],
+    ):
         data = pd.read_csv(pivoted_filename)
         meta = get_s3_object(self.bucket, metadata_key, "tmp")
         metadf = pd.read_csv(meta)
         os.remove(meta)
-        merge = pd.merge(metadf, data, how="right", left_on="filename", right_on="OriginalOutput",suffixes=("","_x"))
-        merge.drop(['Repeat_x'], inplace=True, axis=1)
+        merge = pd.merge(
+            metadf,
+            data,
+            how="outer",
+            left_on=on[0],
+            right_on=on[1],
+            suffixes=("","_x")
+        )
+        duplicate_columns = [i for i in merge.columns if i.endswith('_x')]
+        merge.drop(duplicate_columns, inplace=True, axis=1)
         merge.to_csv(merge_filename, index=False)
         self.upload_file(merge_filename)
 
 
 if __name__ == "__main__":
     bucket = "eisai-basalforebrainsuperres2"
-    metadata_key = "metadata/full_metadata_20210208.csv"
+    metadata_key = "volume_measures/data_w_metadata_v01.csv"
     version = "dkt"
     prefix = f"superres-pipeline-{version}/ADNI/"
     stack_filename = f'stacked_bf_volumes_{version}.csv'
@@ -142,7 +158,7 @@ if __name__ == "__main__":
     merge_filename = f"dkt_with_metdata_{version}.csv"
     upload_prefix = "volume_measures/"
 
-    vd = VolumeData(bucket, prefix, upload_prefix, cache=True)
+    vd = VolumeData(bucket, prefix, upload_prefix, cache=False)
 
     local_stack = vd.stack_volumes(stack_filename)
 
