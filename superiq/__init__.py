@@ -19,3 +19,4 @@ from .segmentation_validation import leave_one_out_cross_validation
 from .segmentation_validation import test_validation
 from .segmentation_validation import make_validation_pools
 from .segmentation_validation import cross_validation
+from .deep_dkt import deep_dkt
