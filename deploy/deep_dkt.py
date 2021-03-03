@@ -1,5 +1,5 @@
 import os
-threads = "4"
+threads = "8"
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
 os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
@@ -33,7 +33,7 @@ def main(input_config):
     template = ants.image_read(template)
 
     sr_model = get_s3_object(config.model_bucket, config.model_key, "/data")
-    #mdl = tf.keras.models.load_model(model_path) 
+    #mdl = tf.keras.models.load_model(model_path)
 
     output_path = "/outputs/"
     if not os.path.exists(output_path):
