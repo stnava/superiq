@@ -3,7 +3,7 @@
     "aws_profile": "role",
     "job_definition" : "superiq_deep_dkt",
     "job_queue" : "superiq_deep_dkt",
-    "skip_repeats": false,
+    "skip_repeats": true,
     "parameters": {
         "environment" : "prod",
         "process_name": "deep_dkt",
@@ -22,6 +22,6 @@
         "output_file_prefix": "deep_dkt",
         "output_bucket" : "eisai-basalforebrainsuperres2",
         "output_prefix": "superres-pipeline-dkt/",
-        "output_suffix": "-deep_dkt"
+        "output_suffix": "-deep_dkt-deep_dkt_Labels-2006-2007-2015-2016_SR"
     }
 }
