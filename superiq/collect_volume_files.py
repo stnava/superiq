@@ -73,6 +73,20 @@ class VolumeData:
         else:
             df['Resolution'] = "SR"
         os.remove(path)
+        df = self.filter_labels(df, k)
+        return df
+
+    def filter_labels(self, df, key):
+        """A hack to deal with unexpeted labels in the outputs"""
+        label_set = {
+            "1015": [1006, 1007, 1015, 1016],
+            "2015": [2006, 2007, 2015, 2016],
+        }
+        keys = list(label_set.keys())
+        if keys[0] in key:
+            df = df[df['Label'].isin(label_set[keys[0]])]
+        else:
+            df = df[df['Label'].isin(label_set[keys[1]])]
         return df
 
     def stack_volumes(self, stack_filename):
