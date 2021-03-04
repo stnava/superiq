@@ -9,7 +9,9 @@ import math
 import ants
 import sys
 from superiq.pipeline_utils import *
-from superiq import native_to_superres_ljlf_segmentation, check_for_labels_in_image
+from superiq import native_to_superres_ljlf_segmentation
+from superiq import check_for_labels_in_image
+from superiq import super_resolution_segmentation_per_label
 
 def basalforebrain(input_config):
     config = LoadConfig(input_config)
@@ -37,17 +39,17 @@ def basalforebrain(input_config):
         target_image_labels_path = get_s3_object(
             config.input_bucket,
             target_image_label_name,
-            tdir,
+            "data",
         )
 
         atlas_image_keys = list_images(config.atlas_bucket, config.atlas_image_prefix)
-        atlas_label_keys = [i for i in atlas_label_keys if i != target_image_labels_path]
         atlas_image_keys = [i for i in atlas_image_keys if i != input_image]
         brains = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_image_keys]
         brains.sort()
         brains = [ants.image_read(i) for i in brains]
 
         atlas_label_keys = list_images(config.atlas_bucket, config.atlas_label_prefix)
+        atlas_label_keys = [i for i in atlas_label_keys if i != target_image_labels_path]
         brainsSeg = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_label_keys]
         brainsSeg.sort()
         brainsSeg = [ants.image_read(i) for i in brainsSeg]
@@ -205,13 +207,24 @@ def basalforebrain(input_config):
             nativeGroundTruthSR,
             output['srSeg']['segmentation']
         )
-        srOverlap = ants.label_overlap_measures( nativeGroundTruthBinSR, srsegLJLF )
+        srOverlap2 = ants.label_overlap_measures( nativeGroundTruthBinSR, srsegLJLF )
+
+        brainName = []
+        dicevalNativeSeg = []
+        dicevalSRNativeSeg = []
+        dicevalSRSeg = []
+
+        brainName.append(target_image_base)
+        dicevalNativeSeg.append(nativeOverlapSloop["MeanOverlap"][0])
+        dicevalSRNativeSeg.append( srOnNativeOverlapSloop["MeanOverlap"][0])
+        dicevalSRSeg.append( srOverlapSloop["MeanOverlap"][0])
 
         dict = {
-            'name': target_image_base,
-            'diceNativeSeg': nativeOverlapSloop["MeanOverlap"][0],
-            'diceSRNativeSeg': srOnNativeOverlapSloop["MeanOverlap"][0],
-            'diceSRSeg': srOverlapSloop["MeanOverlap"][0] }
+		'name': brainName,
+		'diceNativeSeg': dicevalNativeSeg,
+		'diceSRNativeSeg': dicevalSRNativeSeg,
+		'diceSRSeg': dicevalSRSeg
+	}
         df = pd.DataFrame(dict)
         path = f"{target_image_base}_dice_scores.csv"
         df.to_csv("/tmp/" + path, index=False)
