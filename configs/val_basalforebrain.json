@@ -5,12 +5,10 @@
     "job_queue" : "superiq_basalforebrain_dev",
     "skip_repeats": false,
     "parameters": {
-        "environment" : "prod",
+        "environment" : "val",
         "process_name": "basalforebrain_validation",
-        "input_bucket" : "eisai-basalforebrainsuperres2",
-        "input_value" : "tests/ADNI_test/002_S_4473/20140227/T1w/000/ADNI-002_S_4473-20140227-T1w-000.nii.gz",
-        "pipeline_bucket": "eisai-basalforebrainsuperres2",
-        "pipeline_prefix": "superres-pipeline/",
+        "input_bucket" : "invicro-pipeline-inputs",
+        "input_value" : "OASIS30/Brains/1000_3.nii.gz",
         "template_bucket": "invicro-pipeline-inputs",
         "template_key": "adni_templates/adni_template.nii.gz",
         "template_label_key" : "adni_templates/adni_template_dkt_labels.nii.gz",
@@ -47,7 +45,7 @@
         },
         "output_file_prefix": "basalforebrain_validation",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "superres-pipeline-validation/",
-        "output_suffix": "-basalforebrain-validation"
+        "output_prefix": "superres-pipeline-validation/basalforebrain/",
+        "output_suffix": ""
     }
 }
