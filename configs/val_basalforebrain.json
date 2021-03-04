@@ -1,7 +1,7 @@
 {
     "version": 1,
     "aws_profile": "role",
-    "job_definition" : "superiq_basalforebrain_validation",
+    "job_definition" : "superiq_basalforebrain",
     "job_queue" : "superiq_basalforebrain_dev",
     "skip_repeats": false,
     "parameters": {
