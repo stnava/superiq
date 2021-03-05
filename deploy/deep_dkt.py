@@ -10,7 +10,7 @@ import math
 import ants
 import sys
 from superiq.pipeline_utils import *
-from superiq import deep_dkt
+from superiq import deep_dkt, super_resolution_segmentation_per_label
 
 
 def main(input_config):
@@ -28,16 +28,16 @@ def main(input_config):
 
         input_image = ants.image_read(input_image)
     elif config.environment == 'val':
-        input_path = get_s3_object(config.input_bucket, config.input_value, '/data')
-        input_image = ants.read_image(input_path)
+        input_path = get_s3_object(config.input_bucket, config.input_value, '/tmp')
+        input_image = ants.image_read(input_path)
 
-        image_base_name = input_image.split('/')[-1].split('.')[0]
+        image_base_name = input_path.split('/')[-1].split('.')[0]
         image_label_name = \
             config.atlas_label_prefix +  image_base_name + '_JLFSegOR.nii.gz'
         image_labels_path = get_s3_object(
             config.atlas_label_bucket,
             image_label_name,
-            "/data",
+            "/tmp",
         )
     else:
         raise ValueError(f"The environemnt {config.environment} is not recognized")
@@ -47,10 +47,10 @@ def main(input_config):
     template = antspynet.get_antsxnet_data("biobank")
     template = ants.image_read(template)
 
-    sr_model = get_s3_object(config.model_bucket, config.model_key, "/data")
-    mdl = tf.keras.models.load_model(model_path)
+    sr_model = get_s3_object(config.model_bucket, config.model_key, "/tmp")
+    mdl = tf.keras.models.load_model(sr_model)
 
-    output_path = "/outputs/"
+    output_path = "/tmp/outputs/"
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
@@ -74,7 +74,7 @@ def main(input_config):
             output_path,
         )
 
-    elif config.evironment == 'val':
+    elif config.environment == 'val':
 
         nativeGroundTruth = ants.image_read(image_labels_path)
         nativeGroundTruth = ants.mask_image(
@@ -92,7 +92,6 @@ def main(input_config):
             dilation_amount = config.sr_params['dilation_amount'],
             verbose = config.sr_params['verbose']
         )
-        nativeGroundTruthProbSR = gtSR['probability_images'][0]
         nativeGroundTruthSR = gtSR['super_resolution_segmentation']
         nativeGroundTruthBinSR = ants.mask_image(
             nativeGroundTruthSR,
@@ -101,8 +100,8 @@ def main(input_config):
             binarize=True
         )
         ######
-
-        srsegLJLF = ants.threshold_image(output['srSeg']['probsum'], 0.5, math.inf )
+        print(output)
+        srsegLJLF = ants.threshold_image(output['superresSeg']['probsum'], 0.5, math.inf )
         nativeOverlapSloop = ants.label_overlap_measures(
             nativeGroundTruth,
             output['nativeSeg']['segmentation']
@@ -113,7 +112,7 @@ def main(input_config):
         )
         srOverlapSloop = ants.label_overlap_measures(
             nativeGroundTruthSR,
-            output['srSeg']['segmentation']
+            output['superresSeg']['segmentation']
         )
         srOverlap2 = ants.label_overlap_measures( nativeGroundTruthBinSR, srsegLJLF )
 
@@ -142,11 +141,8 @@ def main(input_config):
             config.output_bucket,
             config.output_prefix + path,
         )
-
-
-
-else:
-        pass
+    else:
+        raise ValueError(f"The environemnt {config.environment} is not recognized")
 
 if __name__ == "__main__":
     config = sys.argv[1]

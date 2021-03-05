@@ -1,0 +1,26 @@
+{
+    "version": 1,
+    "aws_profile": "role",
+    "job_definition" : "superiq_deep_dkt",
+    "job_queue" : "superiq_deep_dkt",
+    "skip_repeats": true,
+    "parameters": {
+        "environment" : "val",
+        "process_name": "deep_dkt",
+        "input_bucket" : "invicro-pipeline-inputs",
+        "input_value" : "OASIS30/Brains/1000_3.nii.gz",
+        "atlas_label_bucket": "invicro-pipeline-inputs",
+        "atlas_label_prefix": "OASIS30/SegmentationsJLFOR/",
+        "model_bucket": "invicro-pipeline-inputs",
+        "model_key": "models/SEGSR_32_ANINN222_3.h5",
+        "wlab": [2006, 2007, 2015, 2016],
+        "sr_params":{
+            "upFactor": [2,2,2],
+            "dilation_amount": 6,
+            "verbose": true
+        },
+        "output_bucket" : "eisai-basalforebrainsuperres2",
+        "output_prefix": "superres-pipeline-validation/deep_dkt_right/",
+        "output_suffix": ""
+    }
+}
