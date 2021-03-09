@@ -41,7 +41,7 @@ def get_s3_object(bucket, key, local_dir):
     s3.download_file(
             bucket,
             key,
-            local, 
+            local,
     )
     return local
 
@@ -74,14 +74,14 @@ class LoadConfig:
                 data = f.read()
             params = json.loads(data)
 
-        parameters = params['parameters'] 
+        parameters = params['parameters']
         for key in parameters:
             setattr(self, key, parameters[key])
 
         if params['aws_profile'] != "role":
             os.environ['AWS_PROFILE'] = params['aws_profile']
         print(f"AWS profile set to {params['aws_profile']}")
-    
+
     def __repr__(self):
         return f"config: {self.__dict__}"
 
@@ -117,7 +117,7 @@ def handle_outputs(input_path, output_bucket, output_prefix, process_name, local
             dev=True
         )
     *print*
-    "data/ADNI-002_S_0413-20060224-T1w-000.nii.gz -> 
+    "data/ADNI-002_S_0413-20060224-T1w-000.nii.gz ->
         output_data/ADNI/002_S_0413/20060224/T1w/000/my_process/ADNI-002_S_0413-20060224-T1w-000-my_process-new_data.nii.gz"
     """
     outputs = [i for i in os.listdir(local_output_dir)]
@@ -129,14 +129,14 @@ def handle_outputs(input_path, output_bucket, output_prefix, process_name, local
         outpath = local_output_dir + "/" + output
         obj_name = basename + '-' + process_name + '-' + filename
         obj_path = prefix + obj_name
-        print(f"{outpath} -> {obj_path}") 
+        print(f"{outpath} -> {obj_path}")
         if env == "prod":
             s3.upload_file(
-                    outpath, 
+                    outpath,
                     output_bucket,
                     obj_path,
             )
-    
+
 
 def get_pipeline_data(filename, initial_image_key, bucket, prefix, local_dir="data"):
     """
@@ -163,7 +163,7 @@ def get_pipeline_data(filename, initial_image_key, bucket, prefix, local_dir="da
     ------
     local : string
         the local path of the downloaded object
-    
+
     Example
     -------
     >>> data = get_pipeline_data(
@@ -176,8 +176,8 @@ def get_pipeline_data(filename, initial_image_key, bucket, prefix, local_dir="da
     "data/ADNI-002_S_0413-20060224-T1w-000-brain_ext-bxtreg_n3.nii.gz"
     """
 
-    path, _ = derive_s3_path(initial_image_key)  
-    key_list = list_images(bucket, prefix + path)  
+    path, _ = derive_s3_path(initial_image_key)
+    key_list = list_images(bucket, prefix + path)
     key = [i for i in key_list if i.endswith(filename)]
     if len(key) != 1:
         raise ValueError(f'{len(key)} objects were found with that suffix')
@@ -202,7 +202,7 @@ def derive_s3_path(image_path):
     path, basename : tuple (string, string)
         the path of the image as it would appear on s3 and the basename of the image without
         the extension
-    
+
     Example
     -------
     >>> path, basename = derive_s3_path("data/ADNI-002_S_0413-20060224-T1w-000.nii.gz")
@@ -219,7 +219,7 @@ def derive_s3_path(image_path):
 
 def list_images(bucket, prefix):
     """
-    Helper function for listing all file objects with an extension in s3 under 
+    Helper function for listing all file objects with an extension in s3 under
     a bucket and prefix
 
     Arguments
@@ -249,7 +249,7 @@ def list_images(bucket, prefix):
     }
     while True:
         objects = s3.list_objects_v2(**kwargs)
-        try: 
+        try:
             for obj in objects['Contents']:
                 key =  obj['Key']
                 items.append(key)
@@ -264,14 +264,14 @@ def list_images(bucket, prefix):
 
 
 def get_label_geo(
-        labeled_image, # The ants image to be labeled 
+        labeled_image, # The ants image to be labeled
         initial_image, # The unlabeled image, used in the label stats
         process, # Name of the process
         input_key, # Replace
         label_map_params=None, # Ignore for now
         resolution='OR',
         direction=None):
-    print('Starting Label Geometry Measures') 
+    print('Starting Label Geometry Measures')
     lgms = ants.label_geometry_measures(
             labeled_image,
     )
@@ -281,7 +281,7 @@ def get_label_geo(
         label_map.columns = ['LabelNumber', 'LabelName']
         label_map.set_index('LabelNumber', inplace=True)
         label_map_dict = label_map.to_dict('index')
-    
+
     new_rows = []
     for i,r in lgms.iterrows():
         label = int(r['Label'])
@@ -290,18 +290,18 @@ def get_label_geo(
             clean_label = label.replace(' ', '_')
         else:
             clean_label = label
-        fields = ['VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared'] 
-        select_data = r[fields] 
+        fields = ['VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']
+        select_data = r[fields]
         values = select_data.values
         field_values = zip(fields, values)
-        
+
         for f in field_values:
             new_df = {}
             new_df['Measure'] = f[0]
             new_df['Value'] = f[1]
-            new_df['Process'] = process 
+            new_df['Process'] = process
             new_df['Resolution'] = resolution
-            if direction is not None: 
+            if direction is not None:
                 new_df['Side'] = direction
             else:
                 new_df['Side'] = 'full'
@@ -315,30 +315,30 @@ def get_label_geo(
         label = int(r['LabelValue'])
         if label_map_params is not None:
             label = label_map_dict[label]['LabelName']
-            clean_label = label.replace(' ', '_') 
+            clean_label = label.replace(' ', '_')
         else:
             clean_label = label
-        fields = ['Mean'] 
-        select_data = r[fields]  
+        fields = ['Mean']
+        select_data = r[fields]
         values = select_data.values
         field_values = zip(fields, values)
         for f in field_values:
             new_df = {}
             new_df['Measure'] = 'MeanIntensity'
             new_df['Value'] = f[1]
-            new_df['Process'] = process 
+            new_df['Process'] = process
             new_df['Resolution'] = resolution
-            if direction is not None: 
+            if direction is not None:
                 new_df['Side'] = direction
             else:
                 new_df['Side'] = 'full'
             new_df['Label'] = clean_label
             new_df = pd.DataFrame(new_df, index=[0])
             new_rows.append(new_df)
-    label_data = pd.concat(new_rows) 
-    
+    label_data = pd.concat(new_rows)
+
     s3_path, _ = derive_s3_path(input_key)
-    split = s3_path.split('/')  
+    split = s3_path.split('/')
 
     label_data['Study'] = split[0]
     label_data['Subject'] = split[1]
@@ -357,13 +357,13 @@ def get_label_geo(
 def plot_output(img, output_path, overlay=None):
     if overlay is None:
         plot = ants.plot_ortho(
-                ants.crop_image(img), 
-                flat=True, 
+                ants.crop_image(img),
+                flat=True,
                 filename=output_path,
         )
     else:
         plot = ants.plot_ortho(
-                ants.crop_image(img, overlay), 
+                ants.crop_image(img, overlay),
                 overlay=ants.crop_image(overlay, overlay),
                 flat=True,
                 filename=output_path,
