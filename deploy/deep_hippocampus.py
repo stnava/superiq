@@ -19,7 +19,7 @@ def deep_hippo_deploy(input_config):
             original_image_path,
             c.pipeline_bucket,
             c.pipeline_prefix,
-            "/data"
+            "data"
         )
         img = ants.image_read(input_image_path)
         template = antspynet.get_antsxnet_data( "biobank" )
