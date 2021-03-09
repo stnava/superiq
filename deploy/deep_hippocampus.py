@@ -49,3 +49,6 @@ def deep_hippo_deploy(input_config):
             c.local_output_path
         )
 
+if __name__ == "__main__":
+    config = sys.argv[1]
+    deep_hippo_deploy(config)
