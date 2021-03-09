@@ -100,8 +100,7 @@ def main(input_config):
             binarize=True
         )
         ######
-        print(output)
-        srsegLJLF = ants.threshold_image(output['superresSeg']['probsum'], 0.5, math.inf )
+        srseg = ants.threshold_image(output['superresSeg']['probsum'], 0.5, math.inf )
         nativeOverlapSloop = ants.label_overlap_measures(
             nativeGroundTruth,
             output['nativeSeg']['segmentation']
@@ -114,7 +113,7 @@ def main(input_config):
             nativeGroundTruthSR,
             output['superresSeg']['segmentation']
         )
-        srOverlap2 = ants.label_overlap_measures( nativeGroundTruthBinSR, srsegLJLF )
+        srOverlap2 = ants.label_overlap_measures( nativeGroundTruthBinSR, srseg )
 
         brainName = []
         dicevalNativeSeg = []
