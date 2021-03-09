@@ -1,7 +1,7 @@
 {
     "version": 1,
     "aws_profile": "role",
-    "job_definition" : "superiq_ppmi",
+    "job_definition" : "superiq_ppmi_ljlf",
     "job_queue" : "superiq_ppmi",
     "skip_repeats": true,
     "parameters": {

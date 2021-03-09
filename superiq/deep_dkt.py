@@ -24,6 +24,7 @@ def deep_dkt(
     template = template * antspynet.brain_extraction( template )
 
     rig = ants.registration( template, img, "Affine" )
+    print(key_list)
     rigi = rig['warpedmovout']
 
     mdl = tf.keras.models.load_model(sr_model)

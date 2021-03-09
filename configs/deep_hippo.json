@@ -1,0 +1,16 @@
+{
+    "version": 1,
+    "job_definition" : "qsr_deep_hippo",
+    "job_queue" : "qsr_deep_hippo_dev",
+    "skip_repeats": false,
+    "parameters": {
+        "process_name": "deep_hippocampus",
+        "input_bucket" : "invicro-data-shared",
+        "input_value" : "ADNI/002_S_0413/20170621/T1w/000/ADNI-002_S_0413-20170621-T1w-000.nii.gz",
+        "output_bucket" : "eisai-basalforebrainsuperres2",
+        "output_prefix" : "superres-pipeline/",
+        "output_suffix" : "",
+        "model_bucket": "invicro-pipeline-inputs",
+        "model_key": "models/SEGSR_32_ANINN222_3.h5"
+    }
+}
