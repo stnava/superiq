@@ -6,12 +6,12 @@
     "skip_repeats": true,
     "parameters": {
         "environment" : "prod",
-        "process_name": "ppmi",
+        "process_name": "localjlf",
         "input_bucket" : "ppmi-image-data",
         "input_value" : "PPMI/3000/20110201/T1w/S102119/PPMI-3000-20110201-T1w-S102119.nii.gz",
         "pipeline_bucket": "mjff-ppmi",
         "pipeline_prefix": "superres-pipeline/",
-        "brain_extraction_suffix": "brainextraction-n3",
+        "brain_extraction_suffix": "brainextraction-n3.nii.gz",
         "template_bucket": "invicro-pipeline-inputs",
         "template_key": "adni_templates/adni_template.nii.gz",
         "template_label_key" : "adni_templates/adni_template_dkt_labels.nii.gz",
@@ -48,7 +48,7 @@
         },
         "output_file_prefix": "ppmi",
         "output_bucket" : "mjff-ppmi",
-        "output_prefix": "superres-pipeline-v01/",
+        "output_prefix": "superres-pipeline-ljlf/",
         "output_suffix": "-ppmi-ppmi_srOnNativeSeg"
     }
 }
