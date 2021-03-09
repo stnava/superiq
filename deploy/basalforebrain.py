@@ -13,14 +13,14 @@ from superiq import native_to_superres_ljlf_segmentation
 from superiq import check_for_labels_in_image
 from superiq import super_resolution_segmentation_per_label
 
-def basalforebrain(input_config):
+def local_jlf(input_config):
     config = LoadConfig(input_config)
     if config.environment == "prod":
         input_image = get_pipeline_data(
-                "brain_ext-bxtreg_n3.nii.gz",
-                config.input_value,
-                config.pipeline_bucket,
-                config.pipeline_prefix,
+            config.brain_extraction_suffix, # TODO:Possible breaking change here
+            config.input_value,
+            config.pipeline_bucket,
+            config.pipeline_prefix,
         )
         atlas_image_keys = list_images(config.atlas_bucket, config.atlas_image_prefix)
         brains = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_image_keys]
