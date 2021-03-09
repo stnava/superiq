@@ -4,8 +4,6 @@ import sys
 import antspynet
 import numpy as np
 
-# TODO: pass in images as ants images
-
 def deep_hippo(
     img,
     template,
