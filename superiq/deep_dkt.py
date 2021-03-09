@@ -74,5 +74,9 @@ def deep_dkt(
     )
     label_data_sr.to_csv(output_filename_sr_seg_csv, index=False)
 
-    return  output_path
+    return  {
+        "nativeSeg": ants.image_read(output_filename_native),
+        "superresSeg": ants.image_read(output_filename_sr_seg),
+        "superres": ants.image_read(output_filename_sr),
+    }
 
