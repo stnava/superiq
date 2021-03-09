@@ -47,20 +47,10 @@ def deep_hippo(
     ants.image_write(hippleft, leftORseg_path) # output: segmentation image
     ants.image_write(hippright, rightORseg_path) # output: segmentation image
 
-    #ants.plot_ortho(
-    #        ants.crop_image(img,hippleft),
-    #        ants.crop_image(hippleft,hippleft),
-    #        filename=f"{output_path}hippORleft-ortho.png",
-    #)
-
-    #ants.plot_ortho(
-    #        ants.crop_image(img,hippright),
-    #        ants.crop_image(hippright,hippright),
-    #        filename=f"{output_path}hippORright-ortho.png",
-    #)
-
-    # TODO: Apply label geo on outputs in deploy script
-    # TODO: Ortho plots?
+    hippleftORlabels  = ants.label_geometry_measures(hippleft, avgleft)
+    hipprightORlabels  = ants.label_geometry_measures(hippright, avgright)
+    hippleftORlabels.to_csv(f'{output_path}hippleftOR-lgm.csv')
+    hipprightORlabels.to_csv(f'{output_path}hipprightOR-lgm.csv')
 
     # SR Part
     imglist = []
@@ -118,3 +108,8 @@ def deep_hippo(
         hipprSRleft,
         f"{output_path}hippSegSRleft.nii.gz"
     )
+
+    hippleftSRlabels  = ants.label_geometry_measures(hippSRleft, avgleftSR)
+    hipprightSRlabels  = ants.label_geometry_measures(hippSRright, avgrightSR)
+    hippleftSRlabels.to_csv(f'{output_path}hippleftOR-lgm.csv')
+    hipprightSRlabels.to_csv(f'{output_path}hipprightOR-lgm.csv')
