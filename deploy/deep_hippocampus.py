@@ -5,7 +5,8 @@ os.environ["TF_NUM_INTRAOP_THREADS"] = threads
 os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
 
 import ants
-from pipeline_utils import *
+from superiq.pipeline_utils import *
+from superiq import deep_hippo
 import sys
 import antspynet
 import numpy as np
