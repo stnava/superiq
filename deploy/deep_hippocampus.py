@@ -29,7 +29,8 @@ def deep_hippo_deploy(input_config):
 
         sr_model_path = get_s3_object(
             c.model_bucket,
-            c.model_key
+            c.model_key,
+            "data"
         )
 
         input_params = {

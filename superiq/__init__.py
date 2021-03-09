@@ -16,4 +16,4 @@ from .basalforebrain_seg import ljlf_segmentation
 from .basalforebrain_seg import native_to_superres_ljlf_segmentation
 from .pipeline_utils import *
 from .deep_dkt import deep_dkt
-from .deep_hippocampus import deep_hippocampuse
+from .deep_hippo import deep_hippo

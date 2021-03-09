@@ -2,6 +2,7 @@ import ants
 import sys
 import antspynet
 import numpy as np
+import tensorflow as tf
 
 def deep_hippo(
     img,
