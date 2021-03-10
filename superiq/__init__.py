@@ -17,3 +17,4 @@ from .basalforebrain_seg import native_to_superres_ljlf_segmentation
 from .pipeline_utils import *
 from .deep_dkt import deep_dkt
 from .deep_hippo import deep_hippo
+from .collect_volume_files import VolumeData
