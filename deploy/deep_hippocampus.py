@@ -40,7 +40,7 @@ def deep_hippo_deploy(input_config):
             "img": img,
             "template": template,
             "sr_model_path": sr_model_path,
-            "output_path": c.local_output_path,
+            "output_path": c.local_output_path + '/',
         }
 
         outputs = deep_hippo(**input_params)

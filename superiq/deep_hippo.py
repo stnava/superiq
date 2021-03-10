@@ -113,3 +113,5 @@ def deep_hippo(
     hipprightSRlabels  = ants.label_geometry_measures(hipprSRright, avgrightSR)
     hippleftSRlabels.to_csv(f'{output_path}hippleftSR-lgm.csv')
     hipprightSRlabels.to_csv(f'{output_path}hipprightSR-lgm.csv')
+
+    return None
