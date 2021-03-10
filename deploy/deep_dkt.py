@@ -28,16 +28,16 @@ def main(input_config):
 
         input_image = ants.image_read(input_image)
     elif config.environment == 'val':
-        input_path = get_s3_object(config.input_bucket, config.input_value, '/tmp')
+        input_path = get_s3_object(config.input_bucket, config.input_value, '/data')
         input_image = ants.image_read(input_path)
 
         image_base_name = input_path.split('/')[-1].split('.')[0]
         image_label_name = \
-            config.atlas_label_prefix +  image_base_name + '_JLFSegOR.nii.gz'
+            config.label_prefix +  image_base_name + '_labels.nii.gz'
         image_labels_path = get_s3_object(
-            config.atlas_label_bucket,
+            config.label_bucket,
             image_label_name,
-            "/tmp",
+            "/data",
         )
     else:
         raise ValueError(f"The environemnt {config.environment} is not recognized")
@@ -48,10 +48,10 @@ def main(input_config):
     template = ants.image_read(template)
     template =  template * antspynet.brain_extraction(template)
 
-    sr_model = get_s3_object(config.model_bucket, config.model_key, "/tmp")
+    sr_model = get_s3_object(config.model_bucket, config.model_key, "/data")
     mdl = tf.keras.models.load_model(sr_model)
 
-    output_path = "/tmp/outputs/"
+    output_path = config.output_path
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
@@ -142,10 +142,10 @@ def main(input_config):
         }
         df = pd.DataFrame(dict)
         path = f"{image_base_name}_dice_scores.csv"
-        df.to_csv("/tmp/" + path, index=False)
+        df.to_csv(output_path + path, index=False)
         s3 = boto3.client('s3')
         s3.upload_file(
-            "/tmp/" + path,
+            output_path + path,
             config.output_bucket,
             config.output_prefix + path,
         )
