@@ -23,21 +23,22 @@ def main(input_config):
                 original_image_path,
                 config.pipeline_bucket,
                 config.pipeline_prefix,
-                "/data"
+                "data"
         )
 
         input_image = ants.image_read(input_image)
     elif config.environment == 'val':
-        input_path = get_s3_object(config.input_bucket, config.input_value, '/data')
+        input_path = get_s3_object(config.input_bucket, config.input_value, 'data')
         input_image = ants.image_read(input_path)
-
         image_base_name = input_path.split('/')[-1].split('.')[0]
+        folder_name =  image_base_name.replace('_t1brain', "") + '/'
         image_label_name = \
-            config.label_prefix +  image_base_name + '_labels.nii.gz'
+            config.label_prefix + folder_name +  image_base_name + '_labels.nii.gz'
+        print(image_label_name)
         image_labels_path = get_s3_object(
             config.label_bucket,
             image_label_name,
-            "/data",
+            "data",
         )
     else:
         raise ValueError(f"The environemnt {config.environment} is not recognized")
@@ -48,7 +49,7 @@ def main(input_config):
     template = ants.image_read(template)
     template =  template * antspynet.brain_extraction(template)
 
-    sr_model = get_s3_object(config.model_bucket, config.model_key, "/data")
+    sr_model = get_s3_object(config.model_bucket, config.model_key, "data")
     mdl = tf.keras.models.load_model(sr_model)
 
     output_path = config.output_path
