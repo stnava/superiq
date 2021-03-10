@@ -8,16 +8,18 @@ import multiprocessing as mp
 
 class VolumeData:
 
-    def __init__(self, bucket, prefix, upload_prefix, cache=False):
+    def __init__(self, bucket, prefix, upload_prefix, filter_labels=False,cache=False):
         self.bucket = bucket
         self.prefix = prefix
         self.cache = cache
+        self.labels  = filter_labels
         self.upload_prefix = upload_prefix
 
     def _filter_keys(self):
         print("====> Getting keys")
         keys = list_images(self.bucket, self.prefix)
         keys = [i for i in keys if i.endswith('.csv')]
+        print(len(keys))
         return keys
 
     def upload_file(self, filename):
@@ -68,15 +70,18 @@ class VolumeData:
         for i in zip_list:
             df[i[0]] = i[1]
         df['OriginalOutput'] = "-".join(split[:5]) + ".nii.gz"
-        if  "_OR_" in k:
+        if  ("_OR_" in k) or ("_NR_" in k):
             df['Resolution'] = "OR"
-        else:
+        elif "_SR_" in k:
             df['Resolution'] = "SR"
+        else:
+            df['Resolution'] = "srOnNativeSeg"
         os.remove(path)
-        df = self.filter_labels(df, k)
+        if self.labels:
+            df = self.filter_labels(df, k)
         return df
 
-    def filter_labels(self, df, key):
+    def filter_labels(self, df, key, label_set=None):
         """A hack to deal with unexpeted labels in the outputs"""
         label_set = {
             "1015": [1006, 1007, 1015, 1016],
@@ -132,7 +137,7 @@ class VolumeData:
             final_csv = pivoted
 
             final_csv['Repeat'] = [str(i).zfill(3) for i in final_csv['Repeat']]
-            final_csv.to_csv(pivoted_filename, index=False)
+            final_csv.to_csv(pivot_filename, index=False)
             self.upload_file(pivot_filename)
         else:
             print("====> Cached pivoted_volumes found, skipping")
