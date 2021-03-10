@@ -21,8 +21,6 @@ def deep_dkt(
     """
     img = target_image
 
-    #template = template * antspynet.brain_extraction( template )
-
     rig = ants.registration( template, img, "Rigid" )
     rigi = rig['warpedmovout']
 
