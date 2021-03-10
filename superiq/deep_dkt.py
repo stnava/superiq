@@ -21,10 +21,9 @@ def deep_dkt(
     """
     img = target_image
 
-    template = template * antspynet.brain_extraction( template )
+    #template = template * antspynet.brain_extraction( template )
 
-    rig = ants.registration( template, img, "Affine" )
-    print(key_list)
+    rig = ants.registration( template, img, "Rigid" )
     rigi = rig['warpedmovout']
 
     mdl = tf.keras.models.load_model(sr_model)
@@ -76,7 +75,7 @@ def deep_dkt(
     label_data_sr.to_csv(output_filename_sr_seg_csv, index=False)
 
     return  {
-        "nativeSeg": ants.image_read(output_filename_native),
+        "nativeSeg": ants.image_read(output_filename_native), #segorigspace
         "superresSeg": ants.image_read(output_filename_sr_seg),
         "superres": ants.image_read(output_filename_sr),
     }

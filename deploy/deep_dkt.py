@@ -46,6 +46,7 @@ def main(input_config):
 
     template = antspynet.get_antsxnet_data("biobank")
     template = ants.image_read(template)
+    template =  template * antspynet.brain_extraction(template)
 
     sr_model = get_s3_object(config.model_bucket, config.model_key, "/tmp")
     mdl = tf.keras.models.load_model(sr_model)
@@ -75,61 +76,69 @@ def main(input_config):
         )
 
     elif config.environment == 'val':
-
+        native_seg = output['nativeSeg']
         nativeGroundTruth = ants.image_read(image_labels_path)
-        nativeGroundTruth = ants.mask_image(
+
+        label_one_comp_set = config.label_one_labelset # [17, 53]
+        label_one_gt = ants.threshold_image(
             nativeGroundTruth,
+            label_one_comp_set[0],
+            label_one_comp_set[0],
+        )
+        label_one = ants.threshold_image(
+            native_seg,
+            label_one_comp_set[1],
+            label_one_comp_set[1],
+        )
+        dice_one = ants.label_overlap_measures(label_one_gt, label_one)
+        dice_one = dice_one['MeanOverlap'][1]
+        print(dice_one)
+
+        label_two_comp_set = config.label_two_labelset # [1006, 2006]
+        label_two_gt = ants.threshold_image(
             nativeGroundTruth,
-            level = wlab,
-            binarize=False
+            label_two_comp_set[0],
+            label_two_comp_set[0],
         )
-        gtSR = super_resolution_segmentation_per_label(
-            imgIn = ants.iMath(input_image, "Normalize"),
-            segmentation = nativeGroundTruth, # usually, an estimate from a template, not GT
-            upFactor = config.sr_params['upFactor'],
-            sr_model = mdl,
-            segmentation_numbers = wlab,
-            dilation_amount = config.sr_params['dilation_amount'],
-            verbose = config.sr_params['verbose']
+        label_two = ants.threshold_image(
+            native_seg,
+            label_two_comp_set[1],
+            label_two_comp_set[1],
         )
-        nativeGroundTruthSR = gtSR['super_resolution_segmentation']
-        nativeGroundTruthBinSR = ants.mask_image(
-            nativeGroundTruthSR,
-            nativeGroundTruthSR,
-            wlab,
-            binarize=True
-        )
-        ######
-        srseg = ants.threshold_image(output['superresSeg']['probsum'], 0.5, math.inf )
-        nativeOverlapSloop = ants.label_overlap_measures(
+        dice_two = ants.label_overlap_measures(label_two_gt, label_two)
+        dice_two = dice_two['MeanOverlap'][1]
+        print(dice_two)
+
+        label_three_comp_set = config.label_three_labelset # [1006, 2006]
+        label_three_gt = ants.threshold_image(
             nativeGroundTruth,
-            output['nativeSeg']['segmentation']
+            label_three_comp_set[0],
+            label_three_comp_set[0],
         )
-        srOnNativeOverlapSloop = ants.label_overlap_measures(
-            nativeGroundTruthSR,
-            output['srOnNativeSeg']['super_resolution_segmentation']
+        label_three = ants.threshold_image(
+            native_seg,
+            label_three_comp_set[1],
+            label_three_comp_set[1],
         )
-        srOverlapSloop = ants.label_overlap_measures(
-            nativeGroundTruthSR,
-            output['superresSeg']['segmentation']
-        )
-        srOverlap2 = ants.label_overlap_measures( nativeGroundTruthBinSR, srseg )
+        dice_three = ants.label_overlap_measures(label_three_gt, label_three)
+        dice_three = dice_three['MeanOverlap'][1]
+        print(dice_three)
 
         brainName = []
-        dicevalNativeSeg = []
-        dicevalSRNativeSeg = []
-        dicevalSRSeg = []
+        col1 = []
+        col2 = []
+        col3 = []
 
         brainName.append(target_image_base)
-        dicevalNativeSeg.append(nativeOverlapSloop["MeanOverlap"][0])
-        dicevalSRNativeSeg.append( srOnNativeOverlapSloop["MeanOverlap"][0])
-        dicevalSRSeg.append( srOverlapSloop["MeanOverlap"][0])
+        col1.append(dice_one)
+        col2.append(dice_two)
+        col3.append(dice_three)
 
         dict = {
                 'name': brainName,
-                'diceNativeSeg': dicevalNativeSeg,
-                'diceSRNativeSeg': dicevalSRNativeSeg,
-                'diceSRSeg': dicevalSRSeg
+                'hippocampus': col1,
+                'entorhinal': col2,
+                'parahippocampal': col3,
         }
         df = pd.DataFrame(dict)
         path = f"{image_base_name}_dice_scores.csv"
