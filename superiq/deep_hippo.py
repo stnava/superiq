@@ -34,7 +34,7 @@ def deep_hippo(
 
     # OR Prob Images
     leftORprob_path = f"{output_path}hippProbORleft.nii.gz"
-    rightORprob_path = f"{output_path}/hippProbORright.nii.gz"
+    rightORprob_path = f"{output_path}hippProbORright.nii.gz"
     ants.image_write(avgleft, leftORprob_path)
     ants.image_write(avgright, rightORprob_path)
 
@@ -49,8 +49,8 @@ def deep_hippo(
 
     hippleftORlabels  = ants.label_geometry_measures(hippleft, avgleft)
     hipprightORlabels  = ants.label_geometry_measures(hippright, avgright)
-    hippleftORlabels.to_csv(f'{output_path}hippleftOR-lgm.csv')
-    hipprightORlabels.to_csv(f'{output_path}hipprightOR-lgm.csv')
+    hippleftORlabels.to_csv(f'{output_path}hippleftOR-lgm.csv', index=False)
+    hipprightORlabels.to_csv(f'{output_path}hipprightOR-lgm.csv', index=False)
 
     # SR Part
     imglist = []
@@ -109,7 +109,7 @@ def deep_hippo(
         f"{output_path}hippSegSRleft.nii.gz"
     )
 
-    hippleftSRlabels  = ants.label_geometry_measures(hippSRleft, avgleftSR)
-    hipprightSRlabels  = ants.label_geometry_measures(hippSRright, avgrightSR)
-    hippleftSRlabels.to_csv(f'{output_path}hippleftOR-lgm.csv')
-    hipprightSRlabels.to_csv(f'{output_path}hipprightOR-lgm.csv')
+    hippleftSRlabels  = ants.label_geometry_measures(hipprSRleft, avgleftSR)
+    hipprightSRlabels  = ants.label_geometry_measures(hipprSRright, avgrightSR)
+    hippleftSRlabels.to_csv(f'{output_path}hippleftSR-lgm.csv')
+    hipprightSRlabels.to_csv(f'{output_path}hipprightSR-lgm.csv')
