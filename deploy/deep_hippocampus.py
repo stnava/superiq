@@ -33,6 +33,9 @@ def deep_hippo_deploy(input_config):
             "data"
         )
 
+        if not os.path.exists(c.local_output_path):
+            os.makedirs(c.local_output_path)
+
         input_params = {
             "img": img,
             "template": template,
