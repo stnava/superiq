@@ -130,7 +130,7 @@ def main(input_config):
         col2 = []
         col3 = []
 
-        brainName.append(target_image_base)
+        brainName.append(image_base_name)
         col1.append(dice_one)
         col2.append(dice_two)
         col3.append(dice_three)
