@@ -5,9 +5,9 @@ import boto3
 
 
 bucket = "eisai-basalforebrainsuperres2"
-prefix = f"superres-pipeline-validation/basalforebrain/"
+prefix = f"superres-pipeline-validation/deep_dkt/"
 stack_filename = f'stacked_dice_scores.csv'
-output_name = "basalforebrain_dice_scores_all.csv"
+output_name = "deep_dkt_dice_scores_all.csv"
 s3 = boto3.client('s3')
 
 def get_files(k):
