@@ -48,7 +48,7 @@ output_filename_sr_seg = output_filename  +  "_SR_seg.nii.gz"
 output_filename_sr_seg_csv = output_filename  + "_SR_seg.csv"
 output_filename_warped = output_filename  + "_warped.nii.gz"
 
-is_test=True
+is_test=False
 
 if not 'reg' in locals():
     regits = (600,600,600,200,50)
