@@ -183,7 +183,8 @@ def super_resolution_segmentation_per_label(
     segmentation_numbers,
     dilation_amount = 6,
     probability_images=None, # probability list
-    probability_labels=None, # the segmentation ids for the probability image
+    probability_labels=None, # the segmentation ids for the probability image,
+    max_lab_plus_one=False,
     verbose = False,
 ):
     """
@@ -215,6 +216,9 @@ def super_resolution_segmentation_per_label(
 
     probability_labels : integer list
         providing the integer values associated with each probability image
+
+    max_lab_plus_one : boolean
+        add background label
 
     verbose : boolean
         whether to show status updates
@@ -249,12 +253,20 @@ def super_resolution_segmentation_per_label(
     imgsrfull = imgup * 0.0
     weightedavg = imgup * 0.0
     problist = []
-    seggeom = []
     imgsegjoin = imgup * 0.0
-    for locallab in segmentation_numbers:
+    bkgdilate = 2
+    segmentationUse = ants.image_clone( segmentation )
+    segmentation_numbers_use = segmentation_numbers
+    if max_lab_plus_one:
+        background = ants.threshold_image( segmentationUse, 1, max(segmentation_numbers) )
+        background = ants.iMath(background,"MD",bkgdilate) - background
+        segmentation_numbers_use.append( max(segmentation_numbers) + 1 )
+        segmentationUse = segmentationUse + background * max(segmentation_numbers_use)
+
+    for locallab in segmentation_numbers_use:
         if verbose:
             print( "SR-per-label:" + str( locallab ) )
-        binseg = ants.threshold_image( segmentation, locallab, locallab )
+        binseg = ants.threshold_image( segmentationUse, locallab, locallab )
         sizethresh = 2
         if ( binseg == 1 ).sum() < sizethresh :
             warnings.warn( "SR-per-label:" + str( locallab ) + ' is small' )
@@ -269,22 +281,20 @@ def super_resolution_segmentation_per_label(
                 maxprob = max( probimg[ binseg >= 0.5 ] )
             if verbose:
                 print( "SR-per-label:" + str( locallab ) + " min/max-prob: " + str(minprob)+ " / " + str(maxprob)  )
-            binsegdil = ants.iMath( ants.threshold_image( segmentation, locallab, locallab ), "MD", dilation_amount )
+            binsegdil = ants.iMath( ants.threshold_image( segmentationUse, locallab, locallab ), "MD", dilation_amount )
             binsegdil2input = ants.resample_image_to_target( binsegdil, imgIn, interp_type='nearestNeighbor'  )
             imgc = ants.crop_image( ants.iMath(imgIn,"Normalize"), binsegdil2input )
             imgc = imgc * 255 - 127.5 # for SR
             imgch = ants.crop_image( binseg, binsegdil )
             imgch = ants.iMath( imgch, "Normalize" ) * 255 - 127.5 # for SR
             if type( sr_model ) == type(""): # this is just for testing
-                if locallab == segmentation_numbers[0]:
+                if locallab == segmentation_numbers_use[0]:
                     imgsegjoin = imgup * 0.0
                 binsegup = ants.resample_image_to_target( binseg, imgup, interp_type='nearestNeighbor' )
                 temp = binsegup * locallab
                 temp[ (temp > 0) * (imgsegjoin > 0) ] = 0 # FIXME zeroes out uncertain boundaries
                 selector = (imgsegjoin == 0) * (temp > 0) # FIXME - this introduces some dependencies on ordering
                 imgsegjoin[ selector ] = imgsegjoin[ selector ] + temp[ selector ]
-                tempgeo = ants.label_geometry_measures( binsegup )
-                seggeom.append( tempgeo )
             else:
                 myarr = np.stack( [imgc.numpy(),imgch.numpy()],axis=3 )
                 newshape = np.concatenate( [ [1],np.asarray( myarr.shape )] )
@@ -297,7 +307,7 @@ def super_resolution_segmentation_per_label(
                 imgsrh = ants.from_numpy( tf.squeeze( pred[1] ).numpy())
                 imgsrh = ants.copy_image_info( imgc, imgsrh )
                 ants.set_spacing( imgsrh,  newspc )
-                if locallab == segmentation_numbers[0]:
+                if locallab == segmentation_numbers_use[0]:
                     imgsegjoin = imgup * 0.0
                 # NOTE: this only works because we use sigmoid activation with binary labels
                 # NOTE: we could also compute the minimum probability in the label and run
@@ -319,11 +329,6 @@ def super_resolution_segmentation_per_label(
                 contribtoavg = ants.resample_image_to_target( imgsr*0+1, imgup, interp_type='nearestNeighbor' )
                 weightedavg = weightedavg + contribtoavg
                 imgsrfull = imgsrfull + ants.resample_image_to_target( imgsr, imgup, interp_type='nearestNeighbor' )
-                if  imgsrhb.max() > imgsrhb.min():
-                    tempgeo = ants.label_geometry_measures( imgsrhb )
-                else:
-                    tempgeo = "NA"
-                seggeom.append( tempgeo )
 
     imgsrfull2 = imgsrfull
     selector = imgsrfull == 0
@@ -331,9 +336,31 @@ def super_resolution_segmentation_per_label(
     weightedavg[ weightedavg == 0.0 ] = 1.0
     imgsrfull2=imgsrfull2/weightedavg
     imgsrfull2[ imgup == 0 ] = 0
+
+    for k in range(len(problist)):
+        problist[k] = ants.resample_image_to_target(problist[k],imgsrfull2)
+
+    if max_lab_plus_one:
+        tarmask = ants.threshold_image( segmentationUse, 1, segmentationUse.max() )
+    else:
+        tarmask = ants.threshold_image( segmentationUse, 1, segmentationUse.max() ).iMath("MD",1)
+    tarmask = ants.resample_image_to_target( tarmask, imgsrfull2, interp_type='genericLabel' )
+    segmat = ants.images_to_matrix(problist, tarmask)
+    finalsegvec = segmat.argmax(axis=0)
+    finalsegvec2 = finalsegvec.copy()
+
+    # mapfinalsegvec to original labels
+    for i in range(len(problist)):
+        segnum = segmentation_numbers_use[i]
+        finalsegvec2[finalsegvec == i] = segnum
+
+    outimg = ants.make_image(tarmask, finalsegvec2)
+    seggeom = ants.label_geometry_measures( outimg )
+
     return {
         "super_resolution": imgsrfull2,
         "super_resolution_segmentation": imgsegjoin,
+        "super_resolution_segmentation_vote": outimg,
         "segmentation_geometry": seggeom,
         "probability_images": problist
         }
