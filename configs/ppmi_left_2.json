@@ -6,7 +6,7 @@
     "skip_repeats": true,
     "parameters": {
         "environment" : "prod",
-        "process_name": "localljlfleft",
+        "process_name": "localjlfleft",
         "input_bucket" : "ppmi-image-data",
         "input_value" : "PPMI/3000/20110201/T1w/S102119/PPMI-3000-20110201-T1w-S102119.nii.gz",
         "pipeline_bucket": "mjff-ppmi",
@@ -49,6 +49,6 @@
         "output_file_prefix": "ppmi",
         "output_bucket" : "mjff-ppmi",
         "output_prefix": "superres-pipeline-v2/",
-        "output_suffix": "-localljlfleft-ppmi_NR_seg.nii.gz"
+        "output_suffix": "-localjlfleft-ppmi_NR_seg.nii.gz"
     }
 }
