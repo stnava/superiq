@@ -24,7 +24,7 @@ def local_jlf(input_config):
         )
         # Noise Correction
         input_image = ants.denoise_image(input_image)
-        input_image = ants.iMath(input_image, 'TruncateIntensity', 0, 0.995)
+        input_image = ants.iMath(input_image, 'TruncateIntensity', 0.000001, 0.995)
 
         atlas_image_keys = list_images(config.atlas_bucket, config.atlas_image_prefix)
         brains = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_image_keys]
