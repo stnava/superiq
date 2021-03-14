@@ -47,7 +47,7 @@ if not 'reg' in locals():
     print("SyN begin")
     reg = ants.registration( imgIn, template, 'SyN',
         syn_metric='CC', syn_sampling=2, grad_step=0.2,
-        reg_iterations=[200,200,20,0,0] )
+        reg_iterations=[200,200,50,0,0] )
     forward_transforms = reg['fwdtransforms']
     initlab0 = ants.apply_transforms( imgIn, templateL,
           forward_transforms, interpolator="genericLabel" )
@@ -59,7 +59,7 @@ srseg = super_resolution_segmentation_per_label(
     upFactor = [2,2,2],
     sr_model = mdl,
     segmentation_numbers = wlab,
-    dilation_amount = 4,
+    dilation_amount = 8,
     max_lab_plus_one = True,
     verbose = True
 )
@@ -76,11 +76,11 @@ locseg = ljlf_parcellation_one_template(
         forward_transforms=forward_transforms,
         template=template,
         templateLabels=templateL,
-        templateRepeats = 8,
-        submask_dilation=6,  # a parameter that should be explored
-        searcher= 1,  # double this for SR
-        radder=2,  # double this for SR
-        reg_iterations=[100,100,50,10], # fast test
+        templateRepeats = 12,
+        submask_dilation = 8,  # a parameter that should be explored
+        searcher = 1,  # double this for SR
+        radder = 2,  # double this for SR
+        reg_iterations=[200,200,40], # fast test
         syn_sampling = 2,
         syn_metric = 'CC',
         max_lab_plus_one=True,

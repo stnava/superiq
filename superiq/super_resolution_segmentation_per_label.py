@@ -547,6 +547,8 @@ def ljlf_parcellation_one_template(
     syn_sampling=2,
     syn_metric='CC',
     max_lab_plus_one=True,
+    deformation_sd=2.0,
+    intensity_sd=0.1,
     output_prefix=None,
     verbose=False,
 ):
@@ -596,6 +598,12 @@ def ljlf_parcellation_one_template(
     max_lab_plus_one : boolean
         set True if you are having problems with background segmentation labels
 
+    deformation_sd : numeric value
+        controls the amount of deformation in simulation
+
+    intensity_sd : numeric value
+        controls the amount of intensity noise in simulation
+
     output_prefix : string
         the location of the output; should be both a directory and prefix filename
 
@@ -631,11 +639,15 @@ def ljlf_parcellation_one_template(
     libraryL = []
     for x in range(templateRepeats):
         temp = ants.iMath( template, "Normalize" )
-        mystd = 0.1 * temp.std()
+        bsp_field = ants.simulate_displacement_field(template, field_type="bspline",sd_noise=deformation_sd)
+        bsp_xfrm = ants.transform_from_displacement_field(bsp_field * 3)
+        temp = ants.apply_ants_transform_to_image(bsp_xfrm, temp, temp)
+        mystd = intensity_sd * temp.std()
         temp = ants.add_noise_to_image( temp, "additivegaussian", [0,mystd] )
         libraryI.append( temp )
         temp = ants.image_clone( templateLabels )
-#        temp = ants.mask_image( templateLabels, templateLabels, segmentation_numbers )
+        temp = ants.mask_image( templateLabels, templateLabels, segmentation_numbers )
+        temp = ants.apply_ants_transform_to_image(bsp_xfrm, temp, temp,interpolation='nearestneighbor')
         libraryL.append( temp )
 
     #  https://mindboggle.readthedocs.io/en/latest/labels.html
