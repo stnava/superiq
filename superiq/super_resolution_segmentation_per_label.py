@@ -256,10 +256,11 @@ def super_resolution_segmentation_per_label(
     imgsegjoin = imgup * 0.0
     bkgdilate = 2
     segmentationUse = ants.image_clone( segmentation )
-    segmentation_numbers_use = segmentation_numbers
+    segmentation_numbers_use = segmentation_numbers.copy()
     if max_lab_plus_one:
         background = ants.threshold_image( segmentationUse, 1, max(segmentation_numbers) )
         background = ants.iMath(background,"MD",bkgdilate) - background
+        backgroundup = ants.resample_image_to_target( background, imgup, interp_type='linear' )
         segmentation_numbers_use.append( max(segmentation_numbers) + 1 )
         segmentationUse = segmentationUse + background * max(segmentation_numbers_use)
 
@@ -331,7 +332,7 @@ def super_resolution_segmentation_per_label(
                 imgsrfull = imgsrfull + ants.resample_image_to_target( imgsr, imgup, interp_type='nearestNeighbor' )
 
     if max_lab_plus_one:
-        problist.append( background )
+        problist.append( backgroundup )
 
     imgsrfull2 = imgsrfull
     selector = imgsrfull == 0
