@@ -263,7 +263,7 @@ def super_resolution_segmentation_per_label(
         segmentation_numbers_use.append( max(segmentation_numbers) + 1 )
         segmentationUse = segmentationUse + background * max(segmentation_numbers_use)
 
-    for locallab in segmentation_numbers_use:
+    for locallab in segmentation_numbers:
         if verbose:
             print( "SR-per-label:" + str( locallab ) )
         binseg = ants.threshold_image( segmentationUse, locallab, locallab )
@@ -330,6 +330,9 @@ def super_resolution_segmentation_per_label(
                 weightedavg = weightedavg + contribtoavg
                 imgsrfull = imgsrfull + ants.resample_image_to_target( imgsr, imgup, interp_type='nearestNeighbor' )
 
+    if max_lab_plus_one:
+        problist.append( background )
+
     imgsrfull2 = imgsrfull
     selector = imgsrfull == 0
     imgsrfull2[ selector  ] = imgup[ selector ]
@@ -338,7 +341,7 @@ def super_resolution_segmentation_per_label(
     imgsrfull2[ imgup == 0 ] = 0
 
     for k in range(len(problist)):
-        problist[k] = ants.resample_image_to_target(problist[k],imgsrfull2)
+        problist[k] = ants.resample_image_to_target(problist[k],imgsrfull2,interp_type='linear')
 
     if max_lab_plus_one:
         tarmask = ants.threshold_image( segmentationUse, 1, segmentationUse.max() )
