@@ -18,7 +18,7 @@ import pandas as pd
 from superiq import super_resolution_segmentation_per_label
 from superiq import ljlf_parcellation
 from superiq import ljlf_parcellation_one_template
-from superiq import listToString
+from superiq import list_to_string
 
 # user definitions here
 tdir = "/Users/stnava/data/BiogenSuperRes/CIT168_Reinf_Learn_v1/"
@@ -45,7 +45,9 @@ output_filename_sr_seg_csv = output_filename  + "_SR_seg.csv"
 # first, run registration - then do SR in the local region
 if not 'reg' in locals():
     print("SyN begin")
-    reg = ants.registration( imgIn, template, 'SyN' )
+    reg = ants.registration( imgIn, template, 'SyN',
+        syn_metric='CC', syn_sampling=2, grad_step=0.2,
+        reg_iterations=[200,200,20,0,0] )
     forward_transforms = reg['fwdtransforms']
     initlab0 = ants.apply_transforms( imgIn, templateL,
           forward_transforms, interpolator="genericLabel" )
