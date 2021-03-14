@@ -540,12 +540,12 @@ def ljlf_parcellation_one_template(
     template,
     templateLabels,
     templateRepeats,
-    submask_dilation=12,  # a parameter that should be explored
+    submask_dilation=6,  # a parameter that should be explored
     searcher=1,  # double this for SR
     radder=2,  # double this for SR
-    reg_iterations = [100,100,5],
-    syn_sampling=32,
-    syn_metric='mattes',
+    reg_iterations = [100,100,100,55],
+    syn_sampling=2,
+    syn_metric='CC',
     max_lab_plus_one=True,
     output_prefix=None,
     verbose=False,

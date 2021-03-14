@@ -79,15 +79,6 @@ if is_test:
     sr_params = { 'upFactor':[2,2,2], 'dilation_amount':2, 'verbose':True}
     mynums=[7,8,9,10,11]
 
-# background = ants.threshold_image( initlab0, 1, max(mynums) )
-# bkgdilate = 2
-# background = ants.iMath(background,"MD",bkgdilate) - background
-# mynums.append( max(mynums) + 1 )
-# initlab0p1 = initlab0 + background * max(mynums)
-
-# imgInR = ants.apply_transforms( template, imgIn, reg['fwdtransforms'][1],interpolator="nearestNeighbor" )
-# initlab0R = ants.apply_transforms( imgInR, templateL, reg['invtransforms'][1], interpolator="nearestNeighbor" )
-
 if not 'srseg' in locals():
     srseg = super_resolution_segmentation_per_label(
         imgIn = imgIn,
@@ -101,7 +92,8 @@ if not 'srseg' in locals():
     )
 
 ants.image_write( srseg['super_resolution'], output_filename_sr )
-ants.image_write( srseg['super_resolution_segmentation_vote'], output_filename_sr_seg )
+
+ants.image_write( srseg['super_resolution_segmentation'], output_filename_sr_seg )
 
 derka
 
