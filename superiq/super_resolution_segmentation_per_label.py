@@ -184,7 +184,7 @@ def super_resolution_segmentation_per_label(
     dilation_amount = 6,
     probability_images=None, # probability list
     probability_labels=None, # the segmentation ids for the probability image,
-    max_lab_plus_one=False,
+    max_lab_plus_one=True,
     verbose = False,
 ):
     """

@@ -114,6 +114,7 @@ if hasattr(config, "sr_params"):
         sr_model = mdl,
         segmentation_numbers = wlab,
         dilation_amount = sr_params['dilation_amount'],
+        max_lab_plus_one = True,
         verbose = sr_params['verbose']
     )
     get_label_geo(

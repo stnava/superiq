@@ -27,10 +27,8 @@ model_file_name = "/Users/stnava/code/super_resolution_pipelines/models/SEGSR_32
 tfn = tdir + "CIT168_T1w_700um.nii.gz"
 tfnl = tdir + "det_atlas_25.nii.gz"
 infn = sdir + "ADNI-002_S_4473-20140227-T1w-000-brain_ext-bxtreg_n3.nii.gz"
-output_filename = "/tmp/outputs3/CITI68"
-wlab = range(7,11) # substantia nigra in CIT168
-# wlab = [1,2,5,6] # this is putamen, caudate - need multi-atlas
-wlab = [2] # substantia nigra in CIT168
+output_filename = "outputs/CITI68"
+wlab = list(range(7,11)) # substantia nigra regions in CIT168
 # input data
 imgIn = ants.image_read( infn )
 template = ants.image_read(tfn)
@@ -59,7 +57,8 @@ srseg = super_resolution_segmentation_per_label(
     upFactor = [2,2,2],
     sr_model = mdl,
     segmentation_numbers = wlab,
-    dilation_amount = 12,
+    dilation_amount = 4,
+    max_lab_plus_one = True,
     verbose = True
 )
 
@@ -77,8 +76,8 @@ locseg = ljlf_parcellation_one_template(
         templateLabels=templateL,
         templateRepeats = 8,
         submask_dilation=6,  # a parameter that should be explored
-        searcher= 2,  # double this for SR
-        radder=3,  # double this for SR
+        searcher= 1,  # double this for SR
+        radder=2,  # double this for SR
         reg_iterations=[100,100,50,10], # fast test
         syn_sampling = 2,
         syn_metric = 'CC',
