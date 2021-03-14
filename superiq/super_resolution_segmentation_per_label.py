@@ -256,6 +256,7 @@ def super_resolution_segmentation_per_label(
     imgsegjoin = imgup * 0.0
     bkgdilate = 2
     segmentationUse = ants.image_clone( segmentation )
+    segmentationUse = ants.mask_image( segmentationUse, segmentationUse, segmentation_numbers )
     segmentation_numbers_use = segmentation_numbers.copy()
     if max_lab_plus_one:
         background = ants.threshold_image( segmentationUse, 1, max(segmentation_numbers) )
@@ -359,6 +360,7 @@ def super_resolution_segmentation_per_label(
         finalsegvec2[finalsegvec == i] = segnum
 
     outimg = ants.make_image(tarmask, finalsegvec2)
+    outimg = ants.mask_image( outimg, outimg, segmentation_numbers )
     seggeom = ants.label_geometry_measures( outimg )
 
     return {
@@ -517,6 +519,7 @@ def ljlf_parcellation(
         print("Nerds want to know the size if dilation is:" + str(submask_dilation ))
         print( imgc )
     imgc = ants.iMath(imgc, "TruncateIntensity", 0.001, 0.99999)
+    imgc = ants.iMath( imgc, "Normalize" )
     initlabc = ants.resample_image_to_target( initlab, imgc, interp_type="nearestNeighbor"  )
     jlfmask = imgc * 0 + 1
     deftx = "SyN"

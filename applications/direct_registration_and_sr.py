@@ -25,17 +25,18 @@ from superiq import list_to_string
 # user definitions here
 tdir = "/Users/stnava/data/BiogenSuperRes/CIT168_Reinf_Learn_v1/"
 sdir = "/Users/stnava/Downloads/temp/adniin/002_S_4473/20140227/T1w/000/brain_ext/"
+sdir = "/tmp/PPMI/3068/20110620/T1w/S117935/localjlf/"
 model_file_name = "/Users/stnava/code/super_resolution_pipelines/models/SEGSR_32_ANINN222_3.h5"
 tfn = tdir + "CIT168_T1w_700um_pad.nii.gz"
 tfnl = tdir + "det_atlas_25_pad.nii.gz"
 infn = sdir + "ADNI-002_S_4473-20140227-T1w-000-brain_ext-bxtreg_n3.nii.gz"
-
+infn = sdir + "PPMI-3068-20110620-T1w-S117935-localjlf-ppmi_OR.nii.gz"
 # config handling
-output_filename = "outputs/EXAMPLE5"
+output_filename = "outputs/TEST_"
 # input data
 imgIn = ants.image_read( infn )
 imgIn = ants.denoise_image( imgIn, noise_model='Rician' )
-imgIn = ants.iMath( imgIn, "TruncateIntensity", 0.00001, 0.995 )
+imgIn = ants.iMath( imgIn, "TruncateIntensity", 0.00001, 0.9995 ).iMath("Normalize")
 template = ants.image_read(tfn)
 templateL = ants.image_read(tfnl)
 mdl = tf.keras.models.load_model( model_file_name ) # FIXME - parameterize this
@@ -54,7 +55,7 @@ if not 'reg' in locals():
     regits = (600,600,600,200,50)
     verber=False
     if is_test:
-        regits=(600,600,0,0,0)
+        regits=(600,600,20,0,0)
         verber=True
     reg = ants.registration( template, imgIn,
 #        type_of_transform="TV[2]",        grad_step = 1.4,
@@ -76,7 +77,7 @@ mynums=list( range(1,17) )
 
 if is_test:
     sr_params = { 'upFactor':[2,2,2], 'dilation_amount':2, 'verbose':True}
-    mynums=[7,8,9,10]
+    mynums=[7,8,9,10,11]
 
 # background = ants.threshold_image( initlab0, 1, max(mynums) )
 # bkgdilate = 2
