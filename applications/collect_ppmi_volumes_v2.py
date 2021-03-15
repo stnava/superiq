@@ -1,0 +1,55 @@
+from superiq import VolumeData
+from superiq.pipeline_utils import *
+import boto3
+import pandas as pd
+from datetime import datetime
+
+
+if __name__ == "__main__":
+	bucket = "mjff-ppmi"
+	#metadata_key = "volume_measures/data_w_metadata_v01.csv"
+	version = "simple"
+	prefix = f"superres-pipeline-{version}/"
+	stack_filename = f'ppmi_stacked_volumes_{version}.csv'
+	pivoted_filename = f'ppmi_pivoted_volumes_{version}.csv'
+	#merge_filename = f"dkt_with_metdata_{version}.csv"
+	upload_prefix = "volume_measures/"
+	vd = VolumeData(bucket, prefix, upload_prefix, cache=False)
+	local_stack = vd.stack_volumes(stack_filename)
+	local_pivot = vd.pivot_data(local_stack, pivoted_filename)
+	local_pivot_df = pd.read_csv(local_pivot)
+	local_pivot_df = local_pivot_df
+	local_pivot_df['join_date'] = [str(i)[:6] for i in local_pivot_df['Date']]
+	s3 = boto3.client('s3')
+	local_pivot_df.to_csv('local_pivot.csv')
+	s3.upload_file('local_pivot.csv', bucket, "simple_reg_sr_ppmi_volumes.csv")
+	bucket = 'mjff-ppmi'
+	metadata = 'metadata/PPMI_Original_Cohort_BL_to_Year_5_Dataset_Apr2020.csv'
+	prodro = 'metadata/PPMI_Prodromal_Cohort_BL_to_Year_1_Dataset_Apr2020.csv'
+
+	metadata_path = 'ppmi_metadata.csv'
+	prodro_path = 'ppmi_prodro.csv'
+	s3.download_file(bucket, metadata, metadata_path)
+	s3.download_file(bucket, prodro, prodro_path)
+
+	metadata_df = pd.read_csv(metadata_path)
+	prodro_df = pd.read_csv(prodro_path)
+	stack = pd.concat([metadata_df, prodro_df])
+	stack['join_date'] = [datetime.strptime(i, '%b%Y') for i in stack['visit_date']]
+	stack['join_date'] = [i.strftime('%Y%m') for i in stack['join_date']]
+	stack['PATNO'] = [str(i) for i in stack['PATNO']]
+	stack.to_csv('tmp_stack.csv')
+	s3.upload_file('tmp_stack.csv', bucket, 'tmp_stack.csv')
+	# Join on Subject
+	merged = pd.merge(
+		stack,
+		local_pivot_df,
+		right_on=['Subject', 'join_date'],
+		left_on=['PATNO', 'join_date'],
+		how='outer'
+	)
+	merged_path = "full_" + "simple_reg_sr_ppmi_volumes.csv"
+	merged.to_csv(merged_path, index=False)
+	s3.upload_file(merged_path, bucket, merged_path)
+
+	print(merged[merged['PATNO'].isna()].shape)
