@@ -127,6 +127,7 @@ def main(input_config):
     ants.image_write( initlab0, output_filename_seg )
 
     g1 = ants.label_geometry_measures(initlab0,imgIn)
+    g1.to_csv(output_filename + 'OR-lgm.csv')
 
     sr_params = c.sr_params
     mynums=c.wlab
@@ -145,6 +146,12 @@ def main(input_config):
     ants.image_write( srseg['super_resolution'], output_filename_sr )
 
     ants.image_write( srseg['super_resolution_segmentation'], output_filename_sr_seg )
+
+    g2 = ants.label_geometry_measures(
+        srseg['super_resolution_segmentation'],
+        srseg['super_resolution']
+    )
+    g2.to_csv(output_filename + 'SR-lgm.csv')
 
     handle_outputs(
         c.input_value,
