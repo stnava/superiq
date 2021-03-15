@@ -7,24 +7,29 @@ RUN apt-get update && \
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
 
-RUN pip install numpy keras boto3 
-RUN pip install --upgrade tensorflow tensorflow-probability 
+RUN pip install numpy keras boto3
+RUN pip install --upgrade tensorflow tensorflow-probability
 
 ARG antspy_hash
 RUN pip install git+https://github.com/ANTsX/ANTsPy.git@$antspy_hash
 #RUN python ext/get_commit.py antspy $antspy_hash
-#RUN pip install ext/antspyx* 
+#RUN pip install ext/antspyx*
 
 ARG antspynet_hash
 RUN pip install git+https://github.com/ANTsX/ANTsPyNet.git@$antspynet_hash
 #RUN python ext/get_commit.py antspynet $antspynet_hash
-#RUN pip install ext/antspynet* 
+#RUN pip install ext/antspynet*
 
 # Package needs to be public first
 #ARG superiq_hash
 #RUN python -m pip install git+https://github.com/stnava/superiq.git@$superiq_hash
 
-COPY . src
+
+#COPY . src
+COPY setup.py src/setup.py
+COPY deploy src/deploy
+COPY configs src/configs
+COPY superiq src/superiq
 WORKDIR src
 RUN python setup.py install
 
