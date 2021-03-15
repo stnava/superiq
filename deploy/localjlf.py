@@ -22,9 +22,6 @@ def local_jlf(input_config):
             config.pipeline_bucket,
             config.pipeline_prefix,
         )
-        # Noise Correction
-        input_image = ants.denoise_image(input_image)
-        input_image = ants.iMath(input_image, 'TruncateIntensity', 0.000001, 0.995)
 
         atlas_image_keys = list_images(config.atlas_bucket, config.atlas_image_prefix)
         brains = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_image_keys]
@@ -60,6 +57,11 @@ def local_jlf(input_config):
     else:
         raise ValueError(f"The environemnt {config.environment} is not recognized")
     input_image = ants.image_read(input_image)
+
+    # Noise Correction
+    input_image = ants.denoise_image(input_image)
+    input_image = ants.iMath(input_image, 'TruncateIntensity', 0.000001, 0.995)
+
     wlab = config.wlab
     template = get_s3_object(config.template_bucket, config.template_key, "data")
     template = ants.image_read(template)
