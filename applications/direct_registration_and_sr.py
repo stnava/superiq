@@ -37,6 +37,22 @@ output_filename = "outputs/TEST_"
 imgIn = ants.image_read( infn )
 imgIn = ants.denoise_image( imgIn, noise_model='Rician' )
 imgIn = ants.iMath( imgIn, "TruncateIntensity", 0.00001, 0.9995 ).iMath("Normalize")
+
+# brain age
+t1_preprocessing = antspynet.preprocess_brain_image( imgIn,
+            truncate_intensity=(0.00001, 0.9995),
+            do_brain_extraction=False,
+            template="croppedMni152",
+            template_transform_type="AffineFast",
+            do_bias_correction=False,
+            do_denoising=False,
+            antsxnet_cache_directory="/tmp/",
+            verbose=True)
+
+bage = antspynet.brain_age( t1_preprocessing['preprocessed_image'],
+    do_preprocessing=False )
+# save these values to a csv file
+
 template = ants.image_read(tfn)
 templateL = ants.image_read(tfnl)
 mdl = tf.keras.models.load_model( model_file_name ) # FIXME - parameterize this
