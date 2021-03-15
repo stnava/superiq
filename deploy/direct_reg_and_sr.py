@@ -11,14 +11,18 @@ os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
 import ants
 import antspynet
 import tensorflow as tf
-import pandas as pd
+import os
 import sys
+import pandas as pd
+import numpy as np
 
 from superiq import super_resolution_segmentation_per_label
 from superiq import ljlf_parcellation
 from superiq import ljlf_parcellation_one_template
 from superiq import list_to_string
 from superiq.pipeline_utils import *
+
+
 
 def main(input_config):
     c = LoadConfig(input_config)
@@ -40,7 +44,9 @@ def main(input_config):
 
     model_file_name = get_s3_object(c.model_bucket, c.model_key, tdir)
 
-    output_filename = "outputs/"
+    if not os.path.exists(c.output_folder):
+        os.makedirs(c.output_folder)
+    output_filename = c.output_folder + "/"
 
     # input data
     imgIn = ants.image_read( infn )
@@ -67,10 +73,18 @@ def main(input_config):
             t1_preprocessing['preprocessed_image'],
             do_preprocessing=False
         )
-        print('Brain age per slice')
+        ages = []
         for i in bage['brain_age_per_slice']:
-            print(i)
-        print("###***###")
+            ages.append(i[0])
+        average = np.average(ages)
+        std = np.std(ages)
+        record = {
+            'avg_Brain_Age': [average, ],
+            'std_Brain_Age': [std, ]
+        }
+        brain_age_df = pd.DataFrame(record)
+        brain_age_df.to_csv(output_filename + 'brain_age.csv')
+
 
     mdl = tf.keras.models.load_model( model_file_name )
 

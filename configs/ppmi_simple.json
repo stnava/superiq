@@ -2,7 +2,7 @@
     "version": 1,
     "aws_profile": "role",
     "job_definition" : "superiq_simple",
-    "job_queue" : "superiq_ppmi",
+    "job_queue" : "superiq_simple",
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
@@ -24,6 +24,7 @@
             "verbose": true
         },
         "brain_age": true,
+        "output_folder": "outputs",
         "output_file_prefix": "ppmi",
         "output_bucket" : "mjff-ppmi",
         "output_prefix": "superres-pipeline-simple/",
