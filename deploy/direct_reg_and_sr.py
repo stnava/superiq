@@ -12,6 +12,7 @@ import ants
 import antspynet
 import tensorflow as tf
 import pandas as pd
+import sys
 
 from superiq import super_resolution_segmentation_per_label
 from superiq import ljlf_parcellation
@@ -20,16 +21,15 @@ from superiq import list_to_string
 from superiq.pipeline_utils import *
 
 def main(input_config):
-    c = Load_Config(input_config)
+    c = LoadConfig(input_config)
     tdir = "data"
     #tfn = tdir + "CIT168_T1w_700um_pad.nii.gz"
     #tfnl = tdir + "det_atlas_25_pad.nii.gz"
     tfn = get_s3_object(c.template_bucket, c.template_key, tdir)
-    tfnl = get_s3_object(c.template_bucket, c.template_key_label, tdir)
+    tfnl = get_s3_object(c.template_bucket, c.template_label_key, tdir)
 
     #sdir = "/Users/stnava/Downloads/temp/adniin/002_S_4473/20140227/T1w/000/brain_ext/"
     #infn = sdir + "ADNI-002_S_4473-20140227-T1w-000-brain_ext-bxtreg_n3.nii.gz"
-    infn = sdir + "PPMI-3068-20110620-T1w-S117935-localjlf-ppmi_OR.nii.gz"
     infn = get_pipeline_data(
         c.brain_extraction_suffix,
         c.input_value,
@@ -38,7 +38,7 @@ def main(input_config):
         tdir,
     )
 
-    model_file_name = get_s3_object(c.model_bucket, c.model_prefix, tdir)
+    model_file_name = get_s3_object(c.model_bucket, c.model_key, tdir)
 
     output_filename = "outputs/"
 
@@ -138,3 +138,7 @@ def main(input_config):
         c.output_prefix,
         c.process_name,
     )
+
+if __name__ == "__main__":
+    config = sys.argv[1]
+    main(config)
