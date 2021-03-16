@@ -18,7 +18,7 @@ class VolumeData:
     def _filter_keys(self):
         print("====> Getting keys")
         keys = list_images(self.bucket, self.prefix)
-        keys = [i for i in keys if i.endswith('.csv')]
+        keys = [i for i in keys if i.endswith('lgm.csv')]
         print(len(keys))
         return keys
 
@@ -43,7 +43,7 @@ class VolumeData:
 
     def _get_files(self, k):
         bucket = self.bucket
-        path = get_s3_object(bucket, k, "tmp")
+        path = get_s3_object(bucket, k, "tmp/")
         df = pd.read_csv(path)
         fields = ["Label", 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']
         df = df[fields]
@@ -70,9 +70,9 @@ class VolumeData:
         for i in zip_list:
             df[i[0]] = i[1]
         df['OriginalOutput'] = "-".join(split[:5]) + ".nii.gz"
-        if  ("_OR_" in k) or ("_NR_" in k):
+        if  "OR" in k:
             df['Resolution'] = "OR"
-        elif "_SR_" in k:
+        elif "SR" in k:
             df['Resolution'] = "SR"
         else:
             df['Resolution'] = "srOnNativeSeg"
