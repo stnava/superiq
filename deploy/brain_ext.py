@@ -18,8 +18,6 @@ import numpy as np
 
 from superiq.pipeline_utils import *
 
-
-
 def main(input_config):
     c = LoadConfig(input_config)
     tdir = "data"
