@@ -49,7 +49,7 @@ def main(input_config):
         whichtoinvert=[True,],
     )
     bxton4 = ants.n4_bias_field_correction(img, bxto, 4)
-    plot_path = '~outputs/bxtoplot.png'
+    plot_path = 'outputs/bxtoplot.png'
     ants.plot(
         bxton4 * bxto,
         axis=2,
