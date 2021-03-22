@@ -52,10 +52,9 @@ def main(input_config):
     plot_path = '~outputs/bxtoplot.png'
     ants.plot(
         bxton4 * bxto,
-        axis=3,
+        axis=2,
         filename=plot_path
     )
-    # TODO: output bxto, plot
     output_filename = c.output_folder + "/"
 
     ants.image_write(bxto, output_filename + 'n4brain')
