@@ -57,7 +57,7 @@ def main(input_config):
     )
     output_filename = c.output_folder + "/"
 
-    ants.image_write(bxto, output_filename + 'n4brain')
+    ants.image_write(bxto, output_filename + 'n4brain.nii.gz')
 
     handle_outputs(
         c.input_value,
