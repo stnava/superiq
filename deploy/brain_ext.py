@@ -21,14 +21,14 @@ from superiq.pipeline_utils import *
 def main(input_config):
     c = LoadConfig(input_config)
     tdir = "data"
-    input_path = get_s3_object(c.input_bucket, c.input_value, tdir)
+    image_path = get_s3_object(c.input_bucket, c.input_value, tdir)
     input_image = ants.image_read(image_path)
 
     if not os.path.exists(c.output_folder):
         os.makedirs(c.output_folder)
     output_filename = c.output_folder + "/"
 
-    # TODO: ukbb = antspynet.get "biobank"
+    ukbb = antspynet.get_antsxnet_data("biobank")
     template = ants.image_read(ukbb)
 
     img = ants.iMath(input_image, "TruncateIntensity", 0.0001, 0.999)
