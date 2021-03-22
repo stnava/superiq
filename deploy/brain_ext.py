@@ -46,7 +46,7 @@ def main(input_config):
         fixed=imgn4,
         moving=bxt,
         transformlist=rig['invtransforms'],
-        whichtoinvert=True,
+        whichtoinvert=[True,],
     )
     bxton4 = ants.n4_bias_field_correction(img, bxto, 4)
     plot_path = '~outputs/bxtoplot.png'
