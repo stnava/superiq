@@ -93,10 +93,12 @@ def main(input_config):
     output_filename_seg = output_filename + "ORseg.nii.gz"
     output_filename_sr = output_filename + "SR.nii.gz"
     output_filename_sr_seg = output_filename  +  "SR_seg.nii.gz"
+    output_filename_sr_segljlf = output_filename  +  "SR_segljlf.nii.gz"
     output_filename_sr_seg_csv = output_filename  + "SR_seg.csv"
     output_filename_warped = output_filename  + "warped.nii.gz"
 
     regits = (600,600,600,200,50)
+    lregits = (100, 100,100, 55)
     verber=False
     reg = ants.registration(
         template,
@@ -143,9 +145,92 @@ def main(input_config):
         verbose = sr_params['verbose']
     )
 
+    ljlfseg = ljlf_parcellation_one_template(
+	img = srseg['super_resolution'],
+        segmentation_numbers = mynums,
+        forward_transforms = inv_transforms,
+        template = template,
+        templateLabels = templateL,
+        templateRepeats = 8,
+        submask_dilation = 6,
+        searcher=1,
+        radder=2,
+        reg_iterations=lregits,
+        syn_sampling=2,
+        syn_metric='CC',
+        max_lab_plus_one=True,
+        deformation_sd=2.0,
+        intensity_sd=0.1,
+        output_prefix=output_filename,
+        verbose=False,
+    )
+
     ants.image_write( srseg['super_resolution'], output_filename_sr )
 
     ants.image_write( srseg['super_resolution_segmentation'], output_filename_sr_seg )
+
+    ants.image_write( ljlfseg['segmentation'], output_filename_sr_segljlf )
+
+    localregsegtotal = srseg['super_resolution'] * 0.0
+
+    labels=[]
+    vols=[]
+    areas=[]
+    for mylab in mynums:
+        localprefix = output_filename + "synlocal_label" + str( mylab ) + "_"
+        print(localprefix)
+        cmskt = ants.mask_image( templateL, templateL, mylab, binarize=True ).iMath( "MD", 8 )
+        cimgt = ants.crop_image( template, cmskt ) \
+            .resample_image( [0.5,0.5,0.5],use_voxels=False, interp_type=0 )
+        cmsk = ants.mask_image(
+            ljlfseg['segmentation'],
+            ljlfseg['segmentation'],
+            mylab,
+            binarize=True,
+        ).iMath( "MD", 12 )
+        cimg = ants.crop_image( srseg['super_resolution'], cmsk )
+        rig = ants.registration( ants.crop_image( cmskt ) , cmsk, "Rigid" )
+        syn = ants.registration(
+            ants.iMath(cimgt,"Normalize"),
+            cimg, # srseg['super_resolution'],
+            type_of_transform="SyNOnly",
+            reg_iterations=[200,200,200,50],
+            initial_transform=rig['fwdtransforms'][0],
+            syn_metric='cc',
+            syn_sampling=2,
+            outprefix=localprefix,
+            verbose=False,
+        )
+        if len( syn['fwdtransforms'] ) > 1 :
+            jimg = ants.create_jacobian_determinant_image(
+                cimgt,
+                syn['fwdtransforms'][0],
+                True,
+                False,
+            )
+            ants.image_write( jimg, localprefix + "jacobian.nii.gz" )
+            cmskt = ants.mask_image( templateL, templateL, mylab, binarize=True )
+            localregseg = ants.apply_transforms(
+                srseg['super_resolution'],
+                cmskt,
+                syn['invtransforms'],
+                interpolator='genericLabel'
+            )
+            labels.append( mylab )
+            vols.append(
+                ants.label_geometry_measures( localregseg, localregseg )['VolumeInMillimeters'][1]
+            )
+            areas.append(
+                ants.label_geometry_measures(
+                    localregseg,
+                    localregseg,
+                )['SurfaceAreaInMillimetersSquared'][1]
+            )
+            localregseg = localregseg * mylab
+            ants.image_write( syn['warpedmovout'], localprefix + "_localreg.nii.gz" )
+            ants.image_write( localregseg, localprefix + "_localregseg.nii.gz" )
+            localregsegtotal = localregseg + localregsegtotal
+
 
     g2 = ants.label_geometry_measures(
         srseg['super_resolution_segmentation'],
