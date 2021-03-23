@@ -37,11 +37,13 @@ def main(input_config):
         template,
         imgn4,
         "Affine",
-        aff_iterrations=(10000, 500, 50, 0),
+        aff_iterrations=(10000, 500, 0, 0),
     )
     rigi = ants.iMath(rig['warpedmovout'], "Normalize")
-    bxt = antspynet.brain_extraction(rigi, 't1combined')
-    bxt = ants.threshold_image(bxt, 2, 3)
+    b1 = antspynet.brain_extraction(rigi, 't1combined')
+    rigi_mod = rigi * ants.iMath(ants.threshold_image(b1, 2, 3), "MD", 25)
+    b2 = antspynet.brain_extraction(rigi_mod, 't1combined')
+    bxt = ants.threshold_image(b2, 2, 3)
     bxto = ants.apply_transforms(
         fixed=imgn4,
         moving=bxt,
