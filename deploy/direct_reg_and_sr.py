@@ -219,13 +219,16 @@ def main(input_config):
             )
             labels.append( mylab )
             vols.append(
-                ants.label_geometry_measures( localregseg, localregseg )['VolumeInMillimeters'][1]
+                ants.label_geometry_measures(
+                    localregseg,
+                    localregseg,
+                )['VolumeInMillimeters'][0]
             )
             areas.append(
                 ants.label_geometry_measures(
                     localregseg,
                     localregseg,
-                )['SurfaceAreaInMillimetersSquared'][1]
+                )['SurfaceAreaInMillimetersSquared'][0]
             )
             localregseg = localregseg * mylab
             ants.image_write( syn['warpedmovout'], localprefix + "_localreg.nii.gz" )
