@@ -88,7 +88,7 @@ initlab0 = ants.apply_transforms( imgIn, templateL, inv_transforms, interpolator
 ants.image_write( initlab0, output_filename_seg )
 g1 = ants.label_geometry_measures(initlab0,imgIn)
 sr_params = { 'upFactor':[2,2,2], 'dilation_amount':8, 'verbose':False}
-mynums=list( range(1,17) )
+mynums=list( range(1,32) )
 
 if is_test:
     sr_params = { 'upFactor':[2,2,2], 'dilation_amount':2, 'verbose':True}
@@ -137,7 +137,10 @@ ants.image_write( ljlfseg['segmentation'], output_filename_sr_segljlf )
 
 # below - do a good registration for each label in order to get a locally
 # high quality registration - and also to get the jacobian
-localregsegtotal = srseg['super_resolution']
+localregsegtotal = srseg['super_resolution'] * 0.0
+labels=[]
+vols=[]
+areas=[]
 for mylab in mynums:
     localprefix = output_filename + "_synlocal_label" + str( mylab ) + "_"
     print(localprefix)
@@ -161,9 +164,17 @@ for mylab in mynums:
         ants.image_write( jimg, localprefix + "_jacobian.nii.gz" )
         cmskt = ants.mask_image( templateL, templateL, mylab, binarize=True )
         localregseg = ants.apply_transforms( srseg['super_resolution'], cmskt, syn['invtransforms'], interpolator='genericLabel' )
-        localregseg = localregseg * mylab
+        labels.append( mylab )
+        vols.append( ants.label_geometry_measures( localregseg, localregseg )['VolumeInMillimeters'][1] )
+        areas.append( ants.label_geometry_measures( localregseg, localregseg )['SurfaceAreaInMillimetersSquared'][1] )
+        localregseg = localregseg * mylabs
         ants.image_write( syn['warpedmovout'], localprefix + "_localreg.nii.gz" )
+        ants.image_write( localregseg, localprefix + "_localregseg.nii.gz" )
         localregsegtotal = localregseg + localregsegtotal
 
+# FIXME: write  data.frame( label=labels, vols=vols, areas=areas )
+
+# NOTE: we should quantify volume/area based on localregseg - not localregsegtotal
+# localregsegtotal is for visualization
 localprefix = output_filename + "_synlocal_regseg.nii.gz"
 ants.image_write( localregsegtotal, localprefix )
