@@ -25,21 +25,20 @@ from superiq import list_to_string
 # user definitions here
 tdir = "/Users/stnava/data/BiogenSuperRes/CIT168_Reinf_Learn_v1/"
 sdir = "/Users/stnava/Downloads/temp/adniin/002_S_4473/20140227/T1w/000/brain_ext/"
-sdir = "/tmp/PPMI/3068/20110620/T1w/S117935/localjlf/"
 model_file_name = "/Users/stnava/code/super_resolution_pipelines/models/SEGSR_32_ANINN222_3.h5"
 tfn = tdir + "CIT168_T1w_700um_pad.nii.gz"
-tfnl = tdir + "det_atlas_25_pad.nii.gz"
+tfnl = tdir + "det_atlas_25_pad_LR.nii.gz"
 infn = sdir + "ADNI-002_S_4473-20140227-T1w-000-brain_ext-bxtreg_n3.nii.gz"
-infn = sdir + "PPMI-3068-20110620-T1w-S117935-localjlf-ppmi_OR.nii.gz"
 # config handling
-output_filename = "outputs/TEST_"
+output_filename = "outputs/ZZZ_"
 # input data
 imgIn = ants.image_read( infn )
-imgIn = ants.denoise_image( imgIn, noise_model='Rician' )
+# imgIn = ants.denoise_image( imgIn, noise_model='Rician' )
 imgIn = ants.iMath( imgIn, "TruncateIntensity", 0.00001, 0.9995 ).iMath("Normalize")
 
 # brain age
-t1_preprocessing = antspynet.preprocess_brain_image( imgIn,
+if False:
+    t1_preprocessing = antspynet.preprocess_brain_image( imgIn,
             truncate_intensity=(0.00001, 0.9995),
             do_brain_extraction=False,
             template="croppedMni152",
@@ -48,11 +47,8 @@ t1_preprocessing = antspynet.preprocess_brain_image( imgIn,
             do_denoising=False,
             antsxnet_cache_directory="/tmp/",
             verbose=True)
-
-bage = antspynet.brain_age( t1_preprocessing['preprocessed_image'],
-    do_preprocessing=False )
+    bage = antspynet.brain_age( t1_preprocessing['preprocessed_image'], do_preprocessing=False )
 # save these values to a csv file
-
 template = ants.image_read(tfn)
 templateL = ants.image_read(tfnl)
 mdl = tf.keras.models.load_model( model_file_name ) # FIXME - parameterize this
@@ -62,16 +58,19 @@ output_filename_jac = output_filename + "_jacobian.nii.gz"
 output_filename_seg = output_filename + "_ORseg.nii.gz"
 output_filename_sr = output_filename + "_SR.nii.gz"
 output_filename_sr_seg = output_filename  +  "_SR_seg.nii.gz"
+output_filename_sr_segljlf = output_filename  +  "_SR_segljlf.nii.gz"
 output_filename_sr_seg_csv = output_filename  + "_SR_seg.csv"
 output_filename_warped = output_filename  + "_warped.nii.gz"
 
-is_test=True
+is_test=False
 
 if not 'reg' in locals():
-    regits = (600,600,600,200,50)
+    regits = [600,600,600,200,50]
+    lregits = [100, 100, 100, 55]
     verber=False
     if is_test:
-        regits=(600,600,20,0,0)
+        regits=[600,600,20,0,0]
+        lregits=[600,600,0,0,0]
         verber=True
     reg = ants.registration( template, imgIn,
 #        type_of_transform="TV[2]",        grad_step = 1.4,
@@ -93,7 +92,8 @@ mynums=list( range(1,17) )
 
 if is_test:
     sr_params = { 'upFactor':[2,2,2], 'dilation_amount':2, 'verbose':True}
-    mynums=[7,8,9,10,11]
+    mynums=[7,8,9,23,24,25]
+    mynums=[1,2,17,18]
 
 if not 'srseg' in locals():
     srseg = super_resolution_segmentation_per_label(
@@ -107,77 +107,63 @@ if not 'srseg' in locals():
         verbose = sr_params['verbose']
     )
 
+if not 'ljlfseg' in locals():
+    ljlfseg = ljlf_parcellation_one_template(
+            img = srseg['super_resolution'],
+            segmentation_numbers = mynums,
+            forward_transforms = inv_transforms,
+            template = template,
+            templateLabels = templateL,
+            templateRepeats = 8,
+            submask_dilation = 6,
+            searcher=1,
+            radder=2,
+            reg_iterations=lregits,
+            syn_sampling=2,
+            syn_metric='CC',
+            max_lab_plus_one=True,
+            deformation_sd=2.0,
+            intensity_sd=0.1,
+            output_prefix=output_filename,
+            verbose=False,
+        )
+
+
 ants.image_write( srseg['super_resolution'], output_filename_sr )
 
 ants.image_write( srseg['super_resolution_segmentation'], output_filename_sr_seg )
 
-derka
+ants.image_write( ljlfseg['segmentation'], output_filename_sr_segljlf )
 
-if not 'reg2' in locals():
-    reg2 = ants.registration( srseg['super_resolution'], template,
-        type_of_transform="SyN",        grad_step = 0.20,
-        syn_metric='CC',
-        syn_sampling=2,
-        reg_iterations=regits, verbose=verber )
-    print("SyN2 Done")
+# below - do a good registration for each label in order to get a locally
+# high quality registration - and also to get the jacobian
+localregsegtotal = srseg['super_resolution']
+for mylab in mynums:
+    localprefix = output_filename + "_synlocal_label" + str( mylab ) + "_"
+    print(localprefix)
+    cmskt = ants.mask_image( templateL, templateL, mylab, binarize=True ).iMath( "MD", 8 )
+    cimgt = ants.crop_image( template, cmskt ).resample_image( [0.5,0.5,0.5],use_voxels=False, interp_type=0 )
+    cmsk = ants.mask_image( ljlfseg['segmentation'], ljlfseg['segmentation'], mylab, binarize=True  ).iMath( "MD", 12 )
+    cimg = ants.crop_image( srseg['super_resolution'], cmsk )
+    rig = ants.registration( ants.crop_image( cmskt ) , cmsk, "Rigid" )
+    syn = ants.registration(
+      ants.iMath(cimgt,"Normalize"),
+      cimg, # srseg['super_resolution'],
+      type_of_transform="SyNOnly",
+      reg_iterations=[200,200,200,50],
+      initial_transform=rig['fwdtransforms'][0],
+      syn_metric='cc',
+      syn_sampling=2,
+      outprefix=localprefix,
+      verbose=False )
+    if len( syn['fwdtransforms'] ) > 1 :
+        jimg = ants.create_jacobian_determinant_image( cimgt, syn['fwdtransforms'][0], True, False )
+        ants.image_write( jimg, localprefix + "_jacobian.nii.gz" )
+        cmskt = ants.mask_image( templateL, templateL, mylab, binarize=True )
+        localregseg = ants.apply_transforms( srseg['super_resolution'], cmskt, syn['invtransforms'], interpolator='genericLabel' )
+        localregseg = localregseg * mylab
+        ants.image_write( syn['warpedmovout'], localprefix + "_localreg.nii.gz" )
+        localregsegtotal = localregseg + localregsegtotal
 
-
-initlab1 = ants.apply_transforms( imgIn, templateL, reg2['fwdtransforms'],
-  interpolator="nearestNeighbor" )
-
-# background = ants.threshold_image( initlab1, 1, max(mynums)-1 )
-# bkgdilate = 2
-# background = ants.iMath(background,"MD",bkgdilate) - background
-# initlab0p1 = initlab0 + background * max(mynums)
-
-
-if not 'srseg2' in locals():
-    srseg2 = super_resolution_segmentation_per_label(
-        imgIn = imgIn,
-        segmentation = initlab1,
-        upFactor = sr_params['upFactor'],
-        sr_model = mdl,
-        segmentation_numbers = mynums,
-        dilation_amount = sr_params['dilation_amount'],
-        max_lab_plus_one = True,
-        verbose = sr_params['verbose']
-    )
-
-derk
-derka
-
-probimgs=[]
-for k in range(len(srseg['probability_images'])):
-    tar = srseg['super_resolution_segmentation']
-    temp = ants.resample_image_to_target(srseg['probability_images'][k],tar)
-    probimgs.append( temp )
-
-tarmask = ants.threshold_image( initlab0, 1, initlab0.max() ).iMath("MD",bkgdilate)
-tarmask = ants.resample_image_to_target( tarmask, tar, interp_type='nearestNeighbor' )
-segmat = ants.images_to_matrix(probimgs, tarmask)
-finalsegvec = segmat.argmax(axis=0)
-finalsegvec2 = finalsegvec.copy()
-
-# mapfinalsegvec to original labels
-for i in range(len(probimgs)):
-    segnum = mynums[i]
-    finalsegvec2[finalsegvec == i] = segnum
-
-outimg = ants.make_image(tarmask, finalsegvec2)
-ants.image_write( outimg, output_filename_sr_seg )
-
-derka
-
-# next decide what is "background" based on the sum of the first k labels vs the prob of the last one
-firstK = probimgs[0] * 0
-
-for i in range(len(probimgs)):
-    firstK = firstK + probimgs[i]
-
-background_prob = ants.resample_image_to_target( background,  tar,interp_type='linear')
-
-segmat = ants.images_to_matrix([background_prob, firstK], tarmask)
-bkgsegvec = segmat.argmax(axis=0)
-outimg = outimg * ants.make_image(tarmask, bkgsegvec)
-
-ants.image_write( outimg, output_filename_sr_seg )
+localprefix = output_filename + "_synlocal_regseg.nii.gz"
+ants.image_write( localregsegtotal, localprefix )
