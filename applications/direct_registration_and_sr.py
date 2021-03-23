@@ -167,7 +167,7 @@ for mylab in mynums:
         labels.append( mylab )
         vols.append( ants.label_geometry_measures( localregseg, localregseg )['VolumeInMillimeters'][1] )
         areas.append( ants.label_geometry_measures( localregseg, localregseg )['SurfaceAreaInMillimetersSquared'][1] )
-        localregseg = localregseg * mylabs
+        localregseg = localregseg * mylab
         ants.image_write( syn['warpedmovout'], localprefix + "_localreg.nii.gz" )
         ants.image_write( localregseg, localprefix + "_localregseg.nii.gz" )
         localregsegtotal = localregseg + localregsegtotal
