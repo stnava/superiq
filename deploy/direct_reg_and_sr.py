@@ -231,12 +231,19 @@ def main(input_config):
             ants.image_write( localregseg, localprefix + "_localregseg.nii.gz" )
             localregsegtotal = localregseg + localregsegtotal
 
+    seg_labels = {
+        "Label": labels,
+        "VolumeInMillimeters": vols,
+        'SurfaceAreaInMillimetersSquared': areas,
+    }
+    seg_labels = pd.DataFrame(seg_labels)
+    seg_labels.to_csv(output_filename + "SR-lgm.csv", index=False)
 
-    g2 = ants.label_geometry_measures(
-        srseg['super_resolution_segmentation'],
-        srseg['super_resolution']
-    )
-    g2.to_csv(output_filename + 'SR-lgm.csv')
+    #g2 = ants.label_geometry_measures(
+    #    srseg['super_resolution_segmentation'],
+    #    srseg['super_resolution']
+    #)
+    #g2.to_csv(output_filename + 'SR-lgm.csv', index=False)
 
     handle_outputs(
         c.input_value,
