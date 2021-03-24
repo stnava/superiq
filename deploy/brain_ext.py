@@ -2,7 +2,7 @@
 import os.path
 from os import path
 
-threads = "8"
+threads = os.environ['cpu_threads']
 # set number of threads - this should be optimized per compute instance
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
