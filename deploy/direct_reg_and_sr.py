@@ -51,7 +51,7 @@ def main(input_config):
 
     # input data
     imgIn = ants.image_read( infn )
-    imgIn = ants.denoise_image( imgIn, noise_model='Rician' )
+#    imgIn = ants.denoise_image( imgIn, noise_model='Rician' )
     imgIn = ants.iMath( imgIn, "TruncateIntensity", 0.00001, 0.9995 ).iMath("Normalize")
 
     template = ants.image_read(tfn)
@@ -95,8 +95,13 @@ def main(input_config):
     output_filename_sr = output_filename + "SR.nii.gz"
     output_filename_sr_seg = output_filename  +  "SR_seg.nii.gz"
     output_filename_sr_segljlf = output_filename  +  "SR_segljlf.nii.gz"
-    output_filename_sr_seg_csv = output_filename  + "SR_seg.csv"
     output_filename_warped = output_filename  + "warped.nii.gz"
+
+    # the various csv outputs
+    output_filename_or_seg_csv = output_filename  + "OR_seg.csv"
+    output_filename_sr_seg_csv = output_filename  + "SR_seg.csv"
+    output_filename_sr_ljlfseg_csv = output_filename  + "SR_ljflseg.csv"
+    output_filename_sr_regseg_csv = output_filename  + "SR_regseg.csv"
 
     regits = (600,600,600,200,50)
     lregits = (100, 100,100, 55)
@@ -130,7 +135,7 @@ def main(input_config):
     ants.image_write( initlab0, output_filename_seg )
 
     g1 = ants.label_geometry_measures(initlab0,imgIn)
-    g1.to_csv(output_filename + 'OR-lgm.csv')
+    g1.to_csv( output_filename_or_seg_csv )
 
     sr_params = c.sr_params
     mynums=c.wlab
@@ -146,8 +151,12 @@ def main(input_config):
         verbose = sr_params['verbose']
     )
 
+
+    g2 = ants.label_geometry_measures(srseg['super_resolution_segmentation'],srseg['super_resolution'])
+    g2.to_csv( output_filename_sr_seg_csv )
+
     ljlfseg = ljlf_parcellation_one_template(
-	img = srseg['super_resolution'],
+	    img = srseg['super_resolution'],
         segmentation_numbers = mynums,
         forward_transforms = inv_transforms,
         template = template,
@@ -171,6 +180,10 @@ def main(input_config):
     ants.image_write( srseg['super_resolution_segmentation'], output_filename_sr_seg )
 
     ants.image_write( ljlfseg['segmentation'], output_filename_sr_segljlf )
+
+
+    g3 = ants.label_geometry_measures(ljlfseg['segmentation'],srseg['super_resolution'])
+    g3.to_csv( output_filename_sr_ljlfseg_csv )
 
     localregsegtotal = srseg['super_resolution'] * 0.0
 
@@ -233,6 +246,10 @@ def main(input_config):
             localregseg = localregseg * mylab
             ants.image_write( syn['warpedmovout'], localprefix + "_localreg.nii.gz" )
             ants.image_write( localregseg, localprefix + "_localregseg.nii.gz" )
+            # this is a hack fix to get rid of multiple labels overlapping
+            # should use the usual voting scheme or just rely on the local labels
+            # the latter are appropriate for shape analysis in the future.
+            localregseg = localregseg * ants.threshold_image( localregsegtotal, localregsegtotal, 0, 0 )
             localregsegtotal = localregseg + localregsegtotal
 
     seg_labels = {
@@ -241,7 +258,7 @@ def main(input_config):
         'SurfaceAreaInMillimetersSquared': areas,
     }
     seg_labels = pd.DataFrame(seg_labels)
-    seg_labels.to_csv(output_filename + "SR-lgm.csv", index=False)
+    seg_labels.to_csv(output_filename_sr_regseg_csv, index=False)
 
     #g2 = ants.label_geometry_measures(
     #    srseg['super_resolution_segmentation'],
