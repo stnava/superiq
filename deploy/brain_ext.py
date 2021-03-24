@@ -30,36 +30,65 @@ def main(input_config):
 
     ukbb = antspynet.get_antsxnet_data("biobank")
     template = ants.image_read(ukbb)
+    btem = antspynet.brain_extraction(template, 't1')
+    template = template * btem
 
-    img = ants.iMath(input_image, "TruncateIntensity", 0.0001, 0.999)
-    imgn4 = ants.n4_bias_field_correction(img, img*0+1, 4)
-    rig = ants.registration(
-        template,
-        imgn4,
-        "Affine",
-        aff_iterrations=(10000, 500, 0, 0),
-    )
-    rigi = ants.iMath(rig['warpedmovout'], "Normalize")
-    b1 = antspynet.brain_extraction(rigi, 't1combined')
-    rigi_mod = rigi * ants.iMath(ants.threshold_image(b1, 2, 3), "MD", 25)
-    b2 = antspynet.brain_extraction(rigi_mod, 't1combined')
-    bxt = ants.threshold_image(b2, 2, 3)
-    bxto = ants.apply_transforms(
-        fixed=imgn4,
-        moving=bxt,
-        transformlist=rig['invtransforms'],
-        whichtoinvert=[True,],
-    )
-    bxton4 = ants.n4_bias_field_correction(img, bxto, 4)
+    run_extra=True
+
+    def reg_bxt( intemplate, inimg, inbxt, bxt_type, txtype, dilation=0 ):
+        inbxtdil = ants.iMath( inbxt, "MD", dilation )
+        img = ants.iMath( inimg * inbxt, "TruncateIntensity", 0.0001, 0.999)
+        imgn4 = ants.n3_bias_field_correction(img, downsample_factor=4)
+        rig = ants.registration(
+                intemplate,
+                imgn4,
+                txtype,
+                aff_iterations=(10000, 500, 0, 0),
+            )
+        if dilation > 0:
+            rigi = ants.apply_transforms( intemplate, inimg * inbxtdil, rig['fwdtransforms'] )
+        else:
+            rigi = ants.apply_transforms( intemplate, inimg, rig['fwdtransforms'] )
+        rigi = ants.iMath( rigi, "Normalize")
+        rigi = ants.n3_bias_field_correction( rigi, downsample_factor=4 )
+        bxt = antspynet.brain_extraction(rigi, bxt_type )
+        if bxt_type == 't1combined':
+            bxt = ants.threshold_image( bxt, 2, 3 )
+        bxt = ants.apply_transforms(
+                fixed=inimg,
+                moving=bxt,
+                transformlist=rig['invtransforms'],
+                whichtoinvert=[True,],
+            )
+        return bxt
+
+    b0 = antspynet.brain_extraction(input_image, 't1')
+    rbxt1 = reg_bxt( template, input_image, b0, 't1', 'Rigid', dilation=0 )
+    rbxt2 = reg_bxt( template, input_image, rbxt1, 't1', 'Rigid', dilation=0  )
+    rbxt3 = reg_bxt( template, input_image, rbxt2, 't1', 'Rigid', dilation=0 )
+    rbxt3 = ants.threshold_image( rbxt3, 0.5, 2. ).iMath("GetLargestComponent")
+    rbxt4 = reg_bxt( template, input_image, rbxt3, 't1combined', 'Rigid', dilation=0 )
+    if run_extra:
+        rbxt5 = reg_bxt( template, input_image, rbxt4, 't1combined', 'Rigid', dilation=25 )
+        img = ants.iMath(input_image * rbxt5, "TruncateIntensity", 0.0001, 0.999)
+        imgn4 = ants.n4_bias_field_correction(img, shrink_factor=4)
+        syn=ants.registration(template, imgn4, "SyN" )
+        bxt = ants.apply_transforms( imgn4, btem, syn['invtransforms'], interpolator='nearestNeighbor')
+        bxt = bxt * rbxt5
+    else:
+        bxt = rbxt4
+
+    img = ants.iMath(input_image * bxt, "TruncateIntensity", 0.0001, 0.999)
+    bxton4 = ants.n4_bias_field_correction(img, shrink_factor=4 )
     plot_path = 'outputs/bxtoplot.png'
     ants.plot(
-        bxton4 * bxto,
+        bxton4,
         axis=2,
         filename=plot_path
     )
     output_filename = c.output_folder + "/"
 
-    ants.image_write(bxto * bxton4, output_filename + 'n4brain.nii.gz')
+    ants.image_write( bxton4, output_filename + 'n4brain.nii.gz')
 
     handle_outputs(
         c.input_value,
