@@ -191,11 +191,16 @@ def main(input_config):
 
     localregsegtotal = srseg['super_resolution'] * 0.0
 
-    labels=[]
-    vols=[]
-    areas=[]
-    for mylab in mynums:
-        localprefix = output_filename + "synlocal_label" + str( mylab ) + "_"
+    label_geo_list = []
+    label_groups = []
+    label_groups.append( [1,5,6] )       # r putamen & gp
+    label_groups.append( [17,21,22] )    # l putamen & gp
+    label_groups.append( [2] )           # l caud
+    label_groups.append( [18] )          # r caud
+    label_groups.append( [7,8,9,10] )    # l SN+
+    label_groups.append( [23,24,25,26] ) # r SN+
+    for mylab in label_groups:
+        localprefix = output_filename + "synlocal_label" + list_to_string( mylab ) + "_"
         print(localprefix)
         cmskt = ants.mask_image( templateL, templateL, mylab, binarize=True ).iMath( "MD", 8 )
         cimgt = ants.crop_image( template, cmskt ) \
@@ -227,47 +232,27 @@ def main(input_config):
                 False,
             )
             ants.image_write( jimg, localprefix + "jacobian.nii.gz" )
-            cmskt = ants.mask_image( templateL, templateL, mylab, binarize=True )
+            cmskt = ants.mask_image( templateL, templateL, mylab, binarize=False )
             localregseg = ants.apply_transforms(
                 srseg['super_resolution'],
                 cmskt,
                 syn['invtransforms'],
                 interpolator='genericLabel'
             )
-            labels.append( mylab )
-            vols.append(
-                ants.label_geometry_measures(
-                    localregseg,
-                    localregseg,
-                )['VolumeInMillimeters'][0]
+            localgeo = ants.label_geometry_measures(
+                localregseg,
+                localregseg,
             )
-            areas.append(
-                ants.label_geometry_measures(
-                    localregseg,
-                    localregseg,
-                )['SurfaceAreaInMillimetersSquared'][0]
-            )
-            localregseg = localregseg * mylab
+            output_filename_sr_regseg_csv = localprefix  + "SR_regseg.csv"
+            localgeo.to_csv(output_filename_sr_regseg_csv )
+            label_geo_list.append( localgeo )
             ants.image_write( syn['warpedmovout'], localprefix + "_localreg.nii.gz" )
             ants.image_write( localregseg, localprefix + "_localregseg.nii.gz" )
             # this is a hack fix to get rid of multiple labels overlapping
             # should use the usual voting scheme or just rely on the local labels
             # the latter are appropriate for shape analysis in the future.
-            localregseg = localregseg * ants.threshold_image(
-                localregsegtotal,
-                localregsegtotal,
-                0,
-                0
-            )
+            localregseg = localregseg * ants.threshold_image(localregsegtotal,0,0)
             localregsegtotal = localregseg + localregsegtotal
-
-    seg_labels = {
-        "Label": labels,
-        "VolumeInMillimeters": vols,
-        'SurfaceAreaInMillimetersSquared': areas,
-    }
-    seg_labels = pd.DataFrame(seg_labels)
-    seg_labels.to_csv(output_filename_sr_regseg_csv, index=False)
 
     #g2 = ants.label_geometry_measures(
     #    srseg['super_resolution_segmentation'],
