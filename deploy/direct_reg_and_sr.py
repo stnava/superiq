@@ -2,7 +2,8 @@
 import os.path
 from os import path
 
-threads = "32"
+threads =  os.environ['cpu_threads']
+print(f'Thread count: {threads}')
 # set number of threads - this should be optimized per compute instance
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
@@ -51,7 +52,7 @@ def main(input_config):
 
     # input data
     imgIn = ants.image_read( infn )
-#    imgIn = ants.denoise_image( imgIn, noise_model='Rician' )
+    # imgIn = ants.denoise_image( imgIn, noise_model='Rician' )
     imgIn = ants.iMath( imgIn, "TruncateIntensity", 0.00001, 0.9995 ).iMath("Normalize")
 
     template = ants.image_read(tfn)
@@ -152,11 +153,14 @@ def main(input_config):
     )
 
 
-    g2 = ants.label_geometry_measures(srseg['super_resolution_segmentation'],srseg['super_resolution'])
+    g2 = ants.label_geometry_measures(
+        srseg['super_resolution_segmentation'],
+        srseg['super_resolution']
+    )
     g2.to_csv( output_filename_sr_seg_csv )
 
     ljlfseg = ljlf_parcellation_one_template(
-	    img = srseg['super_resolution'],
+	img = srseg['super_resolution'],
         segmentation_numbers = mynums,
         forward_transforms = inv_transforms,
         template = template,
@@ -249,7 +253,12 @@ def main(input_config):
             # this is a hack fix to get rid of multiple labels overlapping
             # should use the usual voting scheme or just rely on the local labels
             # the latter are appropriate for shape analysis in the future.
-            localregseg = localregseg * ants.threshold_image( localregsegtotal, localregsegtotal, 0, 0 )
+            localregseg = localregseg * ants.threshold_image(
+                localregsegtotal,
+                localregsegtotal,
+                0,
+                0
+            )
             localregsegtotal = localregseg + localregsegtotal
 
     seg_labels = {
