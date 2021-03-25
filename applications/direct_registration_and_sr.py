@@ -67,7 +67,7 @@ is_test=True
 regsegits=[200,200,200,50]
 
 if is_test:
-    regsegits=[200,20,0,0]
+    regsegits=[200,200,200,10]
 
 if not 'reg' in locals():
     regits = [600,600,600,200,50]
@@ -168,7 +168,7 @@ if True:
         rig = ants.registration( ants.crop_image( cmskt ) , cmsk, "Rigid" )
         syn = ants.registration(
             ants.iMath(cimgt,"Normalize"),
-            cimg, # srseg['super_resolution'],
+            srseg['super_resolution'],
             type_of_transform="SyNOnly",
             reg_iterations=regsegits,
             initial_transform=rig['fwdtransforms'][0],

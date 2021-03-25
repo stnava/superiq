@@ -215,7 +215,7 @@ def main(input_config):
         rig = ants.registration( ants.crop_image( cmskt ) , cmsk, "Rigid" )
         syn = ants.registration(
             ants.iMath(cimgt,"Normalize"),
-            cimg, # srseg['super_resolution'],
+            srseg['super_resolution'],
             type_of_transform="SyNOnly",
             reg_iterations=[200,200,200,50],
             initial_transform=rig['fwdtransforms'][0],
