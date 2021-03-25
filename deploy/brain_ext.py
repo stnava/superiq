@@ -90,7 +90,7 @@ def main(input_config):
 
     ants.image_write( bxton4, output_filename + 'n4brain.nii.gz')
 
-    bxt_lgm = ants.threshold_image(bxt_lgm, 0.5, 1)
+    bxt_lgm = ants.threshold_image(bxt, 0.5, 1)
     bxtvol = ants.label_geometry_measures( bxt_lgm )
     bxtvol.to_csv( output_filename + 'brainvol.csv' )
 
