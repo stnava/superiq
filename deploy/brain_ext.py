@@ -78,9 +78,6 @@ def main(input_config):
     else:
         bxt = rbxt4
 
-    # shoud write this out
-    bxtvol = ants.label_geometry_measures( bxt )
-
     img = ants.iMath(input_image * bxt, "TruncateIntensity", 0.0001, 0.999)
     bxton4 = ants.n4_bias_field_correction(img, shrink_factor=4 )
     plot_path = 'outputs/bxtoplot.png'
@@ -93,7 +90,8 @@ def main(input_config):
 
     ants.image_write( bxton4, output_filename + 'n4brain.nii.gz')
 
-    # FIXME - not sure this is correct
+    bxt_lgm = ants.threshold_image(bxt_lgm, 0.5, 1)
+    bxtvol = ants.label_geometry_measures( bxt_lgm )
     bxtvol.to_csv( output_filename + 'brainvol.csv' )
 
     handle_outputs(
