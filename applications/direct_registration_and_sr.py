@@ -97,8 +97,7 @@ mynums=list( range(1,32) )
 
 if is_test:
     sr_params = { 'upFactor':[2,2,2], 'dilation_amount':2, 'verbose':True}
-    mynums=[7,8,9,23,24,25]
-    mynums=[1,2,17,18]
+    mynums=[1,2,5,6,7,8,9,10,17,18,21,22,23,24,25,26]
 
 if not 'srseg' in locals():
     srseg = super_resolution_segmentation_per_label(
