@@ -249,6 +249,9 @@ def main(input_config):
             localregseg = localregseg * ants.threshold_image(localregsegtotal,0,0)
             localregsegtotal = localregseg + localregsegtotal
 
+    localprefix = output_filename + "_synlocal_regseg.nii.gz"
+    ants.image_write( localregsegtotal, localprefix )
+
     handle_outputs(
         c.input_value,
         c.output_bucket,
