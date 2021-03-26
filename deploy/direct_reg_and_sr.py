@@ -26,16 +26,11 @@ from superiq.pipeline_utils import *
 
 
 def main(input_config):
-    # Expected config
     c = LoadConfig(input_config)
     tdir = "data"
-    #tfn = tdir + "CIT168_T1w_700um_pad.nii.gz"
-    #tfnl = tdir + "det_atlas_25_pad.nii.gz"
     tfn = get_s3_object(c.template_bucket, c.template_key, tdir)
     tfnl = get_s3_object(c.template_bucket, c.template_label_key, tdir)
 
-    #sdir = "/Users/stnava/Downloads/temp/adniin/002_S_4473/20140227/T1w/000/brain_ext/"
-    #infn = sdir + "ADNI-002_S_4473-20140227-T1w-000-brain_ext-bxtreg_n3.nii.gz"
     infn = get_pipeline_data(
         c.brain_extraction_suffix,
         c.input_value,
@@ -253,12 +248,6 @@ def main(input_config):
             # the latter are appropriate for shape analysis in the future.
             localregseg = localregseg * ants.threshold_image(localregsegtotal,0,0)
             localregsegtotal = localregseg + localregsegtotal
-
-    #g2 = ants.label_geometry_measures(
-    #    srseg['super_resolution_segmentation'],
-    #    srseg['super_resolution']
-    #)
-    #g2.to_csv(output_filename + 'SR-lgm.csv', index=False)
 
     handle_outputs(
         c.input_value,
