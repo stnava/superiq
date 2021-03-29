@@ -4,7 +4,7 @@ import pandas
 import os
 import boto3
 import multiprocessing as mp
-
+from datetime import datetime
 
 class VolumeData:
 
@@ -16,11 +16,11 @@ class VolumeData:
 
     def stack_volumes(self, stack_filename):
         print("====> Stacking volumes")
+        keys = self._filter_keys(self.filter_suffixes)
         with mp.Pool() as p:
-            keys = self._filter_keys(self.filter_suffixes)
             dfs = p.map(self._get_files, keys)
         stacked = pd.concat(dfs)
-        stack_filename_key = f"s3://{self.bucket}/{key}"
+        stack_filename_key = f"s3://{self.bucket}/{stack_filename}"
         stacked.to_csv(stack_filename_key, index=False)
         #key = self.upload_file(stack_filename)
         return stack_filename_key
@@ -30,11 +30,11 @@ class VolumeData:
         keys = list_images(self.bucket, self.prefix)
         filtered_keys = []
         for fil in filter_suffix:
-            keys = [i for i in keys if i.endswith(fil)]
-            for k in keys:
-                if k not in filtered_keys:
-                    filtered_keys.append(k)
-        print(len(filtered_keys))
+            print(fil)
+            keys2 = [i for i in keys if i.endswith(fil)]
+            print(len(keys2))
+            for k in keys2:
+                filtered_keys.append(k)
         return filtered_keys
 
     def _get_files(self, k):
@@ -60,7 +60,8 @@ class VolumeData:
         df = pd.concat(new_rows)
         filename = k.split('/')[-1]
         split = filename.split('-')
-        name_list = ["Project", "Subject", "Date", "Modality", "Repeat", "Process", "Name"]
+        name = split[6].split('.',1)[0]
+        name_list = ["Project", "Subject", "Date", "Modality", "Repeat", "Process"]
         zip_list = zip(name_list, split)
         for i in zip_list:
             df[i[0]] = i[1]
@@ -69,6 +70,7 @@ class VolumeData:
             df['Resolution'] = "SR"
         else:
             df['Resolution'] = "OR"
+        df['Name'] = name
         return df
 
     def pivot_data(self, stack_filename_key, pivot_filename):
@@ -77,7 +79,7 @@ class VolumeData:
         #df['Name'] = [i.split('.')[0] for i in df['Name']]
         pivoted = df.pivot(
             index=['Project','Subject','Date', 'Modality', 'Repeat',"OriginalOutput"],
-            columns=['Measure', 'Label',"Resolution",'Process', "Name"])
+            columns=['Measure', 'Label',"Resolution",'Process',"Name"])
 
         columns = []
         for c in pivoted.columns:
@@ -130,22 +132,94 @@ class VolumeData:
         merge.to_csv(merge_filename, index=False)
         self.upload_file(merge_filename)
 
+def fix_dt(dt_col):
+    dt_col = [str(i) for i in dt_col]
+    fixed_dt = [i.split('/')[-1]+i.split('/')[0] for i in dt_col]
+    return(fixed_dt)
 
 if __name__ == "__main__":
-    bucket = "mjff-ppmi"
-    #metadata_key = "volume_measures/data_w_metadata_v01.csv"
-    version = "bxt"
-    prefix = "t1_brain_extraction_v2/"
-    upload_prefix = "volume_measures/"
-    stack_filename = upload_prefix + f'stacked_volumes_{version}.csv'
-    pivoted_filename = upload_prefix + f'pivoted_volumes_{version}.csv'
-    #merge_filename = f"dkt_with_metdata_{version}.csv"
+    direct = False
+    if direct:
+        bucket = "mjff-ppmi"
+        #metadata_key = "volume_measures/data_w_metadata_v01.csv"
+        version = "mjff"
+        prefix = "superres-pipeline-mjff/"
+        upload_prefix = "volume_measures/"
+        stack_filename = upload_prefix + f'stacked_volumes_{version}.csv'
+        pivoted_filename = upload_prefix + f'pivoted_volumes_{version}.csv'
+        #merge_filename = f"dkt_with_metdata_{version}.csv"
+        filter_suffixes = ['OR_seg.csv', "SR_ljflseg.csv", "SR_seg.csv", "SR_regseg.csv"]
+        vd = VolumeData(bucket, prefix,filter_suffixes, upload_prefix)
+        local_stack = vd.stack_volumes(stack_filename)
+        local_pivot = vd.pivot_data(local_stack, pivoted_filename)
+        #vd.merge_data_with_metadata(local_pivot, metadata_key, merge_filename)
 
-    filter_suffixes = ['brainvol.csv']
-    vd = VolumeData(bucket, prefix,filter_suffixes, upload_prefix)
+    bxt = False
+    if bxt:
+        bucket = "mjff-ppmi"
+        #metadata_key = "volume_measures/data_w_metadata_v01.csv"
+        version = "bxt"
+        prefix = "t1_brain_extraction_v2/"
+        upload_prefix = "volume_measures/"
+        stack_filename = upload_prefix + f'stacked_volumes_{version}.csv'
+        pivoted_filename = upload_prefix + f'pivoted_volumes_{version}.csv'
+        #merge_filename = f"dkt_with_metdata_{version}.csv"
+        filter_suffixes = ['brainvol.csv']
+        bxt = VolumeData(bucket, prefix,filter_suffixes, upload_prefix)
+        bxt_stack = bxt.stack_volumes(stack_filename)
+        bxt_pivot = bxt.pivot_data(bxt_stack, pivoted_filename)
+        #vd.merge_data_with_metadata(local_pivot, metadata_key, merge_filename)
 
-    local_stack = vd.stack_volumes(stack_filename)
 
-    local_pivot = vd.pivot_data(local_stack, pivoted_filename)
+    local_pivot = "s3://mjff-ppmi/volume_measures/pivoted_volumes_mjff.csv"
+    bxt_pivot = "s3://mjff-ppmi/volume_measures/pivoted_volumes_bxt.csv"
+    output = "s3://mjff-ppmi/volume_measures/ppmi_all_volumes.csv"
+    direct_df = pd.read_csv(local_pivot)
+    bxt_df = pd.read_csv(bxt_pivot)
+    print(direct_df.shape)
+    print(bxt_df.shape)
+    volumes = pd.merge(bxt_df, direct_df, on="Repeat", suffixes=("", "_x"))
+    print(volumes.shape)
+    duplicate_columns = [i for i in volumes.columns if i.endswith('_x')]
+    volumes.drop(duplicate_columns, inplace=True, axis=1)
+    print(volumes.shape)
 
-    #vd.merge_data_with_metadata(local_pivot, metadata_key, merge_filename)
+    metadata_df = pd.read_csv("s3://mjff-ppmi/metadata/PPMI_Original_Cohort_BL_to_Year_5_Dataset_Apr2020.csv")
+    print("Metadata")
+    print(metadata_df.shape)
+    prodro_df = pd.read_csv("s3://mjff-ppmi/metadata/PPMI_Prodromal_Cohort_BL_to_Year_1_Dataset_Apr2020.csv")
+    print(prodro_df.shape)
+    stack = pd.concat([metadata_df, prodro_df])
+    print(stack.shape)
+    mri_join_map = 's3://mjff-ppmi/metadata/mri_join_map.csv'
+    mri_join_map = pd.read_csv(mri_join_map)
+    mri_join_map['mridt'] = fix_dt(mri_join_map['mridt'])
+    mri_join_map['infodt'] = fix_dt(mri_join_map['infodt'])
+    mri_join_map['patno'] = [str(i) for i in mri_join_map['patno']]
+
+
+    stack['join_date'] = [datetime.strptime(i, '%b%Y') for i in stack['visit_date']]
+    stack['join_date'] = [str(i.strftime('%Y%m')) for i in stack['join_date']]
+    volumes['mri_date'] = [str(i)[:6] for i in volumes['Date']]
+    volumes['Subject'] = [str(i) for i in volumes['Subject']]
+    stack['PATNO'] = [str(i) for i in stack['PATNO']]
+    # Join on Subject
+    mridt_added = pd.merge(
+            stack,
+            mri_join_map,
+            left_on=['PATNO', 'join_date'],
+            right_on=['patno', 'infodt'],
+            how='left'
+    )
+    print('MRI dates')
+    print(mridt_added.shape)
+    merged = pd.merge(
+            mridt_added,
+            volumes,
+            left_on=['PATNO', 'mridt'],
+            right_on=['Subject', 'mri_date'],
+            how='outer'
+    )
+    print(merged.shape)
+    output_uri = "s3://mjff-ppmi/volume_measures/direct_regseg_bxt_volumes.csv"
+    merged.to_csv(output_uri, index=False)
