@@ -96,7 +96,7 @@ def main(input_config):
     # the various csv outputs
     output_filename_or_seg_csv = output_filename  + "OR_seg.csv"
     output_filename_sr_seg_csv = output_filename  + "SR_seg.csv"
-    output_filename_sr_ljlfseg_csv = output_filename  + "SR_ljflseg.csv"
+    output_filename_sr_ljlfseg_csv = output_filename  + "SR_ljlfseg.csv"
     output_filename_sr_regseg_csv = output_filename  + "SR_regseg.csv"
 
     regits = (600,600,600,200,50)
