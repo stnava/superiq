@@ -19,12 +19,6 @@ from superiq.pipeline_utils import *
 def main(input_congif):
     c = LoadConfig(input_config)
     tdir = "data"
-    # input brain extracted target image
-    # inputs CIT168 and associated corticospinal tract labels
-    # output approximate CST and supplementary motor cortex
-    #ifn = "/Users/stnava/data/data_old/PPMI/sr_examples/PPMI/3777/20160706/MRI_T1/I769284/direct_regseg/PPMI-3777-20160706-MRI_T1-I769284-direct_regseg-SR.nii.gz"
-    #ifn = "/Users/stnava/data/data_old/PPMI/sr_examples/PPMI/18567/20150317/MRI_T1/I495172/direct_regseg/PPMI-18567-20150317-MRI_T1-I495172-direct_regseg-SR.nii.gz"
-    #ifn = "/Users/stnava/Downloads/PPMI/sr_results_2021_03_29/regseg/PPMI/3190/20170504/MRI_T1/I901148/direct_regseg/PPMI-3190-20170504-MRI_T1-I901148-direct_regseg-SR.nii.gz"
     ifn = get_pipeline_data(
         c.superres_suffix,
         c.input_value,
@@ -33,7 +27,6 @@ def main(input_congif):
         tdit,
     )
 
-    #tdir = "/Users/stnava/data/BiogenSuperRes/CIT168_Reinf_Learn_v1/"
     tfn = get_s3_object(c.template_bucket, c.template_key, tdir)
     tfnl = get_s3_object(c.template_bucket, c.template_label_key_left, tdir)
     tfnr = get_s3_object(c.template_bucket, c.template_label_key_right, tdir)
@@ -41,14 +34,10 @@ def main(input_congif):
     cstlfn = tfnl
     templatefn = tfn
     img = ants.image_read( ifn )
-    # img = ants.resample_image( img, (1,1,1) ) # FIXME - dont do this in real data
     imgsmall = ants.resample_image( img, (128,128,128), use_voxels = True )
     cstR = ants.image_read( cstrfn )
     cstL = ants.image_read( cstlfn )
     template = ants.image_read( templatefn )
-    # if a registration to CIT168 is already computed ( which it should be ) then
-    # just apply the resulting transformations otherwise compute a new reg
-    # existing registrations look like prefixWarp.nii.gz, prefixGenericAffine.mat
     reg = ants.registration( imgsmall, template, 'SyN' )
 
     cstL2subject = ants.apply_transforms( img, cstL, reg['fwdtransforms'] )
@@ -91,17 +80,10 @@ def main(input_congif):
     bincst = bincst + \
         ants.threshold_image( cstR2subject, 0.5, 1 ) * ants.threshold_image( bincst, 0, 0 )
     mysma = mysma + ( bincst * ants.threshold_image( mysma, 0, 0 ) * 3. )
-    ants.image_write( img, '/tmp/temp_i.nii.gz' )
-    ants.image_write( mysma, '/tmp/temp_sma.nii.gz' )
-    ants.image_write( segorigspace, '/tmp/temp_dkt.nii.gz' )
-    ants.image_write( cstL2subject, '/tmp/temp_cstL.nii.gz' )
-    ants.image_write( cstR2subject, '/tmp/temp_cstR.nii.gz' )
 
-    ########################################
-    mysegnumbers = [ 1, 2 ] #
-    ########################################
-    mdl = tf.keras.models.load_model( "models/SEGSR_32_ANINN222_bigTV3.h5" ) # FIXME - parameterize this
-
+    mysegnumbers = c.wlab
+    model = get_s3_object(c.model_bucket, c.model_key, tdir)
+    mdl = tf.keras.models.load_model(model)
     srseg = super_resolution_segmentation_per_label(
         imgIn = img,
         segmentation = mysma,
@@ -111,9 +93,16 @@ def main(input_congif):
         dilation_amount = 6,
         verbose = True
     )
+    if not os.path.exists('outputs'):
+        os.makedirs('outputs')
 
-    ants.image_write( srseg['super_resolution'], '/tmp/temp_SRI.nii.gz' )
-    ants.image_write( srseg['super_resolution_segmentation'], '/tmp/temp_SRS.nii.gz' )
+    ants.image_write( img, 'outputs/temp_i.nii.gz' )
+    ants.image_write( mysma, 'outputs/temp_sma.nii.gz' )
+    ants.image_write( segorigspace, 'outputs/temp_dkt.nii.gz' )
+    ants.image_write( cstL2subject, 'outputs/temp_cstL.nii.gz' )
+    ants.image_write( cstR2subject, 'outputs/temp_cstR.nii.gz' )
+    ants.image_write( srseg['super_resolution'], 'outputs/temp_SRI.nii.gz' )
+    ants.image_write( srseg['super_resolution_segmentation'], 'outputs/temp_SRS.nii.gz' )
 
     # FIXME - write out label geometry measures for:
     # ants.threshold_image( CSTL, 0.5, 1 )
