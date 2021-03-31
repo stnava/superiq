@@ -11,12 +11,13 @@ os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
 import ants
 import antspynet
 import tensorflow as tf
+import sys
 
 from superiq import super_resolution_segmentation_per_label
 from superiq import list_to_string
 from superiq.pipeline_utils import *
 
-def main(input_congif):
+def main(input_config):
     c = LoadConfig(input_config)
     tdir = "data"
     ifn = get_pipeline_data(
