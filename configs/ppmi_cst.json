@@ -6,7 +6,7 @@
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
-        "process_name": "direct_regseg",
+        "process_name": "cst",
         "input_bucket" : "ppmi-image-data",
         "input_value" : "PPMI/3000/20110201/T1w/S102119/PPMI-3000-20110201-T1w-S102119.nii.gz",
         "pipeline_bucket": "mjff-ppmi",
