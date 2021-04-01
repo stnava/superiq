@@ -25,7 +25,7 @@ def main(input_config):
         c.input_value,
         c.pipeline_bucket,
         c.pipeline_prefix,
-        tdit,
+        tdir,
     )
 
     tfn = get_s3_object(c.template_bucket, c.template_key, tdir)
