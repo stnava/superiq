@@ -105,11 +105,11 @@ def main(input_config):
     ants.image_write( srseg['super_resolution'], 'outputs/temp_SRI.nii.gz' )
     ants.image_write( srseg['super_resolution_segmentation'], 'outputs/temp_SRS.nii.gz' )
 
-    cstlT = ants.threshold_image( cstl2subject, 0.5, 1 )
+    cstlT = ants.threshold_image( cstL2subject, 0.5, 1 )
     cstl_df = ants.label_geometry_measure(cstlT, cstlT)
     cstl_df.to_csv('outputs/cst_left_OR.csv', index=False)
 
-    cstrT = ants.threshold_image( cstr2subject, 0.5, 1 )
+    cstrT = ants.threshold_image( cstR2subject, 0.5, 1 )
     cstr_df = ants.label_geometry_measure(cstrT, cstrT)
     cstr_df.to_csv('outputs/cst_right_OR.csv', index=False)
 
