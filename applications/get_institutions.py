@@ -48,12 +48,44 @@ def get_institutions(bucket, prefix):
                   keys.append(key_dict)
             pkl.dump(keys, open(pickle_file, 'wb'))
       df = pd.DataFrame(keys)
-      df.to_csv('./institution_map.csv')
+      return df
 
+from itertools import groupby
+
+def clustering(df):
+      subjects = list(set(df['subject_id']))
+      inst = list(df['Institution'])
+      inst.sort()
+      institution_counts = {k: len(list(v)) for k,v in groupby(inst)}
+      sub_inst_map = []
+      for s in subjects:
+            subject_inst = {}
+            sublist = df[df['subject_id']==s]
+            institutions = list(set(sublist['Institution']))
+            institutions.sort()
+            sub_institution_counts = {k: len(list(v)) for k,v in groupby(institutions)}
+            new_counts = {}
+            for i in sub_institution_counts:
+                  if i in institution_counts:
+                        new_counts[i] = sub_institution_counts[i] + institution_counts[i]
+                  else:
+                        new_counts[i] = sub_institution_counts[i]
+            max_key = max(new_counts, key=new_counts.get)
+            sub_inst = [s, max_key]
+            sub_inst_map.append(sub_inst)
+
+      df = pd.DataFrame(sub_inst_map, columns = ['subject_id', 'clusteredInstitution'])
+      return df
+            #group_lists.append(institutions)
+      #for i in institutions:
+      #      for g in group_lists:
+      #            if
 
 if __name__ == "__main__":
       bucket = 'ppmi-image-data'
       prefix = 'NEW_PPMI/DCM_RAW/PPMI/'
       inst = get_institutions(bucket, prefix)
-      #print(inst.head())
-      #3007/AX_PD__5_1/2011-05-23_08_41_29.0/S989159/PPMI_3007_MR_AX_PD__5_1_br_raw_20201229105902511_7_S989159_I1393669.dcm'
+      sub_inst_map = clustering(inst)
+      df = pd.merge(inst, sub_inst_map, on='subject_id')
+
+      df.to_csv('./institution_map.csv')
