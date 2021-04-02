@@ -57,6 +57,7 @@ def clustering(df):
       inst = list(df['Institution'])
       inst.sort()
       institution_counts = {k: len(list(v)) for k,v in groupby(inst)}
+      institution_counts.pop('<missing>')
       sub_inst_map = []
       for s in subjects:
             subject_inst = {}
