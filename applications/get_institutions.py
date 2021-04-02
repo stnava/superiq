@@ -48,7 +48,7 @@ def get_institutions(bucket, prefix):
                   keys.append(key_dict)
             pkl.dump(keys, open(pickle_file, 'wb'))
       df = pd.DataFrame(keys)
-      print(df)
+      df.to_csv('./institution_map.csv')
 
 
 if __name__ == "__main__":
