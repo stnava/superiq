@@ -6,7 +6,7 @@ __pycache__/
 .DS_Store
 outputs3*
 *outputs*
-models/* 
+models/*
 *data/*
 *.nii.gz*
 *.swp
@@ -14,6 +14,8 @@ models/*
 *.csv
 *env
 *.whl
+
+*.pkl
 
 # C extensions
 *.so

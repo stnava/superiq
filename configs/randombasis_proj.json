@@ -1,0 +1,20 @@
+{
+    "version": 1,
+    "aws_profile": "role",
+    "job_definition" : "superiq_cst",
+    "job_queue" : "superiq_cst",
+    "skip_repeats": false,
+    "parameters": {
+        "environment" : "prod",
+        "process_name": "cst",
+        "input_bucket" : "ppmi-image-data",
+        "input_value" : "PPMI/3000/20110201/T1w/S102119/PPMI-3000-20110201-T1w-S102119.nii.gz",
+        "nv": 12,
+        "nvox": 128,
+        "output_folder": "outputs",
+        "output_file_prefix": "ppmi",
+        "output_bucket" : "mjff-ppmi",
+        "output_prefix": "superres-pipeline-mjff-cst/",
+        "output_suffix": ""
+    }
+}
