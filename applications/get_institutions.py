@@ -77,16 +77,68 @@ def clustering(df):
 
       df = pd.DataFrame(sub_inst_map, columns = ['subject_id', 'clusteredInstitution'])
       return df
-            #group_lists.append(institutions)
-      #for i in institutions:
-      #      for g in group_lists:
-      #            if
+
+def clustering2(df):
+      # make a dict for each patno with all the institutions
+      clusters = {}
+      for i,r in df.iterrows():
+            inst = r['institution']
+            patno = r['subject_id']
+            try:
+                  found = clusters[patno]
+                  found.append(inst)
+                  clusters[patno] = found
+            except KeyError:
+                  clusters[patno] = [inst,]
+      inst_lists = [v for k,v in clusters.items()]
+      # cluster institutions
+      inst_dicts = {}
+      for i in inst_lists:
+            try:
+                  found = inst_dicts[i[0]]
+                  found.append(i)
+                  inst_dicts[i[0]] = list(set(found))
+            except KeyError:
+                  inst_dicts[i[0]] = list(set(i))
+
+      inst = list(df['institution'])
+      institution_counts = {k: len(list(v)) for k,v in groupby(inst)}
+      institution_counts.pop('<missing>')
+      # determine most common name for each group
+      old_new_map = {}
+      for k,v in inst_dicts.items():
+            counts = {}
+            for i in v:
+                  try:
+                        counts[i] = institution_counts[i]
+                  except KeyError:
+                        continue
+            max_key = max(counts, key=counts.get)
+            for j in v:
+                  old_new_map[j] = max_key
+      df['institution_clustered'] = df.apply(lambda x: old_new_map[x['institution']], axis=0)
+      return df
+
+      #pairs = []
+      #for k,v in clusters.items():
+      #      others = {key:val for key,val in cluster.items()}
+      #      for k2, v2 in others.items():
+      #            if any(items in v for items in v2):
+      #                  pairs.append([k,k2])
+
+      #full = [pairs[0],]
+      #for i in pairs[1:]:
+      #      new_add = []
+      #      no_add = []
+      #      for f in full:
+      #            if i[0] in f or i[1] in m:
+
 
 if __name__ == "__main__":
       bucket = 'ppmi-image-data'
       prefix = 'NEW_PPMI/DCM_RAW/PPMI/'
       inst = get_institutions(bucket, prefix)
-      sub_inst_map = clustering(inst)
-      df = pd.merge(inst, sub_inst_map, on='subject_id')
+      df = clustering2(inst)
+      #df = pd.merge(inst, sub_inst_map, on='subject_id')
 
       df.to_csv('./institution_map.csv')
