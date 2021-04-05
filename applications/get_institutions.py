@@ -1,6 +1,8 @@
 import boto3
+from itertools import groupby
 import pydicom
 import pandas as pd
+from collections import defaultdict
 import pickle as pkl
 
 def get_institutions(bucket, prefix):
@@ -50,33 +52,6 @@ def get_institutions(bucket, prefix):
       df = pd.DataFrame(keys)
       return df
 
-from itertools import groupby
-
-def clustering(df):
-      subjects = list(set(df['subject_id']))
-      inst = list(df['Institution'])
-      inst.sort()
-      institution_counts = {k: len(list(v)) for k,v in groupby(inst)}
-      institution_counts.pop('<missing>')
-      sub_inst_map = []
-      for s in subjects:
-            subject_inst = {}
-            sublist = df[df['subject_id']==s]
-            institutions = list(set(sublist['Institution']))
-            institutions.sort()
-            sub_institution_counts = {k: len(list(v)) for k,v in groupby(institutions)}
-            new_counts = {}
-            for i in sub_institution_counts:
-                  if i in institution_counts:
-                        new_counts[i] = sub_institution_counts[i] + institution_counts[i]
-                  else:
-                        new_counts[i] = sub_institution_counts[i]
-            max_key = max(new_counts, key=new_counts.get)
-            sub_inst = [s, max_key]
-            sub_inst_map.append(sub_inst)
-
-      df = pd.DataFrame(sub_inst_map, columns = ['subject_id', 'clusteredInstitution'])
-      return df
 
 def clustering2(df):
       # make a dict for each patno with all the institutions
@@ -92,59 +67,65 @@ def clustering2(df):
             except KeyError:
                   clusters[patno] = [inst,]
       inst_lists = [v for k,v in clusters.items()]
-      # cluster institutions
-      changes = 1
-      inst_dicts = []
-      for i in inst_lists:
-            if not inst_dicts:
-                  inst_dicts[i[0]] = i
-            flag = 0
-            key = None
-            new_item = None
-            for k,v in inst_dicts.items():
-                  if any(j in i for j in v):
-                        key = k
-                        new_item = v + i
-                  else:
-                        flag = 1
-            if new_item is not None:
-                  inst_dicts[key] = new_item
-            if flag == 1:
-                  inst_dicts[i[0]] = list(set(i))
+      graph = {}
+      for i in range(len(inst_lists)):
+            pairs = []
+            for j in inst_lists[i]:
+                  x = j
+                  for m in inst_lists[i]:
+                        pairs.append((x,m))
+            graph[i] = pairs
 
-      inst = list(df['institution'])
-      institution_counts = {k: len(list(v)) for k,v in groupby(inst)}
-      # determine most common name for each group
+      old_graph = graph
+      edges = {v for k, vs in old_graph.items() for v in vs}
+      graph = defaultdict(set)
+
+      for v1, v2 in edges:
+          graph[v1].add(v2)
+          graph[v2].add(v1)
+
+      components = []
+      for component in connected_components(graph):
+          c = set(component)
+          components.append([edge for edges in old_graph.values()
+                                  for edge in edges
+                                  if c.intersection(edge)])
+
+      value_list = []
+      for i in components:
+            values = []
+            for j in i:
+                  values.append(j[0])
+                  values.append(j[1])
+            value_list.append(values)
+      mapper = {}
+      for v in value_list:
+            mc = max(set(v), key = v.count)
+            mapper[mc] = v
+
       old_new_map = {}
-      for k,v in inst_dicts.items():
-            counts = {}
-            for i in v:
-                  print(i)
-                  if i == 'BCM':
-                        break
-                  try:
-                        counts[i] = institution_counts[i]
-                  except KeyError:
-                        continue
-            max_key = max(counts, key=counts.get)
+      for k,v in mapper.items():
             for j in v:
-                  old_new_map[j] = max_key
+                  old_new_map[j] = k
       df['institution_clustered'] = df.apply(lambda x: old_new_map[x['institution']], axis=1)
       return df
 
-      #pairs = []
-      #for k,v in clusters.items():
-      #      others = {key:val for key,val in cluster.items()}
-      #      for k2, v2 in others.items():
-      #            if any(items in v for items in v2):
-      #                  pairs.append([k,k2])
 
-      #full = [pairs[0],]
-      #for i in pairs[1:]:
-      #      new_add = []
-      #      no_add = []
-      #      for f in full:
-      #            if i[0] in f or i[1] in m:
+
+def connected_components(neighbors):
+    seen = set()
+    def component(node):
+        nodes = set([node])
+        while nodes:
+            node = nodes.pop()
+            seen.add(node)
+            nodes |= neighbors[node] - seen
+            yield node
+    for node in neighbors:
+        if node not in seen:
+            yield component(node)
+
+
 
 
 if __name__ == "__main__":
@@ -154,4 +135,4 @@ if __name__ == "__main__":
       df = clustering2(inst)
       #df = pd.merge(inst, sub_inst_map, on='subject_id')
 
-      df.to_csv('./institution_map.csv')
+      df.to_csv('./institution_map.csv', index=False)
