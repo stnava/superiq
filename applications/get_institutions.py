@@ -80,6 +80,7 @@ def clustering(df):
 
 def clustering2(df):
       # make a dict for each patno with all the institutions
+      print(df)
       clusters = {}
       for i,r in df.iterrows():
             inst = r['institution']
@@ -92,23 +93,35 @@ def clustering2(df):
                   clusters[patno] = [inst,]
       inst_lists = [v for k,v in clusters.items()]
       # cluster institutions
-      inst_dicts = {}
+      changes = 1
+      inst_dicts = []
       for i in inst_lists:
-            try:
-                  found = inst_dicts[i[0]]
-                  found.append(i)
-                  inst_dicts[i[0]] = list(set(found))
-            except KeyError:
+            if not inst_dicts:
+                  inst_dicts[i[0]] = i
+            flag = 0
+            key = None
+            new_item = None
+            for k,v in inst_dicts.items():
+                  if any(j in i for j in v):
+                        key = k
+                        new_item = v + i
+                  else:
+                        flag = 1
+            if new_item is not None:
+                  inst_dicts[key] = new_item
+            if flag == 1:
                   inst_dicts[i[0]] = list(set(i))
 
       inst = list(df['institution'])
       institution_counts = {k: len(list(v)) for k,v in groupby(inst)}
-      institution_counts.pop('<missing>')
       # determine most common name for each group
       old_new_map = {}
       for k,v in inst_dicts.items():
             counts = {}
             for i in v:
+                  print(i)
+                  if i == 'BCM':
+                        break
                   try:
                         counts[i] = institution_counts[i]
                   except KeyError:
@@ -116,7 +129,7 @@ def clustering2(df):
             max_key = max(counts, key=counts.get)
             for j in v:
                   old_new_map[j] = max_key
-      df['institution_clustered'] = df.apply(lambda x: old_new_map[x['institution']], axis=0)
+      df['institution_clustered'] = df.apply(lambda x: old_new_map[x['institution']], axis=1)
       return df
 
       #pairs = []
