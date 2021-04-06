@@ -29,8 +29,8 @@ def dap( x ):
 
 prefix = '/tmp/temp_'
 # FIXME: NOTE: this should work for either case SR or OR
-# img=ants.image_read( prefix+'SR.nii.gz' )
-img=ants.image_read( prefix+'cerebrum.nii.gz' ).resample_image( (128,128,128), use_voxels=True)
+img=ants.image_read( prefix+'SR.nii.gz' )
+# img=ants.image_read( prefix+'cerebrum.nii.gz' ).resample_image( (128,128,128), use_voxels=True)
 idap=ants.image_read( prefix+'tissueSegmentation.nii.gz' ).resample_image_to_target( img, interp_type='genericLabel')
 hemiS=ants.image_read( prefix+'hemisphere.nii.gz' ).resample_image_to_target( img, interp_type='genericLabel')
 citS=ants.image_read( prefix+'CIT168Labels.nii.gz' ).resample_image_to_target( img, interp_type='genericLabel')
