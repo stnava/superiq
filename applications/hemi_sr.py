@@ -89,7 +89,6 @@ citS = ants.apply_transforms( img, templateCIT, reg['invtransforms'], interpolat
 bfprobs=[]
 bftot = img * 0.0
 for x in range(len(templateBF)):
-    print(x)
     bfloc = ants.image_read(  templateBF[x] )
     bfloc = ants.apply_transforms( img, bfloc, reg['invtransforms'], interpolator='linear' )
     bftot = bftot + bfloc
