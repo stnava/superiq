@@ -26,7 +26,7 @@ docker tag $container_name $repo_image && \
     aws batch register-job-definition \
     --job-definition-name $job_definition_name \
     --type container \
-    --timeout attemptDurationSeconds=3600 \
+    --timeout attemptDurationSeconds=36000 \
     --retry-strategy attempts=1 \
     --container-properties \
     '{
