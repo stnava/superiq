@@ -99,6 +99,7 @@ for x in range(len(templateBF)):
 # and multiplying by imgcerebrum
 
 # write out at OR:
+ants.image_write( img*imgcerebrum, prefix+'cerebrum.nii.gz' )
 ants.image_write( idap, prefix+'tissueSegmentation.nii.gz' )
 ants.image_write( hemiS, prefix+'hemisphere.nii.gz' )
 ants.image_write( citS, prefix+'CIT168Labels.nii.gz' )
@@ -119,7 +120,7 @@ csfStd = img[ csfseg == 1 ].std()
 
 # this will give us super-resolution over the whole image and also SR cortex
 # however, it may be better to just re-run the seg on the output SR image
-# this took around 100GB RAM
+# this took around 100GB RAM - could also do per lobe, less RAM but more time (probably)
 srseg = super_resolution_segmentation_per_label( img, cortLR, [2,2,2], sr_model=mdl, segmentation_numbers=[1,2], dilation_amount=2 )
 idapSR = dap( srseg['super_resolution'] )
 
