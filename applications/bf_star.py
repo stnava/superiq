@@ -60,7 +60,6 @@ regsegits=[200,200,200,50]
 
 
 # now do a BF focused registration
-whichHemi=1
 
 # this function looks like it's for BF but it can be used for any local label pair
 def localsyn( whichHemi, tbftotLoc, ibftotLoc, padder = 6 ):
@@ -78,7 +77,7 @@ def localsyn( whichHemi, tbftotLoc, ibftotLoc, padder = 6 ):
 ibftotL = bfprob1L + bfprob2L
 tbftotL = ( ants.image_read( templateBF[0] ) + ants.image_read( templateBF[2] ) ).resample_image_to_target( template, interp_type='linear')
 ibftotR = bfprob1R + bfprob2R
-tbftotR = ants.image_read( templateBF[1] ) + ants.image_read( templateBF[3] ).resample_image_to_target( template, interp_type='linear')
+tbftotR = ( ants.image_read( templateBF[1] ) + ants.image_read( templateBF[3] ) ).resample_image_to_target( template, interp_type='linear')
 synL = localsyn( 1, tbftotL, ibftotL )
 synR = localsyn( 2, tbftotR, ibftotR )
 bftoiL1 = ants.apply_transforms( img, ants.image_read( templateBF[0] ).resample_image_to_target( template, interp_type='linear'), synL['invtransforms'] )
@@ -100,3 +99,9 @@ vbfL1t = np.asarray(myspc).prod() * (bftoiL1*onlygm).sum()
 vbfL2t = np.asarray(myspc).prod() * (bftoiL2*onlygm).sum()
 vbfR1t = np.asarray(myspc).prod() * (bftoiR1*onlygm).sum()
 vbfR2t = np.asarray(myspc).prod() * (bftoiR2*onlygm).sum()
+
+ants.image_write( bftoiL1, prefix+'bfprob1leftSR.nii.gz' )
+ants.image_write( bftoiR1, prefix+'bfprob1rightSR.nii.gz' )
+ants.image_write( bftoiL2, prefix+'bfprob2leftSR.nii.gz' )
+ants.image_write( bftoiR2, prefix+'bfprob2rightSR.nii.gz' )
+
