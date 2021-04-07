@@ -1,9 +1,9 @@
 import pandas as pd
 import boto3
 
-name = ""
+name = "-20210401"
 metadata = "s3://ppmi-metadata/derived_tables/demog_ppmi_built_07042021.csv"
-#cst = 's3://mjff-ppmi/volume_measures/direct_reg_seg_ppmi_volumes-mjff-cst.csv'
+cst = f's3://mjff-ppmi/volume_measures/direct_reg_seg_ppmi_volumes-mjff{name}-cst.csv'
 dir_reg_seg = f's3://mjff-ppmi/volume_measures/direct_reg_seg_ppmi_volumes-mjff{name}.csv'
 
 metadata_df = pd.read_csv(metadata)
