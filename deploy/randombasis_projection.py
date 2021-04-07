@@ -20,14 +20,27 @@ from superiq.pipeline_utils import *
 
 def main(input_config):
     c = LoadConfig(input_config)
-    nv = c.nv #12
-    nvox = c.nvox #128
-    nvox_cubed = nvox * nvox * nvox
+    nvox = 128
+    randbasis = get_s3_object(c.rha_bucket, c.rha_key, 'data')
+    rbpos = ants.image_read(randbasis).numpy()
+    print(rbpos.shape)
+    rbpos[rbpos<0]=0
+    print(rbpos.shape)
+    imgfn = get_s3_object(c.input_bucket, c.input_value, 'data')
+    img = ants.image_read(imgfn)
+    norm = ants.iMath(img, 'Normalize')
+    resamp = ants.resample_image(norm, [nvox]*3, use_voxels=False)
+    img = resamp
+    print(img)
+    imat = img.numpy()
+
+    #nv = c.nv #12
+    #nvox_cubed = nvox * nvox * nvox
     #nelts = nvox_cubed * nv
-    seed = np.random.seed(0)
-    mat = np.random.normal(size=(nv, nvox_cubed))
-    print(mat.shape)
-    randbasis = np.linalg.svd(mat)
+    #seed = np.random.seed(0)
+    #mat = np.random.normal(size=(nv, nvox_cubed))
+    #print(mat.shape)
+    #randbasis = np.linalg.svd(mat)
 
     #tdir = "data"
     #ifn = get_s3_object(c.input_bucket, c.input_value, tdir)

@@ -21,12 +21,12 @@ def collect_brain_age(bucket, version):
 
 if __name__ == "__main__":
 	bucket = "mjff-ppmi"
-	version = "mjff-20210401"
+	version = "mjff"
 	prefix = f"superres-pipeline-{version}/"
 	stack_filename = f'ppmi_stacked_volumes_{version}.csv'
 	pivoted_filename = f'ppmi_pivoted_volumes_{version}.csv'
 	upload_prefix = "volume_measures/"
-	filter_suffixes = ['OR_seg.csv', 'SR_ljflseg.csv', 'SR_seg.csv', 'SR_regseg.csv']
+	filter_suffixes = ['OR_seg.csv', 'SR_jlfseg.csv','SR_ljflseg.csv', 'SR_seg.csv', 'SR_regseg.csv']
 	vd = VolumeData(bucket, prefix, filter_suffixes, upload_prefix)
 	local_stack = vd.stack_volumes(stack_filename)
 	local_pivot = vd.pivot_data(local_stack, pivoted_filename)
@@ -34,12 +34,10 @@ if __name__ == "__main__":
 	local_pivot_df = local_pivot_df
 	ba = collect_brain_age(bucket, version)
 	local_pivot_df['join_date'] = [str(i)[:6] for i in local_pivot_df['Date']]
-	print(local_pivot_df.shape)
 	local_pivot_df = pd.merge(local_pivot_df, ba, on='Repeat')
-	print(local_pivot_df.shape)
 	s3 = boto3.client('s3')
 	local_pivot_df.to_csv('local_pivot.csv')
-	s3.upload_file('local_pivot.csv', bucket, "volume_measures/20210401_direct_reg_seg_ppmi_volumes.csv")
+	s3.upload_file('local_pivot.csv', bucket, f"volume_measures/direct_reg_seg_ppmi_volumes-{version}.csv")
 	metadata = False
 	if metadata:
 		metadata_bucket = 'mjff-ppmi'
