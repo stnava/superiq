@@ -22,19 +22,21 @@ def main(input_config):
     c = LoadConfig(input_config)
     nvox = 128
     randbasis = get_s3_object(c.rha_bucket, c.rha_key, 'data')
-    rbpos = ants.image_read(randbasis).numpy()
-    print(rbpos.shape)
-    rbpos[rbpos<0]=0
-    print(rbpos.shape)
+    randbasis = ants.image_read(randbasis).numpy()
+    rbpos = randbasis
+    rbpos[rbpos<0] = 0
     imgfn = get_s3_object(c.input_bucket, c.input_value, 'data')
     img = ants.image_read(imgfn)
     norm = ants.iMath(img, 'Normalize')
-    resamp = ants.resample_image(norm, [nvox]*3, use_voxels=False)
-    img = resamp
-    print(img)
-    imat = img.numpy()
-
-    #nv = c.nv #12
+    resamp = ants.resample_image(norm, [nvox]*3, use_voxels=True)
+    imat = ants.image_list_to_matrix([resamp], resamp*0+1)
+    print(f'imat.shape: {imat.shape}')
+    uproj = np.matmul(imat, randbasis)
+    print(f'uproj.shape: {uproj.shape}')
+    uprojpos = np.matmul(imat, rbpos)
+    print(f'uproj.shape: {uprojpos}')
+    imgsum = resamp.sum()
+    print(f'imgsum: {imgsum}')
     #nvox_cubed = nvox * nvox * nvox
     #nelts = nvox_cubed * nv
     #seed = np.random.seed(0)
