@@ -14,7 +14,7 @@
         "output_folder": "outputs",
         "output_file_prefix": "ppmi",
         "output_bucket" : "mjff-ppmi",
-        "output_prefix": "superres-pipeline-mjff-cst/",
+        "output_prefix": "superres-pipeline-mjff-randbasis/",
         "output_suffix": ""
     }
 }
