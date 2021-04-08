@@ -26,9 +26,15 @@ def main(input_config):
         imgsum = resamp.sum()
         #outputs
         split = c.input_value.split('/')
-        #subject = split[2]
+        subject = split[2]
+        date = split[3]
         image_id = split[5]
-        record = {'Image.ID':image_id,"RandBasisImgSum": imgsum,}
+        record = {
+            'Subject.ID':subject,
+            "Date":date,
+            'Image.ID':image_id,
+            "RandBasisImgSum": imgsum,
+        }
         uproj_counter = 0
         for i in uproj[0]:
             uproj_counter += 1
@@ -52,7 +58,8 @@ if __name__ == "__main__":
     configs = []
     bucket_prefix = "s3://mjff-ppmi/"
     runs = list_images('mjff-ppmi', 'superres-pipeline-mjff-randbasis/raw/')
-    completed = [bucket_prefix +  i for i in runs]
+    #completed = [bucket_prefix +  i for i in runs]
+    completed = []
     for i in bxt:
         c = LoadConfig(config)
         c.input_value = i
