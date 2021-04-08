@@ -3,7 +3,7 @@
     "aws_profile": "role",
     "job_definition" : "superiq_simple",
     "job_queue" : "superiq_simple",
-    "skip_repeats": false,
+    "skip_repeats": true,
     "parameters": {
         "environment" : "prod",
         "process_name": "direct_regseg",
@@ -28,6 +28,6 @@
         "output_file_prefix": "ppmi",
         "output_bucket" : "mjff-ppmi",
         "output_prefix": "superres-pipeline-mjff/",
-        "output_suffix": ""
+        "output_suffix": "-direct_regseg-SR_seg"
     }
 }

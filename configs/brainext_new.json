@@ -3,7 +3,7 @@
     "aws_profile": "role",
     "job_definition" : "superiq_bxt",
     "job_queue" : "superiq_bxt",
-    "skip_repeats": false,
+    "skip_repeats": true,
     "parameters": {
         "environment" : "prod",
         "process_name": "brainextraction",
@@ -13,6 +13,6 @@
         "output_file_prefix": "ppmi",
         "output_bucket" : "mjff-ppmi",
         "output_prefix": "t1_brain_extraction_v2/",
-        "output_suffix": ""
+        "output_suffix": "-brainextraction-n4brain"
     }
 }
