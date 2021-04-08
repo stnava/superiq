@@ -117,6 +117,10 @@ def main(input_config):
     sr_seg_df = ants.label_geometry_measures(sr_segT, sr_segT)
     sr_seg_df.to_csv('outputs/seg_SR.csv', index=False)
 
+    sma = ants.threshold_image( mysma, 0.5, 1 )
+    sma_df = ants.label_geometry_measures(sma,sma)
+    sma_df.to_csv('outputs/sma_labels.csv', index=False)
+
     handle_outputs(
         c.input_value,
         c.output_bucket,
