@@ -24,7 +24,7 @@ def collect_brain_age():
 if __name__ == "__main__":
 	bucket = "mjff-ppmi"
 	#metadata_key = "volume_measures/data_w_metadata_v01.csv"
-	version = "simple"
+	version = "mjff-20210326-cst/"
 	prefix = f"superres-pipeline-{version}/"
 	stack_filename = f'ppmi_stacked_volumes_{version}.csv'
 	pivoted_filename = f'ppmi_pivoted_volumes_{version}.csv'
