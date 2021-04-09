@@ -3,7 +3,7 @@ import boto3
 
 name = "-20210406"
 metadata = "s3://ppmi-metadata/derived_tables/demog_ppmi_built_07042021.csv"
-cst = True
+cst = False
 cst = f's3://mjff-ppmi/volume_measures/direct_reg_seg_ppmi_volumes-mjff{name}-cst.csv'
 dir_reg_seg = f's3://mjff-ppmi/volume_measures/direct_reg_seg_ppmi_volumes-mjff.csv'#{name}.csv'
 randbasis = 's3://mjff-ppmi/superres-pipeline-mjff-randbasis/fullprojs.csv'

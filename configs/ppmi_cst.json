@@ -3,7 +3,7 @@
     "aws_profile": "role",
     "job_definition" : "superiq_cst",
     "job_queue" : "superiq_cst",
-    "skip_repeats": true,
+    "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
         "process_name": "cst",
