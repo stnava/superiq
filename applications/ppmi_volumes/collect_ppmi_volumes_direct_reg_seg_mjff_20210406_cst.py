@@ -26,7 +26,7 @@ if __name__ == "__main__":
 	stack_filename = f'ppmi_stacked_volumes_{version}.csv'
 	pivoted_filename = f'ppmi_pivoted_volumes_{version}.csv'
 	upload_prefix = "volume_measures/"
-	filter_suffixes = ["left_OR.csv", 'right_OR.csv', 'seg_SR.csv']
+	filter_suffixes = ["left_OR.csv", 'right_OR.csv', 'seg_SR.csv', 'sma_labels.csv']
 	vd = VolumeData(bucket, prefix, filter_suffixes, upload_prefix)
 	local_stack = vd.stack_volumes(stack_filename)
 	local_pivot = vd.pivot_data(local_stack, pivoted_filename)
