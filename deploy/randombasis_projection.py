@@ -11,15 +11,20 @@ def main(input_config):
     try:
         c = input_config
         print(c.input_value)
-        nvox = 128
+        nvox = 128 # FIXME - should parameterize this with dimensionality eg (128,128) for 2D
+        registration_transform = None # FIXME should allow Rigid, Affine, Similarity, SyN
         randbasis = get_s3_object(c.rha_bucket, c.rha_key, 'data')
         randbasis = ants.image_read(randbasis).numpy()
         rbpos = randbasis
         rbpos[rbpos<0] = 0
+        templatefn = get_s3_object(c.input_bucket, c.input_value, 'data') # FIXME
         imgfn = get_s3_object(c.input_bucket, c.input_value, 'data')
         img = ants.image_read(imgfn)
         norm = ants.iMath(img, 'Normalize')
-        resamp = ants.resample_image(norm, [nvox]*3, use_voxels=True)
+        resamp = ants.resample_image(norm, nvox, use_voxels=True)
+        if registration_transform is not None and templatefn is not None: # FIXME - check this
+            template = ants.image_read( templatefn )
+            resamp = ants.registration( template, resample, registration_transform )['warpedmovout']
         imat = ants.image_list_to_matrix([resamp], resamp*0+1)
         uproj = np.matmul(imat, randbasis)
         uprojpos = np.matmul(imat, rbpos)
@@ -50,6 +55,8 @@ def main(input_config):
     except:
         pass
 
+# FIXME - this process should be generalized for 2D, 3D (maybe) 4D images
+# and with whatever project / modality we have on hand.
 
 if __name__ == "__main__":
     config = sys.argv[1]
@@ -80,4 +87,3 @@ if __name__ == "__main__":
         dfs.append(df)
     full = pd.concat(dfs)
     full.to_csv(bucket_prefix + 'superres-pipeline-mjff-randbasis/fullprojs.csv', index=False)
-
