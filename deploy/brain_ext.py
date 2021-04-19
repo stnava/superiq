@@ -30,7 +30,7 @@ def main(input_config):
 
     ukbb = antspynet.get_antsxnet_data("biobank")
     template = ants.image_read(ukbb)
-    btem = antspynet.brain_extraction(template, 't1')
+    btem = antspynet.brain_extraction(template, 't1v0')
     template = template * btem
 
     run_extra=True
@@ -62,10 +62,10 @@ def main(input_config):
             )
         return bxt
 
-    b0 = antspynet.brain_extraction(input_image, 't1')
-    rbxt1 = reg_bxt( template, input_image, b0, 't1', 'Rigid', dilation=0 )
-    rbxt2 = reg_bxt( template, input_image, rbxt1, 't1', 'Rigid', dilation=0  )
-    rbxt3 = reg_bxt( template, input_image, rbxt2, 't1', 'Rigid', dilation=0 )
+    b0 = antspynet.brain_extraction(input_image, 't1v0')
+    rbxt1 = reg_bxt( template, input_image, b0, 't1v0', 'Rigid', dilation=0 )
+    rbxt2 = reg_bxt( template, input_image, rbxt1, 't1v0', 'Rigid', dilation=0  )
+    rbxt3 = reg_bxt( template, input_image, rbxt2, 't1v0', 'Rigid', dilation=0 )
     rbxt3 = ants.threshold_image( rbxt3, 0.5, 2. ).iMath("GetLargestComponent")
     rbxt4 = reg_bxt( template, input_image, rbxt3, 't1combined', 'Rigid', dilation=0 )
     if run_extra:
