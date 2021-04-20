@@ -47,7 +47,7 @@ def main(input_config):
 
     template = antspynet.get_antsxnet_data("biobank")
     template = ants.image_read(template)
-    template =  template * antspynet.brain_extraction(template)
+    template =  template * antspynet.brain_extraction(template, 't1v0')
 
     sr_model = get_s3_object(config.model_bucket, config.model_key, "data")
     mdl = tf.keras.models.load_model(sr_model)
