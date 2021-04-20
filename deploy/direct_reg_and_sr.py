@@ -23,7 +23,11 @@ from superiq import ljlf_parcellation_one_template
 from superiq import list_to_string
 from superiq.pipeline_utils import *
 
-
+def dap( x ):
+  qaff=ants.registration( bbt, x, "AffineFast" )
+  dapper = antspynet.deep_atropos( qaff['warpedmovout'], do_preprocessing=False )
+  dappertox = ants.apply_transforms( x, dapper['segmentation_image'], qaff['fwdtransforms'], interpolator='genericLabel', whichtoinvert=[True] )
+  return(  dappertox )
 
 def main(input_config):
     c = LoadConfig(input_config)
@@ -52,6 +56,17 @@ def main(input_config):
 
     template = ants.image_read(tfn)
     templateL = ants.image_read(tfnl)
+
+    bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
+    bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
+
+    tdap = dap( template )
+    idap = dap( imgIn )
+    maskinds=[2,3,4,5]
+    imgcerebrum = ants.mask_image(idap,idap,maskinds,binarize=True).iMath("GetLargestComponent")
+    temcerebrum = ants.mask_image(tdap,tdap,maskinds,binarize=True).iMath("GetLargestComponent")
+    imgIn = imgIn * imgcerebrum
+    template = template * temcerebrum
 
     if c.brain_age:
         t1_preprocessing = antspynet.preprocess_brain_image(
