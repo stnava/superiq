@@ -61,17 +61,26 @@ def main(input_config):
         filename=plot_path
     )
     output_filename = c.output_folder + "/"
-
-    ants.image_write( bxton4, output_filename + 'n4brain.nii.gz')
+    n4_path = output_filename + 'n4brain.nii.gz'
+    ants.image_write( bxton4, n4_path)
 
     bxt_lgm = ants.threshold_image(bxt, 0.5, 1)
     bxtvol = ants.label_geometry_measures( bxt_lgm )
-    batch.write_output(bxtvol, c, 'OR')
-    #bxtvol.to_csv( output_filename + 'brainvol.csv' )
+    batch.write_output(
+        c.input_value,
+        c.process_name,
+        n4_path,
+        bxtvol,
+        c.output_bucket,
+        c.output_prefix,
+        'OR',
+        c.batch_id
+    )
 
     batch.handle_outputs(
         c.output_bucket,
         c.output_prefix,
+        c.input_value,
         c.process_name,
     )
 
