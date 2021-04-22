@@ -4,7 +4,8 @@ from os import path
 import sys
 import numpy as np
 
-from superiq.pipeline_utils import *
+#from superiq.pipeline_utils import *
+import ia_batch_utils as batch
 from multiprocessing import Pool
 
 def main(input_config):

@@ -16,12 +16,13 @@ import sys
 import pandas as pd
 import numpy as np
 
-from superiq.pipeline_utils import *
+import ia_batch_utils as batch
 
 def main(input_config):
-    c = LoadConfig(input_config)
+    #c = LoadConfig(input_config)
+    c = input_config
     tdir = "data"
-    image_path = get_s3_object(c.input_bucket, c.input_value, tdir)
+    image_path = batch.get_s3_object(c.input_bucket, c.input_value, tdir)
     input_image = ants.image_read(image_path)
 
     if not os.path.exists(c.output_folder):
@@ -34,33 +35,6 @@ def main(input_config):
     template = template * btem
 
     run_extra=True
-
-    def reg_bxt( intemplate, inimg, inbxt, bxt_type, txtype, dilation=0 ):
-        inbxtdil = ants.iMath( inbxt, "MD", dilation )
-        img = ants.iMath( inimg * inbxt, "TruncateIntensity", 0.0001, 0.999)
-        imgn4 = ants.n3_bias_field_correction(img, downsample_factor=4)
-        rig = ants.registration(
-                intemplate,
-                imgn4,
-                txtype,
-                aff_iterations=(10000, 500, 0, 0),
-            )
-        if dilation > 0:
-            rigi = ants.apply_transforms( intemplate, inimg * inbxtdil, rig['fwdtransforms'] )
-        else:
-            rigi = ants.apply_transforms( intemplate, inimg, rig['fwdtransforms'] )
-        rigi = ants.iMath( rigi, "Normalize")
-        rigi = ants.n3_bias_field_correction( rigi, downsample_factor=4 )
-        bxt = antspynet.brain_extraction(rigi, bxt_type )
-        if bxt_type == 't1combined':
-            bxt = ants.threshold_image( bxt, 2, 3 )
-        bxt = ants.apply_transforms(
-                fixed=inimg,
-                moving=bxt,
-                transformlist=rig['invtransforms'],
-                whichtoinvert=[True,],
-            )
-        return bxt
 
     b0 = antspynet.brain_extraction(input_image, 't1v0')
     rbxt1 = reg_bxt( template, input_image, b0, 't1v0', 'Rigid', dilation=0 )
@@ -87,20 +61,57 @@ def main(input_config):
         filename=plot_path
     )
     output_filename = c.output_folder + "/"
-
-    ants.image_write( bxton4, output_filename + 'n4brain.nii.gz')
+    n4_path = output_filename + 'n4brain.nii.gz'
+    ants.image_write( bxton4, n4_path)
 
     bxt_lgm = ants.threshold_image(bxt, 0.5, 1)
     bxtvol = ants.label_geometry_measures( bxt_lgm )
-    bxtvol.to_csv( output_filename + 'brainvol.csv' )
-
-    handle_outputs(
+    batch.write_output(
         c.input_value,
+        c.process_name,
+        n4_path,
+        bxtvol,
         c.output_bucket,
         c.output_prefix,
+        'OR',
+        c.batch_id
+    )
+
+    batch.handle_outputs(
+        c.output_bucket,
+        c.output_prefix,
+        c.input_value,
         c.process_name,
     )
 
+def reg_bxt( intemplate, inimg, inbxt, bxt_type, txtype, dilation=0 ):
+    inbxtdil = ants.iMath( inbxt, "MD", dilation )
+    img = ants.iMath( inimg * inbxt, "TruncateIntensity", 0.0001, 0.999)
+    imgn4 = ants.n3_bias_field_correction(img, downsample_factor=4)
+    rig = ants.registration(
+            intemplate,
+            imgn4,
+            txtype,
+            aff_iterations=(10000, 500, 0, 0),
+        )
+    if dilation > 0:
+        rigi = ants.apply_transforms( intemplate, inimg * inbxtdil, rig['fwdtransforms'] )
+    else:
+        rigi = ants.apply_transforms( intemplate, inimg, rig['fwdtransforms'] )
+    rigi = ants.iMath( rigi, "Normalize")
+    rigi = ants.n3_bias_field_correction( rigi, downsample_factor=4 )
+    bxt = antspynet.brain_extraction(rigi, bxt_type )
+    if bxt_type == 't1combined':
+        bxt = ants.threshold_image( bxt, 2, 3 )
+    bxt = ants.apply_transforms(
+            fixed=inimg,
+            moving=bxt,
+            transformlist=rig['invtransforms'],
+            whichtoinvert=[True,],
+        )
+    return bxt
+
 if __name__ == "__main__":
     config = sys.argv[1]
+    config = batch.LoadConfig(config)
     main(config)
