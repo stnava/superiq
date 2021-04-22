@@ -2,7 +2,7 @@ FROM python:3.7-slim-buster
 LABEL maintainer="tgosselin"
 
 RUN apt-get update && \
-    apt-get install -y build-essential cmake libpng pkg-config git
+    apt-get install -y build-essential cmake libpng-dev pkg-config git
 
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
