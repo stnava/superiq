@@ -6,7 +6,7 @@
     "skip_repeats": false,
     "parameters": {
         "environment" : "dev",
-        "batch_id" : "",
+        "batch_id": "D422",
         "process_name": "brainextraction",
         "input_bucket" : "ppmi-image-data",
         "input_value" : "PPMI/3000/20110201/T1w/S102119/PPMI-3000-20110201-T1w-S102119.nii.gz",
