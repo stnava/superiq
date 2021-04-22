@@ -9,11 +9,13 @@
         "process_name": "rbp",
         "input_bucket" : "mjff-ppmi",
         "input_value" : "t1_brain_extraction_v2/PPMI/10874/20140905/MRI_T1/I450998/brainextraction/PPMI-10874-20140905-MRI_T1-I450998-brainextraction-n4brain.nii.gz",
+        "nvox": 128,
+        "dimentionality": 2,
         "rha_bucket" : "invicro-pipeline-inputs",
         "rha_key" : "random_orthogonal_basis.mha",
         "output_folder": "outputs",
         "output_file_prefix": "ppmi",
-        "output_bucket" : "mjff-ppmi",
+        "output_bucket" : "invicro-data-outputs",
         "output_prefix": "superres-pipeline-mjff-randbasis/",
         "output_suffix": ""
     }

@@ -66,11 +66,10 @@ def main(input_config):
 
     bxt_lgm = ants.threshold_image(bxt, 0.5, 1)
     bxtvol = ants.label_geometry_measures( bxt_lgm )
-    batch.write_output(bxtvol, c.input_bucket, c.input_value, 'OR', c.batch_id)
+    batch.write_output(bxtvol, c, 'OR')
     #bxtvol.to_csv( output_filename + 'brainvol.csv' )
 
-    handle_outputs(
-        c.input_value,
+    batch.handle_outputs(
         c.output_bucket,
         c.output_prefix,
         c.process_name,
