@@ -22,7 +22,7 @@ def main(input_config):
     #c = LoadConfig(input_config)
     c = input_config
     tdir = "data"
-    image_path = get_s3_object(c.input_bucket, c.input_value, tdir)
+    image_path = batch.get_s3_object(c.input_bucket, c.input_value, tdir)
     input_image = ants.image_read(image_path)
 
     if not os.path.exists(c.output_folder):
@@ -35,7 +35,6 @@ def main(input_config):
     template = template * btem
 
     run_extra=True
-
 
     b0 = antspynet.brain_extraction(input_image, 't1v0')
     rbxt1 = reg_bxt( template, input_image, b0, 't1v0', 'Rigid', dilation=0 )
@@ -67,7 +66,8 @@ def main(input_config):
 
     bxt_lgm = ants.threshold_image(bxt, 0.5, 1)
     bxtvol = ants.label_geometry_measures( bxt_lgm )
-    bxtvol.to_csv( output_filename + 'brainvol.csv' )
+    batch.write_output(bxtvol, c.input_bucket, c.input_value, 'OR', c.batch_id)
+    #bxtvol.to_csv( output_filename + 'brainvol.csv' )
 
     handle_outputs(
         c.input_value,
