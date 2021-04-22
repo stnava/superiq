@@ -16,6 +16,9 @@ RUN pip install git+https://github.com/ANTsX/ANTsPy.git@$antspy_hash
 ARG antspynet_hash
 RUN pip install git+https://github.com/ANTsX/ANTsPyNet.git@$antspynet_hash
 
+COPY ia-batch-utils ia-batch-utils
+RUN pip install ia-batch-utils
+
 COPY setup.py src/setup.py
 COPY deploy src/deploy
 COPY configs src/configs
