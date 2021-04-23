@@ -3,19 +3,39 @@ from os import path
 
 import sys
 import numpy as np
+import random
+import functools
+from operator import mul
+from sklearn.utils.extmath import randomized_svd
+
+# for repeatability
+np.random.seed(42)
+
+def myproduct(lst):
+    return( functools.reduce(mul, lst) )
 
 #from superiq.pipeline_utils import *
 import ia_batch_utils as batch
 from multiprocessing import Pool
 
 def main(input_config):
+    random.seed(0)
     try:
         c = input_config
         print(c.input_value)
-        nvox = 128 # FIXME - should parameterize this with dimensionality eg (128,128) for 2D
-        registration_transform = None # FIXME should allow Rigid, Affine, Similarity, SyN
         randbasis = get_s3_object(c.rha_bucket, c.rha_key, 'data')
         randbasis = ants.image_read(randbasis).numpy()
+        nvox = [128,128,128] # FIXME - Taylor this should be parameterized in the json eg (128,128) for 2D (128,128,128) 3D
+        # FIXME - should also check that the dimensions match the basis prod( nvox ) == ncol( randbasis )
+        nBasis = 20 # FIXME this should be a parameter
+        X = np.random.rand( nBasis*2, myproduct( nvox ) )
+
+        U, Sigma, randbasis = randomized_svd(X,
+                                      n_components=nBasis,
+                                      random_state=None)
+
+        registration_transform = 'Rigid' # FIXME - Taylor this should be in the json should allow None Rigid, Affine, Similarity, SyN
+        randbasis = np.transpose( randbasis )
         rbpos = randbasis
         rbpos[rbpos<0] = 0
         templatefn = get_s3_object(c.input_bucket, c.input_value, 'data') # FIXME
@@ -23,9 +43,10 @@ def main(input_config):
         img = ants.image_read(imgfn)
         norm = ants.iMath(img, 'Normalize')
         resamp = ants.resample_image(norm, nvox, use_voxels=True)
+        # FIXME - Taylor should check that the input template is brain extracted
         if registration_transform is not None and templatefn is not None: # FIXME - check this
-            template = ants.image_read( templatefn )
-            resamp = ants.registration( template, resample, registration_transform )['warpedmovout']
+            template = ants.image_read( templatefn ).resample_image(nvox, use_voxels=True)
+            resamp = ants.registration( template, resamp, registration_transform )['warpedmovout']
         imat = ants.image_list_to_matrix([resamp], resamp*0+1)
         uproj = np.matmul(imat, randbasis)
         uprojpos = np.matmul(imat, rbpos)
@@ -58,6 +79,8 @@ def main(input_config):
 
 # FIXME - this process should be generalized for 2D, 3D (maybe) 4D images
 # and with whatever project / modality we have on hand.
+
+# FIXME - the main process below should be made more general
 
 if __name__ == "__main__":
     config = sys.argv[1]
