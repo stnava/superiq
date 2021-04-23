@@ -26,10 +26,12 @@ def main(input_config):
     randbasis = batch.get_s3_object(c.rha_bucket, c.rha_key, 'data')
     randbasis = ants.image_read(randbasis).numpy()
     nvox = [c.nvox]*c.dimensionality
+    print(nvox)
+    print(randbasis.shape)
     print(f"Random basis dimensions: {randbasis.ndim}")
     print(f"Basis prod(nvox): {myproduct(nvox)}")
-    if randbasis.ndim != myproduct(nvox):
-        raise ValueError("Rand basis dimensions to match the voxel product")
+    #if randbasis.ndim != myproduct(nvox):
+    #    raise ValueError("Rand basis dimensions to match the voxel product")
     nBasis = c.nbasis
     X = np.random.rand( nBasis*2, myproduct( nvox ) )
 
