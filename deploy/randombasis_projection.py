@@ -42,7 +42,7 @@ def main(input_config):
     else:
         raise ValueError(f"Expected registration_transform values [{*accepted_transforms,}], not {c.registration_transform}")
     randbasis = np.transpose( randbasis )
-    rbpos = randbasis
+    rbpos = randbasis.copy()
     rbpos[rbpos<0] = 0
     templatefn = get_s3_object(c.template_bucket, c.template_key, 'data')
     imgfn = get_s3_object(c.input_bucket, c.input_value, 'data')
