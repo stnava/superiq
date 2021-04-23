@@ -2,6 +2,7 @@ import os.path
 from os import path
 
 import sys
+import ants
 import numpy as np
 import random
 import functools
@@ -22,7 +23,7 @@ def main(input_config):
     random.seed(0)
     c = input_config
     print(c.input_value)
-    randbasis = get_s3_object(c.rha_bucket, c.rha_key, 'data')
+    randbasis = batch.get_s3_object(c.rha_bucket, c.rha_key, 'data')
     randbasis = ants.image_read(randbasis).numpy()
     nvox = [c.nvox]*c.dimensionality
     print(f"Random basis dimensions: {randbasis.ndim}")
@@ -44,8 +45,8 @@ def main(input_config):
     randbasis = np.transpose( randbasis )
     rbpos = randbasis.copy()
     rbpos[rbpos<0] = 0
-    templatefn = get_s3_object(c.template_bucket, c.template_key, 'data')
-    imgfn = get_s3_object(c.input_bucket, c.input_value, 'data')
+    templatefn = batch.get_s3_object(c.template_bucket, c.template_key, 'data')
+    imgfn = batch.get_s3_object(c.input_bucket, c.input_value, 'data')
     img = ants.image_read(imgfn)
     norm = ants.iMath(img, 'Normalize')
     resamp = ants.resample_image(norm, nvox, use_voxels=True)
@@ -98,5 +99,5 @@ def main(input_config):
 
 if __name__ == "__main__":
     config = sys.argv[1]
-    c = LoadConfig(config)
+    c = batch.LoadConfig(config)
     main(c)
