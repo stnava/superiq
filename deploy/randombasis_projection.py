@@ -8,6 +8,7 @@ import functools
 from operator import mul
 from sklearn.utils.extmath import randomized_svd
 import ia_batch_utils as batch
+
 from multiprocessing import Pool
 
 # for repeatability
@@ -58,16 +59,17 @@ def main(input_config):
     imgsum = resamp.sum()
 
     #outputs
-    split = c.input_value.split('/')
-    subject = split[2]
-    date = split[3]
-    image_id = split[5]
-    record = {
-        'Subject.ID':subject,
-        "Date":date,
-        'Image.ID':image_id,
-        "RandBasisImgSum": imgsum,
-    }
+    #split = c.input_value.split('/')
+    #subject = split[2]
+    #date = split[3]
+    #image_id = split[5]
+    #record = {
+    #    'Subject.ID':subject,
+    #    "Date":date,
+    #    'Image.ID':image_id,
+    #    "RandBasisImgSum": imgsum,
+    #}
+    record = {}
     uproj_counter = 0
     for i in uproj[0]:
         uproj_counter += 1
@@ -79,7 +81,19 @@ def main(input_config):
         name = "RandBasisProjPos" + str(uprojpos_counter).zfill(2)
         record[name] = i
     df = pd.DataFrame(record, index=[0])
-    df.to_csv(c.csv_output, index=False)
+    fields = [i for i in df.columns if i.startswith('RandBasis')]
+    batch.write_outputs(
+        c.input_value,
+        c.process_name,
+        imgfn,
+        df,
+        c.input_bucket,
+        c.input_value,
+        c.resolution,
+        c.batch_id,
+        fields=fields
+    )
+    #df.to_csv(c.csv_output, index=False)
 
 # FIXME - this process should be generalized for 2D, 3D (maybe) 4D images
 # and with whatever project / modality we have on hand.

@@ -7,6 +7,7 @@
     "parameters": {
         "environment" : "prod",
         "process_name": "rbp",
+        "resolution": "OR",
         "input_bucket" : "mjff-ppmi",
         "input_value" : "t1_brain_extraction_v2/PPMI/10874/20140905/MRI_T1/I450998/brainextraction/PPMI-10874-20140905-MRI_T1-I450998-brainextraction-n4brain.nii.gz",
         "template_bucket": "invicro-pipeline-inputs",
