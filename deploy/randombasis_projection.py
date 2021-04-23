@@ -25,7 +25,6 @@ def main(input_config):
     randbasis = get_s3_object(c.rha_bucket, c.rha_key, 'data')
     randbasis = ants.image_read(randbasis).numpy()
     nvox = [c.nvox]*c.dimensionality
-    # FIXME - should also check that the dimensions match the basis prod( nvox ) == ncol( randbasis )
     print(f"Random basis dimensions: {randbasis.ndim}")
     print(f"Basis prod(nvox): {myproduct(nvox)}")
     if randbasis.ndim != myproduct(nvox):
@@ -93,39 +92,11 @@ def main(input_config):
         c.batch_id,
         fields=fields
     )
-    #df.to_csv(c.csv_output, index=False)
 
 # FIXME - this process should be generalized for 2D, 3D (maybe) 4D images
 # and with whatever project / modality we have on hand.
 
-# FIXME - the main process below should be made more general
-
 if __name__ == "__main__":
     config = sys.argv[1]
-    keys = list_images('mjff-ppmi', 't1_brain_extraction_v2/PPMI/')
-    bxt  = [i for i in keys if "nii.gz" in i]
-    configs = []
-    bucket_prefix = "s3://mjff-ppmi/"
-    runs = list_images('mjff-ppmi', 'superres-pipeline-mjff-randbasis/raw/')
-    #completed = [bucket_prefix +  i for i in runs]
-    completed = []
-    for i in bxt:
-        c = LoadConfig(config)
-        c.input_value = i
-        csv_output = f"s3://{c.output_bucket}/{c.output_prefix}raw/{c.input_value.split('/')[5]}.csv"
-        c.csv_output = csv_output
-        if csv_output not in completed:
-            configs.append(c)
-        else:
-            print(f"skipping: {csv_output}")
-    with Pool(30) as p:
-        x = p.map(main, configs)
-    print("Process Complete")
-    bucket_prefix = "s3://mjff-ppmi/"
-    results = list_images('mjff-ppmi', 'superres-pipeline-mjff-randbasis/raw/')
-    dfs = []
-    for i in results:
-        df = pd.read_csv(bucket_prefix + i)
-        dfs.append(df)
-    full = pd.concat(dfs)
-    full.to_csv(bucket_prefix + 'superres-pipeline-mjff-randbasis/fullprojs.csv', index=False)
+    c = LoadConfig(config)
+    main(c)
