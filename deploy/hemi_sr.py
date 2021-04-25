@@ -91,18 +91,18 @@ def main(config):
     imgcerebrum = ants.mask_image(idap,idap,maskinds,binarize=True).iMath("GetLargestComponent")
     temcerebrum = ants.mask_image(tdap,tdap,maskinds,binarize=True).iMath("GetLargestComponent")
 
-    regsegits=[200,200,200,50]
+    #regsegits=[200,200,200,50]
 
-    if c.environment=='dev':
-        regsegits=[200,200,200,10]
+    #if c.environment=='dev':
+    #    regsegits=[200,200,200,10]
 
     if c.do_reg:
         regits = [600,600,600,200,50]
-        lregits = [100, 100, 100, 55]
-        verber=False
+        #lregits = [100, 100, 100, 55]
+        verber=True
         if c.environment=='dev':
             regits=[600,600,0,0,0]
-            lregits=[600,60,0,0,0]
+            #lregits=[600,60,0,0,0]
             verber=True
         reg = ants.registration(
             template * temcerebrum,
