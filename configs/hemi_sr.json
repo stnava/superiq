@@ -1,8 +1,8 @@
 {
     "version": 1,
     "aws_profile": "role",
-    "job_definition" : "superiq_hemi_sr",
-    "job_queue" : "superiq_hemi_sr",
+    "job_definition" : "superiq_hemisr",
+    "job_queue" : "superiq_ppmi",
     "skip_repeats": false,
     "parameters": {
         "environment" : "dev",

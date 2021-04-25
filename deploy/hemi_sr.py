@@ -39,10 +39,10 @@ def main(config):
     c = config
     # input brain extracted target image
     ifn_bucket = c.input_bucket
-    ifn_key = c.input_values
+    ifn_key = c.input_value
     data = 'data/'
     ifn = batch.get_s3_object(ifn_bucket, ifn_key, data)
-    img
+    img = ants.image_read(ifn)
 
     model_bucket = c.model_bucket
     model_key = c.model_key
