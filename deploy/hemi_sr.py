@@ -47,6 +47,9 @@ def main(config):
     ifn = batch.get_s3_object(ifn_bucket, ifn_key, data)
     img = ants.image_read(ifn)
 
+    if not os.path.exists(c.output_file_prefix):
+        os.makedirs(c.output_file_prefix)
+
     model_bucket = c.model_bucket
     model_key = c.model_key
     model_path = batch.get_s3_object(model_bucket, model_key, data)
@@ -76,6 +79,7 @@ def main(config):
     #templateHemi = ants.image_read( tdir + "CIT168_T1w_700um_pad_HemisphereLabel_adni.nii.gz" )
     #img = ants.image_read( ifn )
     template = ants.image_read( templatefn )
+    prefix=c.output_file_prefix
 
     tdap = dap( template )
     idap = dap( img )
@@ -140,7 +144,6 @@ def main(config):
     # and multiplying by imgcerebrum
 
     # write out at OR:
-    prefix=c.output_file_prefix
     ants.image_write( img*imgcerebrum, prefix+'cerebrum.nii.gz' )
     ants.image_write( idap, prefix+'tissueSegmentation.nii.gz' )
     ants.image_write( hemiS, prefix+'hemisphere.nii.gz' )
