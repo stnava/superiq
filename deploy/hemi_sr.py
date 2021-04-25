@@ -2,7 +2,10 @@
 import os.path
 from os import path
 
-threads = os.environ['cpu_threads']
+try:
+    threads = os.environ['cpu_threads']
+except KeyError:
+    threads = "8"
 # set number of threads - this should be optimized per compute instance
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
@@ -49,14 +52,14 @@ def main(config):
     model_path = batch.get_s3_object(model_bucket, model_key, data)
     mdl = tf.keras.models.load_model( model_path ) # FIXME - parameterize this
 
-    template_bucket = c.templage_bucket
-    templatefn = batch.get_s3_object(template_bucket, c.template_base)
-    templateBF1L  =batch.get_s3_object(template_bucket,  c.templateBF1L)
-    templateBF2L  =batch.get_s3_object(template_bucket,  c.templateBF2L)
-    templateBF1R  =batch.get_s3_object(template_bucket,  c.templateBF1R)
-    templateBF2R  =batch.get_s3_object(template_bucket,  c.templateBF2R)
-    templateCIT =batch.get_s3_object(template_bucket,  c.templateCIT)
-    templateHemi=batch.get_s3_object(template_bucket,  c.templateHemi)
+    template_bucket = c.template_bucket
+    templatefn = batch.get_s3_object(template_bucket, c.template_base, data)
+    templateBF1L  =batch.get_s3_object(template_bucket,  c.templateBF1L, data)
+    templateBF2L  =batch.get_s3_object(template_bucket,  c.templateBF2L, data)
+    templateBF1R  =batch.get_s3_object(template_bucket,  c.templateBF1R, data)
+    templateBF2R  =batch.get_s3_object(template_bucket,  c.templateBF2R, data)
+    templateCIT =batch.get_s3_object(template_bucket,  c.templateCIT, data)
+    templateHemi=batch.get_s3_object(template_bucket,  c.templateHemi, data)
     # inputs CIT168 and associated corticospinal tract labels
     # output approximate CST and supplementary motor cortex
     #model_file_name = "/Users/stnava/code/superiq/models/SEGSR_32_ANINN222_bigTV3.h5"
