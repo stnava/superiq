@@ -116,6 +116,7 @@ def main(config):
             verbose=verber )
 
     # 1 is left, 2 is right
+    templateHemi = ants.image_read( templateHemi )
     hemiS = ants.apply_transforms(
         img,
         templateHemi,
@@ -123,6 +124,7 @@ def main(config):
         interpolator='genericLabel',
     )
     # these are the standard CIT labels
+    templateCIT = ants.image_read( templateCIT )
     citS = ants.apply_transforms(
         img,
         templateCIT,

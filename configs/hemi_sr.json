@@ -5,7 +5,7 @@
     "job_queue" : "superiq_ppmi",
     "skip_repeats": false,
     "parameters": {
-        "environment" : "prod",
+        "environment" : "dev",
         "process_name": "hemi_sr",
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "ADNI_EISAI_COHORT/brain_extraction/ADNI/002_S_0729/20060717/T1w/000/brainextraction/ADNI-002_S_0729-20060717-T1w-000-brainextraction-n4brain.nii.gz",
