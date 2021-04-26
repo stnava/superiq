@@ -19,6 +19,8 @@ from superiq import list_to_string
 import ia_batch_utils as batch
 
 def dap( x ):
+    bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
+    bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
     qaff=ants.registration( bbt, x, "AffineFast" )
     dapper = antspynet.deep_atropos( qaff['warpedmovout'], do_preprocessing=False )
     dappertox = ants.apply_transforms(
@@ -44,39 +46,82 @@ def localsyn( whichHemi, tbftotLoc, ibftotLoc, padder = 6 ):
 
 def main(input_config):
     c = input_config
-    bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
-    bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
 
     tdir = "data/"
     img_path = batch.get_s3_object(c.input_bucket, c.input_value, tdir)
     img=ants.image_read(img_path)
 
-    labels = 'labels/'
-    idap=ants.image_read(tdir +'tissueSegmentation.nii.gz' ) \
-      .resample_image_to_target( img, interp_type='genericLabel')
-    hemiS=ants.image_read( tdir+'hemisphere.nii.gz' ) \
-      .resample_image_to_target( img, interp_type='genericLabel')
-    citS=ants.image_read( tdir+'CIT168Labels.nii.gz' ) \
-      .resample_image_to_target( img, interp_type='genericLabel')
-    bfprob1L=ants.image_read( tdir+'bfprob1left.nii.gz' ) \
-      .resample_image_to_target( img, interp_type='linear')
-    bfprob1R=ants.image_read( tdir+'bfprob1right.nii.gz' ) \
-      .resample_image_to_target( img, interp_type='linear')
-    bfprob2L=ants.image_read( tdir+'bfprob2left.nii.gz' ) \
-      .resample_image_to_target( img, interp_type='linear')
-    bfprob2R=ants.image_read( tdir+'bfprob2right.nii.gz' ) \
-      .resample_image_to_target( img, interp_type='linear')
+    filter_vals = c.input_value.split('/')
+    x = '/'.join([filter_vals[2:7]])
+    print(x)
+    pipeline_objects = batch.list_objects(c.hemi_bucket, c.hemi_prefix + x + '/')
+    print(pipeline_objects)
+    tSeg = batch.get_s3_objects(
+        c.hemi_bucket,
+        pipeline_objects.endswith('tissueSegmentation.nii.gz'),
+        tdir,
+    )
+    hemi = batch.get_s3_objects(
+        c.hemi_bucket,
+        pipeline_objects.endswith('hemisphere.nii.gz'),
+        tdir,
+    )
+    citL = batch.get_s3_objects(
+        c.hemi_bucket,
+        pipeline_objects.endswith('CIT168Labels.nii.gz'),
+        tdir,
+    )
+    bfL1 = batch.get_s3_objects(
+        c.hemi_bucket,
+        pipeline_objects.endswith('bfprob1left.nii.gz'),
+        tdir,
+    )
+    bfL2 = batch.get_s3_objects(
+        c.hemi_bucket,
+        pipeline_objects.endswith('bfprob2left.nii.gz'),
+        tdir,
+    )
+    bfR1 = batch.get_s3_objects(
+        c.hemi_bucket,
+        pipeline_objects.endswith('bfprob1right.nii.gz'),
+        tdir,
+    )
+    bfR2 = batch.get_s3_objects(
+        c.hemi_bucket,
+        pipeline_objects.endswith('bfprob2right.nii.gz'),
+        tdir,
+    )
 
-    tdir = "/Users/stnava/data/BiogenSuperRes/CIT168_Reinf_Learn_v1/"
-    templatefn = tdir + "CIT168_T1w_700um_pad_adni0.nii.gz"
-    templateBF = glob.glob(tdir+"CIT168_basal_forebrain_adni_prob*gz")
-    templateBF.sort()
-    template = ants.image_read( templatefn )
+    idap=ants.image_read(tSeg).resample_image_to_target( img, interp_type='genericLabel')
+    hemiS=ants.image_read(hemi).resample_image_to_target( img, interp_type='genericLabel')
+    citS=ants.image_read(citL).resample_image_to_target( img, interp_type='genericLabel')
+    bfprob1L=ants.image_read(bfL1).resample_image_to_target( img, interp_type='linear')
+    bfprob1R=ants.image_read(bfR1).resample_image_to_target( img, interp_type='linear')
+    bfprob2L=ants.image_read(bfL2).resample_image_to_target( img, interp_type='linear')
+    bfprob2R=ants.image_read(bfR2).resample_image_to_target( img, interp_type='linear')
+
+    #templatefn = tdir + "CIT168_T1w_700um_pad_adni0.nii.gz"
+    #templateBF = glob.glob(tdir+"CIT168_basal_forebrain_adni_prob*gz")
+    #templateBF.sort()
+    #template = ants.image_read( templatefn )
+
+    template_bucket = c.template_bucket
+    template = batch.get_s3_object(template_bucket, c.template_base, data)
+    templateBF1L  =batch.get_s3_object(template_bucket,  c.templateBF1L, data)
+    templateBF2L  =batch.get_s3_object(template_bucket,  c.templateBF2L, data)
+    templateBF1R  =batch.get_s3_object(template_bucket,  c.templateBF1R, data)
+    templateBF2R  =batch.get_s3_object(template_bucket,  c.templateBF2R, data)
+    templateCIT =batch.get_s3_object(template_bucket,  c.templateCIT, data)
+    templateHemi=batch.get_s3_object(template_bucket,  c.templateHemi, data)
+    templateBF = [templateBF1L, templateBF1R, templateBF2L,  templateBF2R]
     # upsample the template if we are passing SR as input
     if min(ants.get_spacing(img)) < 0.8:
         template = ants.resample_image( template, (0.5,0.5,0.5), interp_type = 0 )
-    templateCIT = ants.image_read( tdir + "det_atlas_25_pad_LR_adni.nii.gz" ).resample_image_to_target( template, interp_type='genericLabel')
-    templateHemi = ants.image_read( tdir + "CIT168_T1w_700um_pad_HemisphereLabel_adni.nii.gz" ).resample_image_to_target( template, interp_type='genericLabel')
+
+    templateCIT = ants.image_read(templateCIT) \
+        .resample_image_to_target( template, interp_type='genericLabel')
+    templateHemi = ants.image_read(templateHemi) \
+        .resample_image_to_target( template, interp_type='genericLabel')
 
     tdap = dap( template )
     maskinds=[2,3,4,5]
@@ -89,18 +134,22 @@ def main(input_config):
 
     # now do a BF focused registration
 
-
-
     ibftotL = bfprob1L + bfprob2L
-    tbftotL = ( ants.image_read( templateBF[0] ) + ants.image_read( templateBF[2] ) ).resample_image_to_target( template, interp_type='linear')
+    tbftotL = ( ants.image_read( templateBF[0] ) + ants.image_read( templateBF[2] ) ) \
+        .resample_image_to_target( template, interp_type='linear')
     ibftotR = bfprob1R + bfprob2R
-    tbftotR = ( ants.image_read( templateBF[1] ) + ants.image_read( templateBF[3] ) ).resample_image_to_target( template, interp_type='linear')
+    tbftotR = ( ants.image_read( templateBF[1] ) + ants.image_read( templateBF[3] ) ) \
+        .resample_image_to_target( template, interp_type='linear')
     synL = localsyn( 1, tbftotL, ibftotL )
     synR = localsyn( 2, tbftotR, ibftotR )
-    bftoiL1 = ants.apply_transforms( img, ants.image_read( templateBF[0] ).resample_image_to_target( template, interp_type='linear'), synL['invtransforms'] )
-    bftoiL2 = ants.apply_transforms( img, ants.image_read( templateBF[2] ).resample_image_to_target( template, interp_type='linear'), synL['invtransforms'] )
-    bftoiR1 = ants.apply_transforms( img, ants.image_read( templateBF[1] ).resample_image_to_target( template, interp_type='linear'), synR['invtransforms'] )
-    bftoiR2 = ants.apply_transforms( img, ants.image_read( templateBF[3] ).resample_image_to_target( template, interp_type='linear'), synR['invtransforms'] )
+    bftoiL1 = ants.apply_transforms( img, ants.image_read( templateBF[0] ) \
+        .resample_image_to_target( template, interp_type='linear'), synL['invtransforms'] )
+    bftoiL2 = ants.apply_transforms( img, ants.image_read( templateBF[2] ) \
+        .resample_image_to_target( template, interp_type='linear'), synL['invtransforms'] )
+    bftoiR1 = ants.apply_transforms( img, ants.image_read( templateBF[1] ) \
+        .resample_image_to_target( template, interp_type='linear'), synR['invtransforms'] )
+    bftoiR2 = ants.apply_transforms( img, ants.image_read( templateBF[3] ) \
+        .resample_image_to_target( template, interp_type='linear'), synR['invtransforms'] )
 
     # FIXME - write out the above values to appropriately named files similar to templateBF names
     # FIXME - get the volumes for each region (thresholded) and its sum
