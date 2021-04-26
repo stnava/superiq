@@ -33,7 +33,7 @@ def dap( x ):
     return(  dappertox )
 
 # this function looks like it's for BF but it can be used for any local label pair
-def localsyn( whichHemi, tbftotLoc, ibftotLoc, padder = 6 ):
+def localsyn(img, hemiS, templateHemi, whichHemi, tbftotLoc, ibftotLoc, padder = 6 ):
     ihemi=img*ants.threshold_image( hemiS, whichHemi, whichHemi )
     themi=template*ants.threshold_image( templateHemi, whichHemi, whichHemi )
     rig = ants.registration( tbftotLoc, ibftotLoc, 'Rigid' )
