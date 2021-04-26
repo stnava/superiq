@@ -3,7 +3,7 @@
     "aws_profile": "role",
     "job_definition" : "superiq_bxt",
     "job_queue" : "superiq_bxt",
-    "skip_repeats": false,
+    "skip_repeats": true,
     "parameters": {
         "environment" : "prod",
         "batch_id": "",
@@ -12,7 +12,7 @@
         "input_value" : "",
         "output_folder": "outputs",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "ADNI_EISAI_COHORT/brain_extraction/",
+        "output_prefix": "ADNI_APRIL2021/brain_extraction/",
         "output_suffix": "n4brain.nii.gz"
     }
 }

@@ -199,7 +199,7 @@ def main(input_config):
         synR['invtransforms'],
     )
 
-    # FIXME - get the volumes for each region (thresholded) and its sum
+    # get the volumes for each region (thresholded) and its sum
     myspc = ants.get_spacing( img )
     vbfL1 = np.asarray(myspc).prod() * bftoiL1.sum()
     vbfL2 = np.asarray(myspc).prod() * bftoiL2.sum()
@@ -233,6 +233,8 @@ def main(input_config):
     ants.image_write( bftoiR1, output+'bfprob1rightSR.nii.gz' )
     ants.image_write( bftoiL2, output+'bfprob2leftSR.nii.gz' )
     ants.image_write( bftoiR2, output+'bfprob2rightSR.nii.gz' )
+
+    #batch.handle_outputs
 
 if __name__=="__main__":
     config = sys.argv[1]
