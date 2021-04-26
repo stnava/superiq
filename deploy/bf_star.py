@@ -234,7 +234,13 @@ def main(input_config):
     ants.image_write( bftoiL2, output+'bfprob2leftSR.nii.gz' )
     ants.image_write( bftoiR2, output+'bfprob2rightSR.nii.gz' )
 
-    #batch.handle_outputs
+    batch.handle_outputs(
+        c.output_bucket,
+        c.output_prefix,
+        c.input_value,
+        c.process_name,
+    )
+
 
 if __name__=="__main__":
     config = sys.argv[1]
