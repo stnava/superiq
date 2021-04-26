@@ -11,16 +11,17 @@
         "input_value" : "ADNI_EISAI_COHORT/hemi_sr/ADNI/002_S_0729/20060717/T1w/000/hemi_sr/ADNI-002_S_0729-20060717-T1w-000-hemi_sr-SR.nii.gz",
         "hemi_bucket": "eisai-basalforebrainsuperres2",
         "hemi_prefix": "ADNI_EISAI_COHORT/hemi_sr/",
-        "template_bucket": "invicro-pipeline-inputs",
-        "template_key": "adni_templates/adni_template.nii.gz",
-        "template_label_key" : "adni_templates/adni_template_dkt_labels.nii.gz",
-        "model_bucket": "invicro-pipeline-inputs",
-        "model_key": "models/SEGSR_32_ANINN222_3.h5",
-
-
-        "output_file_prefix": "basalforebrain",
+       	"template_bucket": "invicro-pipeline-inputs",
+        "template_base" : "CIT168_adni/CIT168_T1w_700um_pad_adni0.nii.gz",
+        "templateCIT": "CIT168_adni/det_atlas_25_pad_LR_adni.nii.gz",
+        "templateHemi": "CIT168_adni/CIT168_T1w_700um_pad_HemisphereLabel_adni.nii.gz",
+        "templateBF1L": "CIT168_adni/CIT168_basal_forebrain_adni_prob_1_left.nii.gz",
+        "templateBF2L": "CIT168_adni/CIT168_basal_forebrain_adni_prob_2_left.nii.gz",
+        "templateBF1R": "CIT168_adni/CIT168_basal_forebrain_adni_prob_1_right.nii.gz",
+        "templateBF2R": "CIT168_adni/CIT168_basal_forebrain_adni_prob_2_right.nii.gz",
+        "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "superres-pipeline-v03/",
-        "output_suffix": "-basalforebrain-basalforebrain_srOnNativeSeg"
+        "output_prefix": "bf_star/",
+        "output_suffix": ""
     }
 }

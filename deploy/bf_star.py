@@ -140,8 +140,24 @@ def main(input_config):
     ibftotR = bfprob1R + bfprob2R
     tbftotR = ( ants.image_read( templateBF[1] ) + ants.image_read( templateBF[3] ) ) \
         .resample_image_to_target( template, interp_type='linear')
-    synL = localsyn( 1, tbftotL, ibftotL )
-    synR = localsyn( 2, tbftotR, ibftotR )
+    synL = localsyn(
+        img=img,
+        hemiS=hemiS,
+        templateHemi=templateHemi,
+        whichHemi=1,
+        tbftotLoc=tbftotL,
+        ibftotLoc=ibftotL,
+        padder=6,
+    )
+    synR = localsyn(
+        img=img,
+        hemiS=hemiS,
+        templateHemi=templateHemi,
+        whichHemi=2,
+        tbftotLoc=tbftotR,
+        ibftotLoc=ibftotR,
+        padder=6,
+    )
     bftoiL1 = ants.apply_transforms( img, ants.image_read( templateBF[0] ) \
         .resample_image_to_target( template, interp_type='linear'), synL['invtransforms'] )
     bftoiL2 = ants.apply_transforms( img, ants.image_read( templateBF[2] ) \
@@ -151,7 +167,6 @@ def main(input_config):
     bftoiR2 = ants.apply_transforms( img, ants.image_read( templateBF[3] ) \
         .resample_image_to_target( template, interp_type='linear'), synR['invtransforms'] )
 
-    # FIXME - write out the above values to appropriately named files similar to templateBF names
     # FIXME - get the volumes for each region (thresholded) and its sum
     myspc = ants.get_spacing( img )
     vbfL1 = np.asarray(myspc).prod() * bftoiL1.sum()
@@ -166,8 +181,21 @@ def main(input_config):
     vbfR1t = np.asarray(myspc).prod() * (bftoiR1*onlygm).sum()
     vbfR2t = np.asarray(myspc).prod() * (bftoiR2*onlygm).sum()
 
-    ants.image_write( bftoiL1, tdir+'bfprob1leftSR.nii.gz' )
-    ants.image_write( bftoiR1, tdir+'bfprob1rightSR.nii.gz' )
-    ants.image_write( bftoiL2, tdir+'bfprob2leftSR.nii.gz' )
-    ants.image_write( bftoiR2, tdir+'bfprob2rightSR.nii.gz' )
+    volumes = {
+        "BFL1": vbfL1,
+        "BFL2": vbfL2,
+        "BFR1": vbfR1,
+        "BFR2": vbfR2,
+        "BFL1tissue": vbfL1t,
+        "BFL2tissue": vbfL2t,
+        "BFR1tissue": vbfR1t,
+        "BFR2tissue": vbfR2t,
+    }
+    output = c.output_file_prefix
+    df = pd.DataFrame(volumes, index=[0])
+    df.to_csv(output + 'bfvolumes.csv')
+    ants.image_write( bftoiL1, output+'bfprob1leftSR.nii.gz' )
+    ants.image_write( bftoiR1, output+'bfprob1rightSR.nii.gz' )
+    ants.image_write( bftoiL2, output+'bfprob2leftSR.nii.gz' )
+    ants.image_write( bftoiR2, output+'bfprob2rightSR.nii.gz' )
 
