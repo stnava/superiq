@@ -224,6 +224,9 @@ def main(input_config):
         "BFR2tissue": vbfR2t,
     }
     output = c.output_file_prefix
+    if not os.path.exists(output):
+        os.makedirs(output)
+
     df = pd.DataFrame(volumes, index=[0])
     df.to_csv(output + 'bfvolumes.csv')
     ants.image_write( bftoiL1, output+'bfprob1leftSR.nii.gz' )
