@@ -21,7 +21,7 @@
         "templateBF2R": "CIT168_adni/CIT168_basal_forebrain_adni_prob_2_right.nii.gz",
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "bf_star/",
+        "output_prefix": "ADNI_APRIL2021/bf_star_on_sr/",
         "output_suffix": ""
     }
 }
