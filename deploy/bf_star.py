@@ -214,14 +214,14 @@ def main(input_config):
     vbfR2t = np.asarray(myspc).prod() * (bftoiR2*onlygm).sum()
 
     volumes = {
-        "BFL1": vbfL1,
-        "BFL2": vbfL2,
-        "BFR1": vbfR1,
-        "BFR2": vbfR2,
-        "BFL1tissue": vbfL1t,
-        "BFL2tissue": vbfL2t,
-        "BFR1tissue": vbfR1t,
-        "BFR2tissue": vbfR2t,
+        f"BFL1_{c.resolution}": vbfL1,
+        f"BFL2_{c.resolution}": vbfL2,
+        f"BFR1_{c.resolution}": vbfR1,
+        f"BFR2_{c.resolution}": vbfR2,
+        f"BFL1tissue_{c.resolution}": vbfL1t,
+        f"BFL2tissue_{c.resolution}": vbfL2t,
+        f"BFR1tissue_{c.resolution}": vbfR1t,
+        f"BFR2tissue_{c.resolution}": vbfR2t,
     }
     output = c.output_file_prefix
     if not os.path.exists(output):

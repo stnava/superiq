@@ -19,6 +19,7 @@
         "templateBF2L": "CIT168_adni/CIT168_basal_forebrain_adni_prob_2_left.nii.gz",
         "templateBF1R": "CIT168_adni/CIT168_basal_forebrain_adni_prob_1_right.nii.gz",
         "templateBF2R": "CIT168_adni/CIT168_basal_forebrain_adni_prob_2_right.nii.gz",
+        "resolution" : "OR",
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
         "output_prefix": "ADNI_APRIL2021/bf_star_on_sr/",
