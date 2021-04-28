@@ -22,7 +22,7 @@
         "resolution" : "OR",
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "ADNI_APRIL2021/bf_star_on_sr/",
+        "output_prefix": "ADNI_APRIL2021/bf_star_on_or/",
         "output_suffix": ""
     }
 }

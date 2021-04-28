@@ -22,6 +22,8 @@ from superiq import ljlf_parcellation
 from superiq import ljlf_parcellation_one_template
 from superiq import list_to_string
 from superiq.pipeline_utils import *
+#import ia_batch_utils as batch
+
 
 def dap( x ):
   qaff=ants.registration( bbt, x, "AffineFast" )

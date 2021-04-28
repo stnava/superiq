@@ -9,9 +9,9 @@ import antspynet
 import math
 import ants
 import sys
-from superiq.pipeline_utils import *
+#from superiq.pipeline_utils import *
 from superiq import deep_dkt, super_resolution_segmentation_per_label
-
+import ia_batch_utils as batch
 
 def main(input_config):
     config = LoadConfig(input_config)
@@ -19,23 +19,21 @@ def main(input_config):
         original_image_path = config.input_value
 
         input_image = get_pipeline_data(
-                "brain_ext-bxtreg_n3.nii.gz",
-                original_image_path,
-                config.pipeline_bucket,
-                config.pipeline_prefix,
+                config.input_bucket,
+                config.input_value,
                 "data"
         )
 
         input_image = ants.image_read(input_image)
     elif config.environment == 'val':
-        input_path = get_s3_object(config.input_bucket, config.input_value, 'data')
+        input_path = batch.get_s3_object(config.input_bucket, config.input_value, 'data')
         input_image = ants.image_read(input_path)
         image_base_name = input_path.split('/')[-1].split('.')[0]
         folder_name =  image_base_name.replace('_t1brain', "") + '/'
         image_label_name = \
             config.label_prefix + folder_name +  image_base_name + '_labels.nii.gz'
         print(image_label_name)
-        image_labels_path = get_s3_object(
+        image_labels_path = batch.get_s3_object(
             config.label_bucket,
             image_label_name,
             "data",
@@ -49,10 +47,10 @@ def main(input_config):
     template = ants.image_read(template)
     template =  template * antspynet.brain_extraction(template, 't1v0')
 
-    sr_model = get_s3_object(config.model_bucket, config.model_key, "data")
+    sr_model = batch.get_s3_object(config.model_bucket, config.model_key, "data")
     mdl = tf.keras.models.load_model(sr_model)
 
-    output_path = config.output_path
+    output_path = config.output_file_prefix
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
@@ -67,13 +65,21 @@ def main(input_config):
 
     output = deep_dkt(**input_params)
 
+    label_or = output['labels_or']
+    label_sr = output['labels_sr']
+
+    labels_or = pd.read_csv(label_or)
+    labels_sr = pd.read_csv(label_sr)
+
+    pivot_csv(labels_or, config, "OR")
+    pivot_csv(labels_sr, config, "SR")
+
     if config.environment == 'prod':
         handle_outputs(
-            config.input_value,
             config.output_bucket,
             config.output_prefix,
+            config.input_value,
             config.process_name,
-            output_path,
         )
 
     elif config.environment == 'val':
@@ -152,6 +158,55 @@ def main(input_config):
         )
     else:
         raise ValueError(f"The environemnt {config.environment} is not recognized")
+
+def pivot_csv(df, config, resolution):
+    df = pd.read_csv(f"s3://{self.bucket}/{k}")
+    fields = ["Label", 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']
+    df = df[fields]
+    new_rows = []
+    for i,r in df.iterrows():
+        label = int(r['Label'])
+        fields = ['VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']
+        select_data = r[fields]
+        values = select_data.values
+        field_values = zip(fields, values)
+        for f in field_values:
+            new_df = {}
+            new_df['Measure'] = f[0]
+            new_df['Value'] = f[1]
+            new_df['Label'] = label
+            new_df = pd.DataFrame(new_df, index=[0])
+            new_rows.append(new_df)
+    df = pd.concat(new_rows)
+    filename = config.input_value.split('/')[-1]
+    split = filename.split('-')[:5]
+    name_list = ["Project", "Subject", "Date", "Modality", "Repeat", "Process", "Resolution"]
+    split.append('deepdkt')
+    split.append(resolution)
+    zip_list = zip(name_list, split)
+    for i in zip_list:
+        df[i[0]] = i[1]
+    df['OriginalOutput'] = "-".join(split[:5]) + ".nii.gz"
+    df['Name'] = filename
+    #return df
+    pivoted = df.pivot(
+        index=['Project','Subject','Date', 'Modality', 'Repeat',"OriginalOutput"],
+        columns=['Measure', 'Label',"Resolution",'Process',"Name"])
+
+    columns = []
+    for c in pivoted.columns:
+        cols = [str(i) for i in c]
+        column_name = '-'.join(cols[1:])
+        columns.append(column_name)
+
+    pivoted.columns = columns
+    pivoted.reset_index(inplace=True)
+    final_csv = pivoted
+    labels = '_'.join(config.wlab)
+    output_name = f"Labels_{labels}_{resolution}.csv"
+    final_csv['Repeat'] = [str(i).zfill(3) for i in final_csv['Repeat']]
+    final_csv.to_csv('outputs/{output_name}', index=False)
+
 
 if __name__ == "__main__":
     config = sys.argv[1]

@@ -76,5 +76,7 @@ def deep_dkt(
         "nativeSeg": ants.image_read(output_filename_native), #segorigspace
         "superresSeg": ants.image_read(output_filename_sr_seg),
         "superres": ants.image_read(output_filename_sr),
+        "labels_or": output_filename_native_csv,
+        "labels_sr": output_filename_sr_seg_csv,
     }
 
