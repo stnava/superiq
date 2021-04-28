@@ -61,8 +61,8 @@ def main(input_config):
     img=ants.image_read(img_path)
 
     filter_vals = c.input_value.split('/')
-    x = '/'.join(filter_vals[2:8])
-    pipeline_objects = batch.list_objects(c.hemi_bucket, c.hemi_prefix + x + '/')
+    x = '/'.join(filter_vals[2:7])
+    pipeline_objects = batch.list_objects(c.hemi_bucket, c.hemi_prefix + x + f'/hemi_sr/' )
     tSeg = batch.get_s3_object(
         c.hemi_bucket,
         #pipeline_objects.endswith('tissueSegmentation.nii.gz'),
@@ -228,7 +228,7 @@ def main(input_config):
         os.makedirs(output)
 
     df = pd.DataFrame(volumes, index=[0])
-    df.to_csv(output + 'bfvolumes.csv')
+    df.to_csv(output + f'_{c.resolution}_bfvolumes.csv')
     ants.image_write( bftoiL1, output+'bfprob1leftSR.nii.gz' )
     ants.image_write( bftoiR1, output+'bfprob1rightSR.nii.gz' )
     ants.image_write( bftoiL2, output+'bfprob2leftSR.nii.gz' )

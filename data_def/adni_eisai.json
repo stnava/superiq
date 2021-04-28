@@ -1,7 +1,7 @@
 {
     "version": 1,
     "bucket": "eisai-basalforebrainsuperres2",
-    "prefix": "ADNI_EISAI_COHORT/initial_images/",
+    "prefix": "ADNI_APRIL2021/initial_images/",
     "filter_include": ["nii.gz"],
     "filter_exclude": [],
     "dryrun": false

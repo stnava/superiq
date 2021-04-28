@@ -12,13 +12,14 @@ import sys
 #from superiq.pipeline_utils import *
 from superiq import deep_dkt, super_resolution_segmentation_per_label
 import ia_batch_utils as batch
+import pandas as pd
+
 
 def main(input_config):
-    config = LoadConfig(input_config)
+    config = batch.LoadConfig(input_config)
     if config.environment == 'prod':
-        original_image_path = config.input_value
 
-        input_image = get_pipeline_data(
+        input_image = batch.get_s3_object(
                 config.input_bucket,
                 config.input_value,
                 "data"

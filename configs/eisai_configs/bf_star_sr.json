@@ -10,7 +10,7 @@
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "ADNI_EISAI_COHORT/hemi_sr/ADNI/002_S_0729/20060717/T1w/000/hemi_sr/ADNI-002_S_0729-20060717-T1w-000-hemi_sr-SR.nii.gz",
         "hemi_bucket": "eisai-basalforebrainsuperres2",
-        "hemi_prefix": "ADNI_EISAI_COHORT/hemi_sr/",
+        "hemi_prefix": "ADNI_APRIL2021/hemi_sr/",
        	"template_bucket": "invicro-pipeline-inputs",
         "template_base" : "CIT168_adni/CIT168_T1w_700um_pad_adni0.nii.gz",
         "templateCIT": "CIT168_adni/det_atlas_25_pad_LR_adni.nii.gz",

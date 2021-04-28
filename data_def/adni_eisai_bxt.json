@@ -1,7 +1,7 @@
 {
     "version": 1,
     "bucket": "eisai-basalforebrainsuperres2",
-    "prefix": "ADNI_EISAI_COHORT/brain_extraction/ADNI/",
+    "prefix": "ADNI_APRIL2021/brain_extraction/ADNI/",
     "filter_include": ["nii.gz"],
     "filter_exclude": [],
     "dryrun": false
