@@ -114,4 +114,10 @@ def deep_hippo(
     hippleftSRlabels.to_csv(f'{output_path}hippleftSR-lgm.csv')
     hipprightSRlabels.to_csv(f'{output_path}hipprightSR-lgm.csv')
 
-    return None
+    labels = {
+        'leftSR':hippleftSRlabels,
+        'rightSR':hipprightSRlabels,
+        'leftOR': hippleftORlabels,
+        'rightOR':hipprightORlabels,
+    }
+    return labels
