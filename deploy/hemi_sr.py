@@ -163,7 +163,7 @@ def main(config):
     rec = {}
     rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
     rec['batchid'] = c.batch_id
-    rec['hashfields'] = ['originalimage', 'process', 'batchid']
+    rec['hashfields'] = ['originalimage', 'process', 'batchid', 'data']
     rec['project'] = split[0]
     rec['subject'] = split[1]
     rec['date'] = split[2]
@@ -219,7 +219,7 @@ def main(config):
     for r in cort_labs_records:
         label = r['Label']
         r.pop('Label', None)
-        for k,v in r.iteritems():
+        for k,v in r.items():
             data_field = {
                 "label": label,
                 'key': k,
