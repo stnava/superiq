@@ -177,18 +177,6 @@ def main(config):
     rec['extension'] = ".nii.gz"
     rec['resolution'] = "OR"
 
-    for r in cort_labs_records:
-        label = r['Label']
-        r.pop('Label', None)
-        for k,v in r.iteritems():
-            data_field = {
-                "label": label,
-                'key': k,
-                "value": v,
-            }
-            rec['data'] = data_field
-            batch.write_to_dynamo(rec)
-
 
 
     cortLR = ants.threshold_image( idap, 2, 2 ) * hemiS
@@ -223,13 +211,30 @@ def main(config):
     wmSNRSR = wmMeanSR/wmStdSR
     wmcsfSNRSR = wmMeanSR/csfStdSR
     snrdf = {
+        "Label": 0,
         'WMSNROR': wmSNR,
         'WMCSFSNROR': wmcsfSNR,
         'WMSNRSR': wmSNRSR,
         'WMCSFSNRSR': wmcsfSNRSR,
     }
-    df = pd.DataFrame(snrdf, index=[0])
-    df.to_csv(prefix + 'wmsnr.csv', index=False)
+    cort_labs_records.updated(snrdf)
+
+    for r in cort_labs_records:
+        label = r['Label']
+        r.pop('Label', None)
+        for k,v in r.iteritems():
+            data_field = {
+                "label": label,
+                'key': k,
+                "value": v,
+            }
+            rec['data'] = data_field
+            batch.write_to_dynamo(rec)
+
+
+
+    #df = pd.DataFrame(snrdf, index=[0])
+    #df.to_csv(prefix + 'wmsnr.csv', index=False)
     ants.image_write( srseg['super_resolution_segmentation'], prefix+'corticalSegSR.nii.gz' )
     ants.image_write( srseg['super_resolution'], prefix+'SR.nii.gz' )
     batch.handle_outputs(
