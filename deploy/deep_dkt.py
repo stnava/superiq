@@ -17,6 +17,7 @@ import pandas as pd
 
 def main(input_config):
     config = batch.LoadConfig(input_config)
+    c = config
     if config.environment == 'prod':
 
         input_image = batch.get_s3_object(
@@ -78,7 +79,7 @@ def main(input_config):
     }
 
     for key, value in vals.items():
-        split = c.input_value.split('/')[-1].split('-')
+        split = config.input_value.split('/')[-1].split('-')
         rec = {}
         rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
         rec['hashfields'] = ['originalimage', 'process', 'batchid', 'data']
