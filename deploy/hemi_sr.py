@@ -161,7 +161,7 @@ def main(config):
 
     split = c.input_value.split('/')[-1].split('-')
     rec = {}
-    rec['originalimage'] = "-".join([split[:5]]) + '.nii.gz'
+    rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
     rec['batchid'] = c.batch_id
     rec['hashfields'] = ['originalimage', 'process', 'batchid']
     rec['project'] = split[0]

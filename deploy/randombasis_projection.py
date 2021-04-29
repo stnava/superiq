@@ -41,6 +41,42 @@ def main(input_config):
         templatefn = batch.get_s3_object(c.template_bucket, c.template_key, 'data')
     imgfn = batch.get_s3_object(c.input_bucket, c.input_value, 'data')
     img = ants.image_read(imgfn)
+
+    imgt = ants.threshold_image(img, .5, 1)
+    labs = ants.label_geometry_measures(imgt)
+    labs = labs[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
+    labs_records = labs.to_dict('records')
+
+    split = c.input_value.split('/')[-1].split('-')
+    rec = {}
+    rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
+    rec['batchid'] = c.batch_id
+    rec['hashfields'] = ['originalimage', 'process', 'batchid']
+    rec['project'] = split[0]
+    rec['subject'] = split[1]
+    rec['date'] = split[2]
+    rec['modality'] = split[3]
+    rec['repeat'] = split[4]
+    rec['process'] = 'bxt'
+    rec['name'] = "wholebrain"
+    rec['extension'] = ".nii.gz"
+    rec['resolution'] = "OR"
+
+    for r in labs_records:
+        label = r['Label']
+        r.pop('Label', None)
+        for k,v in r.iteritems():
+            data_field = {
+                "label": label,
+                'key': k,
+                "value": v,
+            }
+            rec['data'] = data_field
+            batch.write_to_dynamo(rec)
+
+
+
+
     norm = ants.iMath(img, 'Normalize')
     resamp = ants.resample_image(norm, nvox, use_voxels=True)
     if hasattr(c, 'registration_transform') and hasattr(c, "template_bucket"):
@@ -68,14 +104,43 @@ def main(input_config):
         name = "RandBasisProjPos" + str(uprojpos_counter).zfill(2)
         record[name] = i
     df = pd.DataFrame(record, index=[0])
+
+    split = c.input_value.split('/')[-1].split('-')
+    rec = {}
+    rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
+    rec['batchid'] = c.batch_id
+    rec['hashfields'] = ['originalimage', 'process', 'batchid']
+    rec['project'] = split[0]
+    rec['subject'] = split[1]
+    rec['date'] = split[2]
+    rec['modality'] = split[3]
+    rec['repeat'] = split[4]
+    rec['process'] = 'random_basis_projection'
+    rec['name'] = "randbasisproj"
+    rec['extension'] = ".nii.gz"
+    rec['resolution'] = "OR"
+
+
     fields = [i for i in df.columns if i.startswith('RandBasis')]
-    batch.record_random_basis_projections(
-        c.input_bucket,
-        c.input_value,
-        df,
-        c.resolution,
-        c.batch_id,
-    )
+    records = df[fields]
+    records = records.to_dict('records')
+    for r in records:
+        for k,v in r.iteritems():
+            data_field = {
+                "label": 0,
+                'key': k,
+                "value": v,
+            }
+            rec['data'] = data_field
+            batch.write_to_dynamo(rec)
+
+    #batch.record_random_basis_projections(
+    #    c.input_bucket,
+    #    c.input_value,
+    #    df,
+    #    c.resolution,
+    #    c.batch_id,
+    #)
 
 if __name__ == "__main__":
     config = sys.argv[1]
