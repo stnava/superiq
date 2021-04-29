@@ -230,8 +230,8 @@ def main(input_config):
     split = c.input_value.split('/')[-1].split('-')
     rec = {}
     rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
+    rec['hashfields'] = ['originalimage', 'process', 'batchid', 'data']
     rec['batchid'] = c.batch_id
-    rec['hashfields'] = ['originalimage', 'process', 'batchid']
     rec['project'] = split[0]
     rec['subject'] = split[1]
     rec['date'] = split[2]
