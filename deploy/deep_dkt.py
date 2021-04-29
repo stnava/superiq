@@ -72,8 +72,44 @@ def main(input_config):
     labels_or = pd.read_csv(label_or)
     labels_sr = pd.read_csv(label_sr)
 
-    pivot_csv(labels_or, config, "OR")
-    pivot_csv(labels_sr, config, "SR")
+    vals = {
+        "OR": labels_or,
+        "SR": labels_sr,
+    }
+
+    for key, value in vals.items():
+        split = c.input_value.split('/')[-1].split('-')
+        rec = {}
+        rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
+        rec['hashfields'] = ['originalimage', 'process', 'batchid', 'data']
+        rec['batchid'] = c.batch_id
+        rec['project'] = split[0]
+        rec['subject'] = split[1]
+        rec['date'] = split[2]
+        rec['modality'] = split[3]
+        rec['repeat'] = split[4]
+        rec['process'] = 'deep_dkt'
+        rec['name'] = "deep_dkt"
+        rec['extension'] = ".nii.gz"
+        rec['resolution'] = key
+        df = value[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
+        volumes = df.to_dict('records')
+        for r in volumes:
+            label = r['Label']
+            r.pop("Label", None)
+            for k, v in r.items():
+                rec['data'] = {}
+                rec['data']['label'] = label
+                rec['data']['key'] = k
+                rec['data']['value'] = v
+                print(rec)
+                batch.write_to_dynamo(rec)
+
+
+
+
+    #pivot_csv(labels_or, config, "OR")
+    #pivot_csv(labels_sr, config, "SR")
 
     if config.environment == 'prod':
         batch.handle_outputs(

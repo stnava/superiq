@@ -67,7 +67,7 @@ def deep_hippo_deploy(input_config):
             for r in volumes:
                 label = r['Label']
                 r.pop("Label", None)
-                for k, v in volumes.items():
+                for k, v in r.items():
                     rec['data'] = {}
                     rec['data']['label'] = label
                     rec['data']['key'] = k
