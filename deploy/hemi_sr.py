@@ -155,6 +155,42 @@ def main(config):
     ants.image_write( bfprobs[2], prefix+'bfprob2left.nii.gz' )
     ants.image_write( bfprobs[3], prefix+'bfprob2right.nii.gz' )
 
+    cort_labs = ants.label_geometry_measures(idap)
+    cort_labs_records = cort_labs[
+        'Label',
+        'VolumeInMillimeters',
+        'SurfaceAreaInMillimetersSquared',
+    ].to_dict('records')
+
+    split = c.input_value.split('/')[-1].split('-')
+    rec = {}
+    rec['originalimage'] = "-".join([split[:5]]) + '.nii.gz'
+    rec['batchid'] = c.batch_id
+    rec['hashfields'] = ['originalimage', 'process', 'batchid']
+    rec['project'] = split[0]
+    rec['subject'] = split[1]
+    rec['date'] = split[2]
+    rec['modality'] = split[3]
+    rec['repeat'] = split[4]
+    rec['process'] = 'hemi_sr'
+    rec['name'] = "tissueSegmentation"
+    rec['extension'] = ".nii.gz"
+    rec['resolution'] = "OR"
+
+    for r in cort_labs_records:
+        label = r['Label']
+        r.pop('Label', None)
+        for k,v in r.iteritems():
+            data_field = {
+                "label": label,
+                'key': k,
+                "value": v,
+            }
+            rec['data'] = data_field
+            batch.write_to_dynamo(rec)
+
+
+
     cortLR = ants.threshold_image( idap, 2, 2 ) * hemiS
 
     # get SNR of WM
