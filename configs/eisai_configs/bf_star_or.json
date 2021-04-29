@@ -2,7 +2,7 @@
     "version": 1,
     "aws_profile": "role",
     "job_definition" : "superiq_bfstar",
-    "job_queue" : "superiq_ppmi",
+    "job_queue" : "superiq",
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
