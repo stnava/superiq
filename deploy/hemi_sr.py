@@ -215,7 +215,6 @@ def main(config):
         'WMCSFSNRSR': wmcsfSNRSR,
     }
     cort_labs_records.updated(snrdf)
-
     for r in cort_labs_records:
         label = r['Label']
         r.pop('Label', None)
