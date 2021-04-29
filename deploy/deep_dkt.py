@@ -76,7 +76,7 @@ def main(input_config):
     pivot_csv(labels_sr, config, "SR")
 
     if config.environment == 'prod':
-        handle_outputs(
+        batch.handle_outputs(
             config.output_bucket,
             config.output_prefix,
             config.input_value,
@@ -161,7 +161,7 @@ def main(input_config):
         raise ValueError(f"The environemnt {config.environment} is not recognized")
 
 def pivot_csv(df, config, resolution):
-    df = pd.read_csv(f"s3://{self.bucket}/{k}")
+    #df = pd.read_csv(f"s3://{config.input_bucket}/{k}")
     fields = ["Label", 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']
     df = df[fields]
     new_rows = []
@@ -187,7 +187,7 @@ def pivot_csv(df, config, resolution):
     zip_list = zip(name_list, split)
     for i in zip_list:
         df[i[0]] = i[1]
-    df['OriginalOutput'] = "-".join(split[:5]) + ".nii.gz"
+    df['OriginalOutput'] = "_".join(split[:5]) + ".nii.gz"
     df['Name'] = filename
     #return df
     pivoted = df.pivot(
@@ -203,10 +203,10 @@ def pivot_csv(df, config, resolution):
     pivoted.columns = columns
     pivoted.reset_index(inplace=True)
     final_csv = pivoted
-    labels = '_'.join(config.wlab)
+    labels = '_'.join([str(i) for i in config.wlab])
     output_name = f"Labels_{labels}_{resolution}.csv"
     final_csv['Repeat'] = [str(i).zfill(3) for i in final_csv['Repeat']]
-    final_csv.to_csv('outputs/{output_name}', index=False)
+    final_csv.to_csv(f'outputs/{output_name}', index=False)
 
 
 if __name__ == "__main__":
