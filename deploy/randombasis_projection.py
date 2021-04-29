@@ -51,7 +51,7 @@ def main(input_config):
     rec = {}
     rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
     rec['batchid'] = c.batch_id
-    rec['hashfields'] = ['originalimage', 'process', 'batchid']
+    rec['hashfields'] = ['originalimage', 'process', 'batchid', "data"]
     rec['project'] = split[0]
     rec['subject'] = split[1]
     rec['date'] = split[2]
@@ -65,7 +65,7 @@ def main(input_config):
     for r in labs_records:
         label = r['Label']
         r.pop('Label', None)
-        for k,v in r.iteritems():
+        for k,v in r.items():
             data_field = {
                 "label": label,
                 'key': k,
@@ -109,7 +109,7 @@ def main(input_config):
     rec = {}
     rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
     rec['batchid'] = c.batch_id
-    rec['hashfields'] = ['originalimage', 'process', 'batchid']
+    rec['hashfields'] = ['originalimage', 'process', 'batchid', 'data']
     rec['project'] = split[0]
     rec['subject'] = split[1]
     rec['date'] = split[2]
@@ -125,7 +125,7 @@ def main(input_config):
     records = df[fields]
     records = records.to_dict('records')
     for r in records:
-        for k,v in r.iteritems():
+        for k,v in r.items():
             data_field = {
                 "label": 0,
                 'key': k,
