@@ -227,6 +227,29 @@ def main(input_config):
     if not os.path.exists(output):
         os.makedirs(output)
 
+    split = c.input_value.split('/')[-1].split('-')
+    rec = {}
+    rec['originalimage'] = "-".join([split[:5]]) + '.nii.gz'
+    rec['batchid'] = c.batch_id
+    rec['hashfields'] = ['originalimage', 'process', 'batchid']
+    rec['project'] = split[0]
+    rec['subject'] = split[1]
+    rec['date'] = split[2]
+    rec['modality'] = split[3]
+    rec['repeat'] = split[4]
+    rec['process'] = 'bf_star'
+    rec['name'] = "bf_star"
+    rec['extension'] = ".nii.gz"
+    rec['resolution'] = c.resolution
+    for k, v in voluems.iteritems():
+        data_field = {
+            'label': 0,
+            'key': k,
+            'value': v,
+        }
+        rec['data'] = data_field
+        batch.write_to_dynamo(rec)
+
     df = pd.DataFrame(volumes, index=[0])
     df.to_csv(output + f'_{c.resolution}_bfvolumes.csv')
     ants.image_write( bftoiL1, output+'bfprob1leftSR.nii.gz' )
