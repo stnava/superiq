@@ -229,7 +229,7 @@ def main(input_config):
 
     split = c.input_value.split('/')[-1].split('-')
     rec = {}
-    rec['originalimage'] = "-".join([split[:5]]) + '.nii.gz'
+    rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
     rec['batchid'] = c.batch_id
     rec['hashfields'] = ['originalimage', 'process', 'batchid']
     rec['project'] = split[0]
@@ -241,13 +241,12 @@ def main(input_config):
     rec['name'] = "bf_star"
     rec['extension'] = ".nii.gz"
     rec['resolution'] = c.resolution
-    for k, v in voluems.iteritems():
-        data_field = {
-            'label': 0,
-            'key': k,
-            'value': v,
-        }
-        rec['data'] = data_field
+    for k, v in volumes.items():
+        rec['data'] = {}
+        rec['data']['label'] = 0
+        rec['data']['key'] = k
+        rec['data']['value'] = v
+        print(rec)
         batch.write_to_dynamo(rec)
 
     df = pd.DataFrame(volumes, index=[0])
