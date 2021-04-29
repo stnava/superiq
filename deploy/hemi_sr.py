@@ -156,12 +156,8 @@ def main(config):
     ants.image_write( bfprobs[3], prefix+'bfprob2right.nii.gz' )
 
     cort_labs = ants.label_geometry_measures(idap)
-
-    cort_labs_records = cort_labs[[
-        'Label',
-        'VolumeInMillimeters',
-        'SurfaceAreaInMillimetersSquared',
-    ]].to_dict('records')
+    cort_labs = cort_labs[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
+    cort_labs_records = cort_labs.to_dict('records')
 
     split = c.input_value.split('/')[-1].split('-')
     rec = {}
