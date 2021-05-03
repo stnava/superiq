@@ -3,7 +3,7 @@
     "aws_profile": "role",
     "job_definition" : "superiq_deep_dkt",
     "job_queue" : "superiq_deep_dkt",
-    "skip_repeats": true,
+    "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
         "process_name": "deep_dkt",
