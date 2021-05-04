@@ -3,15 +3,15 @@
     "aws_profile": "role",
     "job_definition" : "superiq_deep_dkt",
     "job_queue" : "superiq_deep_dkt",
-    "skip_repeats": true,
+    "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
         "process_name": "deep_dkt",
         "input_bucket" : "eisai-basalforebrainsuperres2",
-        "input_value" : "",
+        "input_value" : "tests/ADNI_test/002_S_4473/20140227/T1w/000/ADNI-002_S_4473-20140227-T1w-000.nii.gz",
         "model_bucket": "invicro-pipeline-inputs",
         "model_key": "models/SEGSR_32_ANINN222_bigTV3.h5",
-        "wlab": [1006, 1007, 1015, 1016],
+        "wlab": [2006, 2007, 2015, 2016],
         "sr_params":{
             "upFactor": [2,2,2],
             "dilation_amount": 6,
@@ -19,7 +19,7 @@
         },
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "ADNI_APRIL2021/deep_dkt/",
-        "output_suffix": "-deep_dkt-deep_dkt_Labels-1006-1007-1015-1016_SR"
+        "output_prefix": "SEGSR_32_ANINN222_bigTV3_MODEL/deep_dkt/",
+        "output_suffix": "-deep_dkt-deep_dkt_Labels-2006-2007-2015-2016_SR"
     }
 }
