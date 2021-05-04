@@ -21,7 +21,7 @@
         "templateBF2R": "CIT168_adni/CIT168_basal_forebrain_adni_prob_2_right.nii.gz",
         "resolution" : "OR",
         "model_bucket":"invicro-pipeline-inputs",
-        "model_prefix": "model/SEGSR_32_ANINN222_bigTV3.h5",
+        "model_prefix": "models/SEGSR_32_ANINN222_bigTV3.h5",
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
         "output_prefix": "SEGSR_32_ANINN222_bigTV3_MODEL/bf_star_on_or/",

@@ -230,7 +230,7 @@ def main(input_config):
     if not os.path.exists(output):
         os.makedirs(output)
 
-    if os.resolution == 'OR':
+    if c.resolution == 'OR':
         model = batch.get_s3_object(c.model_bucket, c.model_prefix, tdir)
         plist = [bftoiL1,bftoiR1,bftoiL2,bftoiR2]
         ss = superiq.super_resolution_segmentation_with_probabilities(img,plist,model)
