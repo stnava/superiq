@@ -251,10 +251,10 @@ def main(input_config):
 
     df = pd.DataFrame(volumes, index=[0])
     df.to_csv(output + f'_{c.resolution}_bfvolumes.csv')
-    ants.image_write( bftoiL1, output+'bfprob1leftSR.nii.gz' )
-    ants.image_write( bftoiR1, output+'bfprob1rightSR.nii.gz' )
-    ants.image_write( bftoiL2, output+'bfprob2leftSR.nii.gz' )
-    ants.image_write( bftoiR2, output+'bfprob2rightSR.nii.gz' )
+    ants.image_write( bftoiL1, output+f'bfprob1left{c.resolution}.nii.gz' )
+    ants.image_write( bftoiR1, output+f'bfprob1right{c.resolution}.nii.gz' )
+    ants.image_write( bftoiL2, output+f'bfprob2left{c.resolution}.nii.gz' )
+    ants.image_write( bftoiR2, output+f'bfprob2right{c.resolution}.nii.gz' )
 
     batch.handle_outputs(
         c.output_bucket,
