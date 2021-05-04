@@ -68,8 +68,10 @@ def super_resolution_segmentation_with_probabilities(
 #        print( imgsr.max() )
         imgsrh = ants.copy_image_info( imgc, imgsrh )
         ants.set_spacing( imgsrh,  newspc )
+        tempup = ants.resample_image_to_target( temp, imgsr )
         srimglist.append( imgsr )
-        srproblist.append( imgsrh )
+        # NOTE: get rid of pixellated junk/artifacts - acts like a prior
+        srproblist.append( imgsrh * tempup )
 
     labels = {
         'sr_intensities':srimglist,
