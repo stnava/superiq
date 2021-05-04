@@ -18,6 +18,7 @@ import pandas as pd
 import numpy as np
 from superiq import super_resolution_segmentation_per_label
 from superiq import list_to_string
+import superiq
 import ia_batch_utils as batch
 
 def dap( x ):
@@ -126,6 +127,8 @@ def main(input_config):
 
 
 
+
+
     # upsample the template if we are passing SR as input
     if min(ants.get_spacing(img)) < 0.8:
         template = ants.resample_image( template, (0.5,0.5,0.5), interp_type = 0 )
@@ -226,6 +229,20 @@ def main(input_config):
     output = c.output_file_prefix
     if not os.path.exists(output):
         os.makedirs(output)
+
+    model = batch.get_s3_object(c.model_bucket, c.model_prefix, tdir)
+    plist = [bftoiL1,bftoiR1,bftoiL2,bftoiR2]
+    ss = superiq.super_resolution_segmentation_with_probabilities(img,plist,model)
+
+    sr_images = ss['sr_intensities']
+    sr_probs = ss['sr_probabilities']
+    labels = ['BFL1_SRWP', 'BFR1_SRWP', 'BFL2_SRWP', 'BFR2_SRWP']
+
+    for i in range(len(sr_images)):
+        spc = ants.get_spacing(sr_images[i])
+        srvol = np.asarray(spc).prod() * sr_probs[i].sum()
+        volumes[labels[i]] = srvol
+
 
     split = c.input_value.split('/')[-1].split('-')
     rec = {}
