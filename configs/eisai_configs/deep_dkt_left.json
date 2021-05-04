@@ -10,7 +10,7 @@
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "",
         "model_bucket": "invicro-pipeline-inputs",
-        "model_key": "models/SEGSR_32_ANINN222_3.h5",
+        "model_key": "models/SEGSR_32_ANINN222_bigTV3.h5",
         "wlab": [1006, 1007, 1015, 1016],
         "sr_params":{
             "upFactor": [2,2,2],

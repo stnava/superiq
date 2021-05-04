@@ -8,7 +8,7 @@
         "environment" : "prod",
         "process_name": "bf_star",
         "input_bucket" : "eisai-basalforebrainsuperres2",
-        "input_value" : "ADNI_EISAI_COHORT/hemi_sr/ADNI/002_S_0729/20060717/T1w/000/hemi_sr/ADNI-002_S_0729-20060717-T1w-000-hemi_sr-SR.nii.gz",
+        "input_value" : "",
         "hemi_bucket": "eisai-basalforebrainsuperres2",
         "hemi_prefix": "ADNI_APRIL2021/hemi_sr/",
        	"template_bucket": "invicro-pipeline-inputs",
