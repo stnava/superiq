@@ -17,7 +17,7 @@ def super_resolution_segmentation_with_probabilities(
     underlying image content to produce a SR version of both the local region
     intentsity and segmentation probability.  the number of probability images
     determines the number of outputs for the intensity and probabilitiy list
-    that are returned.
+    that are returned.  NOTE: should consider inverse logit transform option.
 
     Arguments
     ---------
