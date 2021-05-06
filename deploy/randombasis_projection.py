@@ -40,7 +40,7 @@ def main(input_config):
     if hasattr(c, 'template_bucket'):
         templatefn = batch.get_s3_object(c.template_bucket, c.template_key, 'data')
     imgfn = batch.get_s3_object(c.input_bucket, c.input_value, 'data')
-    img = ants.image_read(imgfn)
+    img = ants.image_read(imgfn).iMath("Normalize")
 
     imgt = ants.threshold_image(img, .5, 1)
     labs = ants.label_geometry_measures(imgt)
