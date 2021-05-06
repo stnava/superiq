@@ -15,7 +15,7 @@ def deep_hippo(
     avgright = img * 0
     nLoop = 10
     for k in range(nLoop):
-        rig = ants.registration( template, img, "Rigid" )
+        rig = ants.registration( template, img, "Rigid", random_seed=k )
         rigi = rig['warpedmovout']
         hipp = antspynet.hippmapp3r_segmentation( rigi, do_preprocessing=False )
         hippr = ants.apply_transforms(
@@ -23,7 +23,7 @@ def deep_hippo(
             hipp,
             rig['fwdtransforms'],
             whichtoinvert=[True],
-            interpolator='genericLabel'
+            interpolator='genericLabel',
         )
         avgleft = avgleft + ants.threshold_image( hippr, 2, 2 ) / nLoop
         avgright = avgright + ants.threshold_image( hippr, 1, 1 ) / nLoop
