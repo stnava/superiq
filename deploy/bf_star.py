@@ -18,6 +18,7 @@ import pandas as pd
 import numpy as np
 from superiq import super_resolution_segmentation_per_label
 from superiq import list_to_string
+import superiq
 import ia_batch_utils as batch
 
 def dap( x ):
@@ -129,6 +130,8 @@ def main(input_config):
     # ideally, we would compute this separately - but also note that
     regsegits=[200,200,200]
 
+
+
     # upsample the template if we are passing SR as input
     if min(ants.get_spacing(img)) < 0.8:
         regsegits=[200,200,200,200]
@@ -230,6 +233,21 @@ def main(input_config):
     if not os.path.exists(output):
         os.makedirs(output)
 
+    if c.resolution == 'OR':
+        model = batch.get_s3_object(c.model_bucket, c.model_prefix, tdir)
+        plist = [bftoiL1,bftoiR1,bftoiL2,bftoiR2]
+        ss = superiq.super_resolution_segmentation_with_probabilities(img,plist,model)
+
+        sr_images = ss['sr_intensities']
+        sr_probs = ss['sr_probabilities']
+        labels = ['BFL1_SRWP', 'BFR1_SRWP', 'BFL2_SRWP', 'BFR2_SRWP']
+
+        for i in range(len(sr_images)):
+            spc = ants.get_spacing(sr_images[i])
+            srvol = np.asarray(spc).prod() * sr_probs[i].sum()
+            volumes[labels[i]] = srvol
+
+
     split = c.input_value.split('/')[-1].split('-')
     rec = {}
     rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
@@ -254,10 +272,10 @@ def main(input_config):
 
     df = pd.DataFrame(volumes, index=[0])
     df.to_csv(output + f'_{c.resolution}_bfvolumes.csv')
-    ants.image_write( bftoiL1, output+'bfprobCH13leftSR.nii.gz' )
-    ants.image_write( bftoiR1, output+'bfprobCH13rightSR.nii.gz' )
-    ants.image_write( bftoiL2, output+'bfprobNBMleftSR.nii.gz' )
-    ants.image_write( bftoiR2, output+'bfprobNBMrightSR.nii.gz' )
+    ants.image_write( bftoiL1, output+'bfprobCH13left{c.resolution}.nii.gz' )
+    ants.image_write( bftoiR1, output+'bfprobCH13right{c.resolution}.nii.gz' )
+    ants.image_write( bftoiL2, output+'bfprobNBMleft{c.resolution}.nii.gz' )
+    ants.image_write( bftoiR2, output+'bfprobNBMright{c.resolution}.nii.gz' )
 
     batch.handle_outputs(
         c.output_bucket,

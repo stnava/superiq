@@ -19,7 +19,7 @@
         },
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "ADNI_APRIL2021/deep_dkt/",
+        "output_prefix": "SEGSR_32_ANINN222_3_MODEL/deep_dkt/",
         "output_suffix": "-deep_dkt-deep_dkt_Labels-2006-2007-2015-2016_SR"
     }
 }
