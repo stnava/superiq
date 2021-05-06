@@ -36,15 +36,14 @@ def dap( x ):
     return(  dappertox )
 
 # this function looks like it's for BF but it can be used for any local label pair
-def localsyn(img, template, hemiS, templateHemi, whichHemi, tbftotLoc, ibftotLoc, padder, iterations ):
+def localsyn(img, template, hemiS, templateHemi, whichHemi, padder, iterations, output_prefix ):
     ihemi=img*ants.threshold_image( hemiS, whichHemi, whichHemi )
     themi=template*ants.threshold_image( templateHemi, whichHemi, whichHemi )
-    rig = ants.registration( tbftotLoc, ibftotLoc, 'Affine' )
-    tbftotLoct = ants.threshold_image( tbftotLoc, 0.25, 2.0 ).iMath("MD", padder )
-    tcrop = ants.crop_image( themi, tbftotLoct )
-    syn = ants.registration( tcrop, ihemi, 'SyNOnly',
+    hemicropmask = ants.threshold_image( templateHemi, whichHemi, whichHemi ).iMath("MD",padder)
+    tcrop = ants.crop_image( themi, hemicropmask )
+    syn = ants.registration( tcrop, ihemi, 'SyN',
         syn_metric='CC', syn_sampling=2, reg_iterations=iterations,
-        initial_transform=rig['fwdtransforms'][0], verbose=False)
+        verbose=False, outprefix = output_prefix )
     return syn
 
 def find_in_list(list_, find):
@@ -59,7 +58,7 @@ def main(input_config):
 
     tdir = "data/"
     img_path = batch.get_s3_object(c.input_bucket, c.input_value, tdir)
-    img=ants.image_read(img_path)
+    img=ants.image_read(img_path).iMath("Normalize")
 
     filter_vals = c.input_value.split('/')
     x = '/'.join(filter_vals[2:7])
@@ -154,24 +153,21 @@ def main(input_config):
     temcerebrum = ants.mask_image(tdap,tdap,maskinds,binarize=True).iMath("GetLargestComponent")
 
 
-    # now do a BF focused registration
+    output = c.output_file_prefix
+    if not os.path.exists(output):
+        os.makedirs(output)
 
-    ibftotL = bfprob1L + bfprob2L
-    tbftotL = (templateBF[0]+ templateBF[2]) \
-        .resample_image_to_target( template, interp_type='linear')
-    ibftotR = bfprob1R + bfprob2R
-    tbftotR = (templateBF[1] + templateBF[3]) \
-        .resample_image_to_target( template, interp_type='linear')
+    # now do a hemisphere focused registration
+    mypad = 10 # pad the hemi mask for cropping - important due to diff_0
     synL = localsyn(
         img=img*ionlycerebrum,
         template=template*tonlycerebrum,
         hemiS=hemiS,
         templateHemi=templateHemi,
         whichHemi=1,
-        tbftotLoc=tbftotL,
-        ibftotLoc=ibftotL,
-        padder=6,
+        padder=mypad,
         iterations=regsegits,
+        output_prefix = output + "left_hemi_reg",
     )
     synR = localsyn(
         img=img*ionlycerebrum,
@@ -179,103 +175,32 @@ def main(input_config):
         hemiS=hemiS,
         templateHemi=templateHemi,
         whichHemi=2,
-        tbftotLoc=tbftotR,
-        ibftotLoc=ibftotR,
-        padder=6,
+        padder=mypad,
         iterations=regsegits,
-    )
-    bftoiL1 = ants.apply_transforms(
-        img,
-        ants.resample_image_to_target(templateBF[0], template, interp_type='linear'),
-        synL['invtransforms'],
-    )
-    bftoiL2 = ants.apply_transforms(
-        img,
-        ants.resample_image_to_target(templateBF[2], template, interp_type='linear'),
-        synL['invtransforms'],
-    )
-    bftoiR1 = ants.apply_transforms(
-        img,
-        ants.resample_image_to_target(templateBF[1], template, interp_type='linear'),
-        synR['invtransforms'],
-    )
-    bftoiR2 = ants.apply_transforms(
-        img,
-        ants.resample_image_to_target(templateBF[3], template, interp_type='linear'),
-        synR['invtransforms'],
+        output_prefix = output + "right_hemi_reg",
     )
 
-    # get the volumes for each region (thresholded) and its sum
-    myspc = ants.get_spacing( img )
-    vbfL1 = np.asarray(myspc).prod() * bftoiL1.sum()
-    vbfL2 = np.asarray(myspc).prod() * bftoiL2.sum()
-    vbfR1 = np.asarray(myspc).prod() * bftoiR1.sum()
-    vbfR2 = np.asarray(myspc).prod() * bftoiR2.sum()
+    fignameL = output + "left_hemi_reg.png"
+    ants.plot(synL['warpedmovout'],axis=2,ncol=8,nslices=24,filename=fignameL)
 
-    # same calculation but explicitly restricted to brain tissue
-    onlygm = ants.threshold_image( idap, 2, 4 )
-    vbfL1t = np.asarray(myspc).prod() * (bftoiL1*onlygm).sum()
-    vbfL2t = np.asarray(myspc).prod() * (bftoiL2*onlygm).sum()
-    vbfR1t = np.asarray(myspc).prod() * (bftoiR1*onlygm).sum()
-    vbfR2t = np.asarray(myspc).prod() * (bftoiR2*onlygm).sum()
+    fignameR = output + "right_hemi_reg.png"
+    ants.plot(synR['warpedmovout'],axis=2,ncol=8,nslices=24,filename=fignameR)
 
-    volumes = {
-        f"BFLCH13_{c.resolution}": vbfL1,
-        f"BFLNBM_{c.resolution}": vbfL2,
-        f"BFRCH13_{c.resolution}": vbfR1,
-        f"BFRNBM_{c.resolution}": vbfR2,
-        f"BFLCH13tissue_{c.resolution}": vbfL1t,
-        f"BFLNBMtissue_{c.resolution}": vbfL2t,
-        f"BFRCH13tissue_{c.resolution}": vbfR1t,
-        f"BFRNBMtissue_{c.resolution}": vbfR2t,
-    }
-    output = c.output_file_prefix
-    if not os.path.exists(output):
-        os.makedirs(output)
+    temp = ants.image_read(synL['fwdtransforms'][0]).split_channels()[0]
+    lhjac = ants.create_jacobian_determinant_image(
+        temp,
+        synL['fwdtransforms'][0],
+        do_log=1
+        )
+    ants.image_write( lhjac, output+'left_hemi_jacobian.nii.gz' )
 
-    if c.resolution == 'OR':
-        model = batch.get_s3_object(c.model_bucket, c.model_prefix, tdir)
-        plist = [bftoiL1,bftoiR1,bftoiL2,bftoiR2]
-        ss = superiq.super_resolution_segmentation_with_probabilities(img,plist,model)
-
-        sr_images = ss['sr_intensities']
-        sr_probs = ss['sr_probabilities']
-        labels = ['BFLCH13_SRWP', 'BFRCH13_SRWP', 'BFLNBM_SRWP', 'BFRNBM_SRWP']
-
-        for i in range(len(sr_images)):
-            spc = ants.get_spacing(sr_images[i])
-            srvol = np.asarray(spc).prod() * sr_probs[i].sum()
-            volumes[labels[i]] = srvol
-
-
-    split = c.input_value.split('/')[-1].split('-')
-    rec = {}
-    rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
-    rec['hashfields'] = ['originalimage', 'process', 'batchid', 'data']
-    rec['batchid'] = c.batch_id
-    rec['project'] = split[0]
-    rec['subject'] = split[1]
-    rec['date'] = split[2]
-    rec['modality'] = split[3]
-    rec['repeat'] = split[4]
-    rec['process'] = 'bf_star'
-    rec['name'] = "bf_star"
-    rec['extension'] = ".nii.gz"
-    rec['resolution'] = c.resolution
-    for k, v in volumes.items():
-        rec['data'] = {}
-        rec['data']['label'] = 0
-        rec['data']['key'] = k
-        rec['data']['value'] = v
-        print(rec)
-        batch.write_to_dynamo(rec)
-
-    df = pd.DataFrame(volumes, index=[0])
-    df.to_csv(output + f'_{c.resolution}_bfvolumes.csv')
-    ants.image_write( bftoiL1, output+'bfprobCH13left{c.resolution}.nii.gz' )
-    ants.image_write( bftoiR1, output+'bfprobCH13right{c.resolution}.nii.gz' )
-    ants.image_write( bftoiL2, output+'bfprobNBMleft{c.resolution}.nii.gz' )
-    ants.image_write( bftoiR2, output+'bfprobNBMright{c.resolution}.nii.gz' )
+    temp = ants.image_read(synR['fwdtransforms'][0]).split_channels()[0]
+    rhjac = ants.create_jacobian_determinant_image(
+        temp,
+        synR['fwdtransforms'][0],
+        do_log=1
+        )
+    ants.image_write( rhjac, output+'right_hemi_jacobian.nii.gz' )
 
     batch.handle_outputs(
         c.output_bucket,
