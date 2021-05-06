@@ -35,14 +35,14 @@ def dap( x ):
     return(  dappertox )
 
 # this function looks like it's for BF but it can be used for any local label pair
-def localsyn(img, template, hemiS, templateHemi, whichHemi, tbftotLoc, ibftotLoc, padder = 6 ):
+def localsyn(img, template, hemiS, templateHemi, whichHemi, tbftotLoc, ibftotLoc, padder, iterations ):
     ihemi=img*ants.threshold_image( hemiS, whichHemi, whichHemi )
     themi=template*ants.threshold_image( templateHemi, whichHemi, whichHemi )
-    rig = ants.registration( tbftotLoc, ibftotLoc, 'Rigid' )
+    rig = ants.registration( tbftotLoc, ibftotLoc, 'Affine' )
     tbftotLoct = ants.threshold_image( tbftotLoc, 0.25, 2.0 ).iMath("MD", padder )
     tcrop = ants.crop_image( themi, tbftotLoct )
-    syn = ants.registration( tcrop, img, 'SyNOnly',
-        syn_metric='CC', syn_sampling=2, reg_iterations=(200,200,200),
+    syn = ants.registration( tcrop, ihemi, 'SyNOnly',
+        syn_metric='CC', syn_sampling=2, reg_iterations=iterations,
         initial_transform=rig['fwdtransforms'][0], verbose=False)
     return syn
 
@@ -107,6 +107,7 @@ def main(input_config):
     )
 
     idap=ants.image_read(tSeg).resample_image_to_target( img, interp_type='genericLabel')
+    ionlycerebrum = ants.threshold_image( idap, 2, 4 )
     hemiS=ants.image_read(hemi).resample_image_to_target( img, interp_type='genericLabel')
     citS=ants.image_read(citL).resample_image_to_target( img, interp_type='genericLabel')
     bfprob1L=ants.image_read(bfL1).resample_image_to_target( img, interp_type='linear')
@@ -124,10 +125,13 @@ def main(input_config):
     templateHemi= ants.image_read(batch.get_s3_object(template_bucket,  c.templateHemi, tdir))
     templateBF = [templateBF1L, templateBF1R, templateBF2L,  templateBF2R]
 
-
+    # FIXME - this should be a "good" registration like we use in direct reg seg
+    # ideally, we would compute this separately - but also note that
+    regsegits=[200,200,200]
 
     # upsample the template if we are passing SR as input
     if min(ants.get_spacing(img)) < 0.8:
+        regsegits=[200,200,200,200]
         template = ants.resample_image( template, (0.5,0.5,0.5), interp_type = 0 )
 
     templateCIT = ants.resample_image_to_target(
@@ -142,12 +146,9 @@ def main(input_config):
     )
 
     tdap = dap( template )
+    tonlycerebrum = ants.threshold_image( tdap, 2, 4 )
     maskinds=[2,3,4,5]
     temcerebrum = ants.mask_image(tdap,tdap,maskinds,binarize=True).iMath("GetLargestComponent")
-
-    # FIXME - this should be a "good" registration like we use in direct reg seg
-    # ideally, we would compute this separately - but also note that
-    regsegits=[200,200,200,50]
 
 
     # now do a BF focused registration
@@ -159,24 +160,26 @@ def main(input_config):
     tbftotR = (templateBF[1] + templateBF[3]) \
         .resample_image_to_target( template, interp_type='linear')
     synL = localsyn(
-        img=img,
-        template=template,
+        img=img*ionlycerebrum,
+        template=template*tonlycerebrum,
         hemiS=hemiS,
         templateHemi=templateHemi,
         whichHemi=1,
         tbftotLoc=tbftotL,
         ibftotLoc=ibftotL,
         padder=6,
+        iterations=regsegits,
     )
     synR = localsyn(
-        img=img,
-        template=template,
+        img=img*ionlycerebrum,
+        template=template*tonlycerebrum,
         hemiS=hemiS,
         templateHemi=templateHemi,
         whichHemi=2,
         tbftotLoc=tbftotR,
         ibftotLoc=ibftotR,
         padder=6,
+        iterations=regsegits,
     )
     bftoiL1 = ants.apply_transforms(
         img,
@@ -214,14 +217,14 @@ def main(input_config):
     vbfR2t = np.asarray(myspc).prod() * (bftoiR2*onlygm).sum()
 
     volumes = {
-        f"BFL1_{c.resolution}": vbfL1,
-        f"BFL2_{c.resolution}": vbfL2,
-        f"BFR1_{c.resolution}": vbfR1,
-        f"BFR2_{c.resolution}": vbfR2,
-        f"BFL1tissue_{c.resolution}": vbfL1t,
-        f"BFL2tissue_{c.resolution}": vbfL2t,
-        f"BFR1tissue_{c.resolution}": vbfR1t,
-        f"BFR2tissue_{c.resolution}": vbfR2t,
+        f"BFLCH13_{c.resolution}": vbfL1,
+        f"BFLNBM_{c.resolution}": vbfL2,
+        f"BFRCH13_{c.resolution}": vbfR1,
+        f"BFRNBM_{c.resolution}": vbfR2,
+        f"BFLCH13tissue_{c.resolution}": vbfL1t,
+        f"BFLNBMtissue_{c.resolution}": vbfL2t,
+        f"BFRCH13tissue_{c.resolution}": vbfR1t,
+        f"BFRNBMtissue_{c.resolution}": vbfR2t,
     }
     output = c.output_file_prefix
     if not os.path.exists(output):
@@ -251,10 +254,10 @@ def main(input_config):
 
     df = pd.DataFrame(volumes, index=[0])
     df.to_csv(output + f'_{c.resolution}_bfvolumes.csv')
-    ants.image_write( bftoiL1, output+'bfprob1leftSR.nii.gz' )
-    ants.image_write( bftoiR1, output+'bfprob1rightSR.nii.gz' )
-    ants.image_write( bftoiL2, output+'bfprob2leftSR.nii.gz' )
-    ants.image_write( bftoiR2, output+'bfprob2rightSR.nii.gz' )
+    ants.image_write( bftoiL1, output+'bfprobCH13leftSR.nii.gz' )
+    ants.image_write( bftoiR1, output+'bfprobCH13rightSR.nii.gz' )
+    ants.image_write( bftoiL2, output+'bfprobNBMleftSR.nii.gz' )
+    ants.image_write( bftoiR2, output+'bfprobNBMrightSR.nii.gz' )
 
     batch.handle_outputs(
         c.output_bucket,
