@@ -10,6 +10,8 @@
         "process_name": "bf_star_on_or",
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "",
+        "ants_random_seed": "1",
+        "itk_threads": "1",
         "hemi_bucket": "eisai-basalforebrainsuperres2",
         "hemi_prefix": "SEGSR_32_ANINN222_bigTV3_MODEL/hemi_sr/",
        	"template_bucket": "invicro-pipeline-inputs",
@@ -25,7 +27,7 @@
         "model_prefix": "models/SEGSR_32_ANINN222_bigTV3.h5",
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "repoducibility_test/bf_star_on_or/",
+        "output_prefix": "reproducibility_test/bf_star_on_or/",
         "output_suffix": ""
     }
 }

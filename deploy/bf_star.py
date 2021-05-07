@@ -265,7 +265,7 @@ def main(input_config):
     rec['date'] = split[2]
     rec['modality'] = split[3]
     rec['repeat'] = split[4]
-    rec['process'] = 'bf_star'
+    rec['process'] = c.process_name
     rec['name'] = "bf_star"
     rec['version'] = c.version
     rec['extension'] = ".nii.gz"
@@ -280,10 +280,10 @@ def main(input_config):
 
     df = pd.DataFrame(volumes, index=[0])
     df.to_csv(output + f'_{c.resolution}_bfvolumes.csv')
-    ants.image_write( bftoiL1, output+'bfprobCH13left{c.resolution}.nii.gz' )
-    ants.image_write( bftoiR1, output+'bfprobCH13right{c.resolution}.nii.gz' )
-    ants.image_write( bftoiL2, output+'bfprobNBMleft{c.resolution}.nii.gz' )
-    ants.image_write( bftoiR2, output+'bfprobNBMright{c.resolution}.nii.gz' )
+    ants.image_write( bftoiL1, output+f'bfprobCH13left{c.resolution}.nii.gz' )
+    ants.image_write( bftoiR1, output+f'bfprobCH13right{c.resolution}.nii.gz' )
+    ants.image_write( bftoiL2, output+f'bfprobNBMleft{c.resolution}.nii.gz' )
+    ants.image_write( bftoiR2, output+f'bfprobNBMright{c.resolution}.nii.gz' )
 
     batch.handle_outputs(
         c.output_bucket,
