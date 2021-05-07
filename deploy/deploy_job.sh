@@ -27,7 +27,7 @@ docker tag $container_name $repo_image && \
     --job-definition-name $job_definition_name \
     --type container \
     --timeout attemptDurationSeconds=36000 \
-    --retry-strategy attempts=1 \
+    --retry-strategy attempts=3 \
     --container-properties \
     '{
         "image": "'"${repo_image_latest}"'",

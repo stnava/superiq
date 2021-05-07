@@ -66,16 +66,29 @@ def main(input_config):
 
     bxt_lgm = ants.threshold_image(bxt, 0.5, 1)
     bxtvol = ants.label_geometry_measures( bxt_lgm )
-    batch.write_output(
-        c.input_value,
-        c.process_name,
-        n4_path,
-        bxtvol,
-        c.output_bucket,
-        c.output_prefix,
-        'OR',
-        c.batch_id
-    )
+    volumes = bxtvol[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
+    volumes = volumes.to_dict('records')
+    split = c.input_value.split('/')[-1].split('-')
+    rec = {}
+    rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
+    rec['hashfields'] = ['originalimage', 'process', 'batchid', 'data']
+    rec['batchid'] = c.batch_id
+    rec['project'] = split[0]
+    rec['subject'] = split[1]
+    rec['date'] = split[2]
+    rec['modality'] = split[3]
+    rec['repeat'] = split[4]
+    rec['process'] = 'bxt'
+    rec['name'] = "bxt"
+    rec['extension'] = ".nii.gz"
+    rec['resolution'] = c.resolution
+    for k, v in volumes.items():
+        rec['data'] = {}
+        rec['data']['label'] = 1
+        rec['data']['key'] = k
+        rec['data']['value'] = v
+        batch.write_to_dynamo(rec)
+
 
     batch.handle_outputs(
         c.output_bucket,
