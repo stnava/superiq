@@ -2,11 +2,12 @@
     "version": 1,
     "aws_profile": "role",
     "job_definition" : "superiq_rbp",
-    "job_queue" : "superiq_ppmi",
+    "job_queue" : "superiq",
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
         "process_name": "rbp",
+        "version": "V0",
         "resolution": "OR",
         "batch_id": "",
         "input_bucket" : "eisai-basalforebrainsuperres2",
