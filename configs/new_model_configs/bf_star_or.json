@@ -6,6 +6,7 @@
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
+        "version": "V2",
         "process_name": "bf_star_on_or",
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "",
@@ -24,7 +25,7 @@
         "model_prefix": "models/SEGSR_32_ANINN222_bigTV3.h5",
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "SEGSR_32_ANINN222_bigTV3_MODEL/bf_star_on_or/",
+        "output_prefix": "repoducibility_test/bf_star_on_or/",
         "output_suffix": ""
     }
 }

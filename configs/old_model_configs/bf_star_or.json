@@ -11,8 +11,7 @@
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "",
         "hemi_bucket": "eisai-basalforebrainsuperres2",
-        "hemi_prefix": "ADNI_EISAI_PROD/",
-        "hemi_version": "V1",
+        "hemi_prefix":  "SEGSR_32_ANINN222_3_MODEL/hemi_sr/",
        	"template_bucket": "invicro-pipeline-inputs",
         "template_base" : "CIT168_adni/CIT168_T1w_700um_pad_adni0.nii.gz",
         "templateCIT": "CIT168_adni/det_atlas_25_pad_LR_adni.nii.gz",
@@ -26,7 +25,7 @@
         "resolution" : "OR",
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "ADNI_EISAI_PROD/",
+        "output_prefix": "reproducibility_test/bf_star_on_or/",
         "output_suffix": ""
     }
 }

@@ -6,6 +6,7 @@
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
+        "version" : "V2",
         "process_name": "bf_star_on_sr",
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "ADNI_EISAI_COHORT/hemi_sr/ADNI/002_S_0729/20060717/T1w/000/hemi_sr/ADNI-002_S_0729-20060717-T1w-000-hemi_sr-SR.nii.gz",
@@ -22,7 +23,7 @@
         "resolution" : "SR",
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "SEGSR_32_ANINN222_bigTV3_MODEL/bf_star_on_sr/",
+        "output_prefix": "reproducibility_test/bf_star_on_sr/",
         "output_suffix": ""
     }
 }
