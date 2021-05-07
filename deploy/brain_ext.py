@@ -79,6 +79,7 @@ def main(input_config):
     rec['modality'] = split[3]
     rec['repeat'] = split[4]
     rec['process'] = 'bxt'
+    rec['version'] = c.version
     rec['name'] = "bxt"
     rec['extension'] = ".nii.gz"
     rec['resolution'] = c.resolution
@@ -95,6 +96,7 @@ def main(input_config):
         c.output_prefix,
         c.input_value,
         c.process_name,
+        c.version,
     )
 
 def reg_bxt( intemplate, inimg, inbxt, bxt_type, txtype, dilation=0 ):
