@@ -20,13 +20,12 @@ def import_handling(config):
     else:
         os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
 
+    global ants, antspynet, pd, np, superiq
+
     import ants
     import antspynet
-    import tensorflow as tf
     import pandas as pd
     import numpy as np
-    from superiq import super_resolution_segmentation_per_label
-    from superiq import list_to_string
     import superiq
 
 def dap( x ):
@@ -298,5 +297,5 @@ def main(input_config):
 if __name__=="__main__":
     config = sys.argv[1]
     config = batch.LoadConfig(config)
-    input_handling(config)
+    import_handling(config)
     main(config)
