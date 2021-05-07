@@ -68,6 +68,7 @@ def main(input_config):
     bxtvol = ants.label_geometry_measures( bxt_lgm )
     volumes = bxtvol[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
     volumes = volumes.to_dict('records')
+
     split = c.input_value.split('/')[-1].split('-')
     rec = {}
     rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
@@ -83,12 +84,13 @@ def main(input_config):
     rec['name'] = "bxt"
     rec['extension'] = ".nii.gz"
     rec['resolution'] = "OR"
-    for k, v in volumes.items():
-        rec['data'] = {}
-        rec['data']['label'] = 1
-        rec['data']['key'] = k
-        rec['data']['value'] = v
-        batch.write_to_dynamo(rec)
+    for vol in volumes:
+        for k, v in vol.items():
+            rec['data'] = {}
+            rec['data']['label'] = 1
+            rec['data']['key'] = k
+            rec['data']['value'] = v
+            batch.write_to_dynamo(rec)
 
 
     batch.handle_outputs(

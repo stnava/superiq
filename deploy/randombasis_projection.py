@@ -42,37 +42,37 @@ def main(input_config):
     imgfn = batch.get_s3_object(c.input_bucket, c.input_value, 'data')
     img = ants.image_read(imgfn).iMath("Normalize")
 
-    imgt = ants.threshold_image(img, .5, 1)
-    labs = ants.label_geometry_measures(imgt)
-    labs = labs[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
-    labs_records = labs.to_dict('records')
+    #imgt = ants.threshold_image(img, .5, 1)
+    #labs = ants.label_geometry_measures(imgt)
+    #labs = labs[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
+    #labs_records = labs.to_dict('records')
 
-    split = c.input_value.split('/')[-1].split('-')
-    rec = {}
-    rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
-    rec['batchid'] = c.batch_id
-    rec['hashfields'] = ['originalimage', 'process', 'batchid', "data"]
-    rec['project'] = split[0]
-    rec['subject'] = split[1]
-    rec['date'] = split[2]
-    rec['modality'] = split[3]
-    rec['repeat'] = split[4]
-    rec['process'] = 'bxt'
-    rec['name'] = "wholebrain"
-    rec['extension'] = ".nii.gz"
-    rec['resolution'] = "OR"
+    #split = c.input_value.split('/')[-1].split('-')
+    #rec = {}
+    #rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
+    #rec['batchid'] = c.batch_id
+    #rec['hashfields'] = ['originalimage', 'process', 'batchid', "data"]
+    #rec['project'] = split[0]
+    #rec['subject'] = split[1]
+    #rec['date'] = split[2]
+    #rec['modality'] = split[3]
+    #rec['repeat'] = split[4]
+    #rec['process'] = 'bxt'
+    #rec['name'] = "wholebrain"
+    #rec['extension'] = ".nii.gz"
+    #rec['resolution'] = "OR"
 
-    for r in labs_records:
-        label = r['Label']
-        r.pop('Label', None)
-        for k,v in r.items():
-            data_field = {
-                "label": label,
-                'key': k,
-                "value": v,
-            }
-            rec['data'] = data_field
-            batch.write_to_dynamo(rec)
+    #for r in labs_records:
+    #    label = r['Label']
+    #    r.pop('Label', None)
+    #    for k,v in r.items():
+    #        data_field = {
+    #            "label": label,
+    #            'key': k,
+    #            "value": v,
+    #        }
+    #        rec['data'] = data_field
+    #        batch.write_to_dynamo(rec)
 
 
 
@@ -135,13 +135,6 @@ def main(input_config):
             rec['data'] = data_field
             batch.write_to_dynamo(rec)
 
-    #batch.record_random_basis_projections(
-    #    c.input_bucket,
-    #    c.input_value,
-    #    df,
-    #    c.resolution,
-    #    c.batch_id,
-    #)
 
 if __name__ == "__main__":
     config = sys.argv[1]

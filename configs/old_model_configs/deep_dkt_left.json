@@ -2,11 +2,12 @@
     "version": 1,
     "aws_profile": "role",
     "job_definition" : "superiq_deep_dkt",
-    "job_queue" : "superiq_deep_dkt",
+    "job_queue" : "superiq",
     "skip_repeats": true,
     "parameters": {
         "environment" : "prod",
         "process_name": "deep_dkt",
+        "version": "V1",
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "",
         "model_bucket": "invicro-pipeline-inputs",
@@ -19,7 +20,7 @@
         },
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "SEGSR_32_ANINN222_3_MODEL/deep_dkt/",
+        "output_prefix": "ADNI_EISAI_PROD/",
         "output_suffix": "-deep_dkt-deep_dkt_Labels-1006-1007-1015-1016_SR"
     }
 }
