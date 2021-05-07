@@ -1,25 +1,33 @@
 # this script assumes the image have been brain extracted
-import os.path
-from os import path
-try:
-    threads = os.environ['cpu_threads']
-except KeyError:
-    threads = "8"
-# set number of threads - this should be optimized per compute instance
-os.environ["TF_NUM_INTEROP_THREADS"] = threads
-os.environ["TF_NUM_INTRAOP_THREADS"] = threads
-os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
-
-import ants
-import antspynet
-import tensorflow as tf
+import os
 import sys
-import pandas as pd
-import numpy as np
-from superiq import super_resolution_segmentation_per_label
-from superiq import list_to_string
-import superiq
 import ia_batch_utils as batch
+
+def import_handling(config):
+    try:
+        threads = os.environ['cpu_threads']
+    except KeyError:
+        threads = "8"
+    # set number of threads - this should be optimized per compute instance
+    os.environ["TF_NUM_INTEROP_THREADS"] = threads
+    os.environ["TF_NUM_INTRAOP_THREADS"] = threads
+
+    if config.ants_random_seed != '-1':
+        os.environ['ANTS_RANDOM_SEED'] = config.ants_random_seed
+
+    if config.itk_threads != '-1':
+        os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = config.itk_threads
+    else:
+        os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
+
+    import ants
+    import antspynet
+    import tensorflow as tf
+    import pandas as pd
+    import numpy as np
+    from superiq import super_resolution_segmentation_per_label
+    from superiq import list_to_string
+    import superiq
 
 def dap( x ):
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
@@ -290,4 +298,5 @@ def main(input_config):
 if __name__=="__main__":
     config = sys.argv[1]
     config = batch.LoadConfig(config)
+    input_handling(config)
     main(config)

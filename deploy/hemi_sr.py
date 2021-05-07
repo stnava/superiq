@@ -1,26 +1,7 @@
-# this script assumes the image have been brain extracted
-import os.path
-from os import path
-
-try:
-    threads = os.environ['cpu_threads']
-except KeyError:
-    threads = "8"
-# set number of threads - this should be optimized per compute instance
-os.environ["TF_NUM_INTEROP_THREADS"] = threads
-os.environ["TF_NUM_INTRAOP_THREADS"] = threads
-os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
-
+import os
 import sys
-import ants
-import antspynet
-import tensorflow as tf
-import glob as glob
-import pandas as pd
-
-from superiq import super_resolution_segmentation_per_label
-from superiq import list_to_string
 import ia_batch_utils as batch
+
 
 def dap( x ):
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
@@ -63,21 +44,7 @@ def main(config):
     templateBF2R  =batch.get_s3_object(template_bucket,  c.templateBF2R, data)
     templateCIT =batch.get_s3_object(template_bucket,  c.templateCIT, data)
     templateHemi=batch.get_s3_object(template_bucket,  c.templateHemi, data)
-    # inputs CIT168 and associated corticospinal tract labels
-    # output approximate CST and supplementary motor cortex
-    #model_file_name = "/Users/stnava/code/superiq/models/SEGSR_32_ANINN222_bigTV3.h5"
-    #mdl = tf.keras.models.load_model( model_file_name ) # FIXME - parameterize this
-    #ifn = "/Users/stnava/data/data_old/PPMI/sr_examples/PPMI/3777/20160706/MRI_T1/I769284/direct_regseg/PPMI-3777-20160706-MRI_T1-I769284-direct_regseg-SR.nii.gz"
-    #tdir = "/Users/stnava/data/BiogenSuperRes/CIT168_Reinf_Learn_v1/"
-    #prefix = '/tmp/temp_' # FIXME this is the output
 
-
-    #templatefn = tdir + "CIT168_T1w_700um_pad_adni0.nii.gz"
-    #templateBF = glob.glob(tdir+"CIT168_basal_forebrain_adni_prob*gz")
-    #templateBF.sort()
-    #templateCIT = ants.image_read( tdir + "det_atlas_25_pad_LR_adni.nii.gz" )
-    #templateHemi = ants.image_read( tdir + "CIT168_T1w_700um_pad_HemisphereLabel_adni.nii.gz" )
-    #img = ants.image_read( ifn )
     template = ants.image_read( templatefn )
     prefix=c.output_file_prefix
 
@@ -242,7 +209,33 @@ def main(config):
         c.version,
     )
 
+def import_handling(config):
+    try:
+        threads = os.environ['cpu_threads']
+    except KeyError:
+        threads = "8"
+    # set number of threads - this should be optimized per compute instance
+    os.environ["TF_NUM_INTEROP_THREADS"] = threads
+    os.environ["TF_NUM_INTRAOP_THREADS"] = threads
+
+    if config.ants_random_seed != '-1':
+        os.environ['ANTS_RANDOM_SEED'] = config.ants_random_seed
+
+    if config.itk_threads != '-1':
+        os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = config.itk_threads
+    else:
+        os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
+
+    import ants
+    import antspynet
+    import tensorflow as tf
+    import pandas as pd
+
+    from superiq import super_resolution_segmentation_per_label
+    from superiq import list_to_string
+
 if __name__ == "__main__":
     config = sys.argv[1]
     config = batch.LoadConfig(config)
+    import_handling(config)
     main(config)
