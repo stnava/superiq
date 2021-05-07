@@ -82,7 +82,7 @@ def main(input_config):
     rec['version'] = c.version
     rec['name'] = "bxt"
     rec['extension'] = ".nii.gz"
-    rec['resolution'] = c.resolution
+    rec['resolution'] = "OR"
     for k, v in volumes.items():
         rec['data'] = {}
         rec['data']['label'] = 1

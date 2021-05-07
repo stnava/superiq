@@ -6,6 +6,7 @@
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
+        "version": "V0",
         "process_name": "bf_star_on_or",
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "",
