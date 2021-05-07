@@ -55,6 +55,7 @@ def deep_hippo_deploy(input_config):
             rec['modality'] = split[3]
             rec['repeat'] = split[4]
             rec['process'] = 'deep_hippo'
+            rec['version'] = c.version
             rec['name'] = key
             rec['extension'] = ".nii.gz"
             if "OR" in key:
@@ -84,6 +85,7 @@ def deep_hippo_deploy(input_config):
             c.output_prefix,
             c.input_value,
             c.process_name,
+            c.version,
         )
 
 if __name__ == "__main__":

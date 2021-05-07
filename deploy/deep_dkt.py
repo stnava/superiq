@@ -91,6 +91,7 @@ def main(input_config):
         rec['repeat'] = split[4]
         rec['process'] = 'deep_dkt'
         rec['name'] = "deep_dkt"
+        rec['version'] = config..version
         rec['extension'] = ".nii.gz"
         rec['resolution'] = key
         df = value[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
@@ -118,6 +119,7 @@ def main(input_config):
             config.output_prefix,
             config.input_value,
             config.process_name,
+            config.verions
         )
 
     elif config.environment == 'val':

@@ -170,6 +170,7 @@ def main(config):
     rec['modality'] = split[3]
     rec['repeat'] = split[4]
     rec['process'] = 'hemi_sr'
+    rec['version'] = c.version
     rec['name'] = "tissueSegmentation"
     rec['extension'] = ".nii.gz"
     rec['resolution'] = "OR"
@@ -238,6 +239,7 @@ def main(config):
         c.output_prefix,
         c.input_value,
         c.process_name,
+        c.version,
     )
 
 if __name__ == "__main__":

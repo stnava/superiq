@@ -116,6 +116,7 @@ def main(input_config):
     rec['modality'] = split[3]
     rec['repeat'] = split[4]
     rec['process'] = 'random_basis_projection'
+    rec['version'] = c.version
     rec['name'] = "randbasisproj"
     rec['extension'] = ".nii.gz"
     rec['resolution'] = "OR"

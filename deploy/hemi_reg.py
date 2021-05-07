@@ -207,6 +207,7 @@ def main(input_config):
         c.output_prefix,
         c.input_value,
         c.process_name,
+        c.version
     )
 
 

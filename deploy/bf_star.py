@@ -260,6 +260,7 @@ def main(input_config):
     rec['repeat'] = split[4]
     rec['process'] = 'bf_star'
     rec['name'] = "bf_star"
+    rec['version'] = c.version
     rec['extension'] = ".nii.gz"
     rec['resolution'] = c.resolution
     for k, v in volumes.items():
@@ -282,6 +283,7 @@ def main(input_config):
         c.output_prefix,
         c.input_value,
         c.process_name,
+        c.version,
     )
 
 
