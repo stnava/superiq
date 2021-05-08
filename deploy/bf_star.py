@@ -46,12 +46,12 @@ def dap( x ):
 def localsyn(img, template, hemiS, templateHemi, whichHemi, tbftotLoc, ibftotLoc, padder, iterations ):
     ihemi=img*ants.threshold_image( hemiS, whichHemi, whichHemi )
     themi=template*ants.threshold_image( templateHemi, whichHemi, whichHemi )
-    rig = ants.registration( tbftotLoc, ibftotLoc, 'Affine' )
+    rig = ants.registration( tbftotLoc, ibftotLoc, 'Affine', random_seed = 1  )
     tbftotLoct = ants.threshold_image( tbftotLoc, 0.25, 2.0 ).iMath("MD", padder )
     tcrop = ants.crop_image( themi, tbftotLoct )
     syn = ants.registration( tcrop, ihemi, 'SyNOnly',
         syn_metric='CC', syn_sampling=2, reg_iterations=iterations,
-        initial_transform=rig['fwdtransforms'][0], verbose=False)
+        initial_transform=rig['fwdtransforms'][0], verbose=False, random_seed = 1 )
     return syn
 
 def find_in_list(list_, find):
