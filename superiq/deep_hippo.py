@@ -2,7 +2,18 @@ import ants
 import sys
 import antspynet
 import numpy as np
+from scipy.stats import rankdata
 import tensorflow as tf
+
+
+def rank_intensity( x, method='max' ):
+    fim = ants.get_mask( x )
+    fir = rankdata( (x*fim).numpy(), method=method )
+    fir = fir - 1
+    fir = fir.reshape( x.shape )
+    rimg = ants.from_numpy( fir.astype(float)  )
+    rimg = ants.iMath(rimg,"Normalize")
+    return( ants.copy_image_info( x, rimg ) )
 
 def deep_hippo(
     img,
@@ -15,7 +26,7 @@ def deep_hippo(
     avgright = img * 0
     nLoop = 10
     for k in range(nLoop):
-        rig = ants.registration( template, img, "Rigid", random_seed=k )
+        rig = ants.registration( template, img, "Rigid", random_seed=k, aff_metric='GC' )
         rigi = rig['warpedmovout']
         hipp = antspynet.hippmapp3r_segmentation( rigi, do_preprocessing=False )
         hippr = ants.apply_transforms(

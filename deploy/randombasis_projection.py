@@ -1,3 +1,4 @@
+# BA - checked for metric randomness
 import os.path
 from os import path
 
@@ -86,7 +87,8 @@ def main(input_config):
         else:
             raise ValueError(f"Expected registration_transform values [{*accepted_transforms,}], not {c.registration_transform}")
         template = ants.image_read( templatefn ).resample_image(nvox, use_voxels=True)
-        resamp = ants.registration( template, resamp, registration_transform )['warpedmovout']
+        resamp = ants.registration( template, resamp,
+            registration_transform, aff_metric='GC', random_seed=1 )['warpedmovout']
     imat = ants.image_list_to_matrix([resamp], resamp*0+1)
     uproj = np.matmul(imat, randbasis)
     uprojpos = np.matmul(imat, rbpos)

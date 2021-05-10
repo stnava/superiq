@@ -15,21 +15,24 @@ import pandas as pd
 import numpy as np
 from superiq import super_resolution_segmentation_per_label
 from superiq import list_to_string
+from superiq import rank_intensity
 
 
 bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
 bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
 
 def dap( x ):
-  qaff=ants.registration( bbt, x, "AffineFast" )
+  qaff=ants.registration( (bbt), (x),
+    "AffineFast", aff_metric='GC', random_seed=1 )
   dapper = antspynet.deep_atropos( qaff['warpedmovout'], do_preprocessing=False )
-  dappertox = ants.apply_transforms( x, dapper['segmentation_image'], qaff['fwdtransforms'], interpolator='genericLabel', whichtoinvert=[True] )
+  dappertox = ants.apply_transforms( x, dapper['segmentation_image'],
+    qaff['fwdtransforms'], interpolator='genericLabel', whichtoinvert=[True] )
   return(  dappertox )
 
 
-prefix = '/tmp/temp_'
+prefix = '/Users/stnava/code/code_old/adu/ADNI/reviewData/SRPro/20070820/T1w/000/hemi_sr/ADNI-016_S_0769-20070820-T1w-000-hemi_sr-'
 # FIXME: NOTE: this should work for either case SR or OR
-img=ants.image_read( prefix+'SR.nii.gz' )
+img=ants.image_read( prefix+'SR.nii.gz' ).rank_intensity()
 # img=ants.image_read( prefix+'cerebrum.nii.gz' ).resample_image( (128,128,128), use_voxels=True)
 idap=ants.image_read( prefix+'tissueSegmentation.nii.gz' ).resample_image_to_target( img, interp_type='genericLabel')
 hemiS=ants.image_read( prefix+'hemisphere.nii.gz' ).resample_image_to_target( img, interp_type='genericLabel')
@@ -43,7 +46,8 @@ tdir = "/Users/stnava/data/BiogenSuperRes/CIT168_Reinf_Learn_v1/"
 templatefn = tdir + "CIT168_T1w_700um_pad_adni0.nii.gz"
 templateBF = glob.glob(tdir+"CIT168_basal_forebrain_adni_prob*gz")
 templateBF.sort()
-template = ants.image_read( templatefn )
+template = ants.image_read( templatefn ).rank_intensity()
+
 # upsample the template if we are passing SR as input
 if min(ants.get_spacing(img)) < 0.8:
     template = ants.resample_image( template, (0.5,0.5,0.5), interp_type = 0 )
@@ -57,7 +61,7 @@ temcerebrum = ants.mask_image(tdap,tdap,maskinds,binarize=True).iMath("GetLarges
 # FIXME - this should be a "good" registration like we use in direct reg seg
 # ideally, we would compute this separately - but also note that
 regsegits=[200,200,200,50]
-
+regsegits=[20,0,0,0]
 
 # now do a BF focused registration
 
@@ -65,12 +69,16 @@ regsegits=[200,200,200,50]
 def localsyn( whichHemi, tbftotLoc, ibftotLoc, padder = 6 ):
     ihemi=img*ants.threshold_image( hemiS, whichHemi, whichHemi )
     themi=template*ants.threshold_image( templateHemi, whichHemi, whichHemi )
-    rig = ants.registration( tbftotLoc, ibftotLoc, 'Rigid' )
+    rig = ants.registration(
+        (tbftotLoc),
+        (ibftotLoc),
+        'Rigid', random_seed=1, aff_metric='GC' )
     tbftotLoct = ants.threshold_image( tbftotLoc, 0.25, 2.0 ).iMath("MD", padder )
     tcrop = ants.crop_image( themi, tbftotLoct )
     syn = ants.registration( tcrop, img, 'SyNOnly',
         syn_metric='CC', syn_sampling=2, reg_iterations=(200,200,200),
-        initial_transform=rig['fwdtransforms'][0], verbose=False)
+        initial_transform=rig['fwdtransforms'][0], verbose=False,
+        random_seed=1, aff_metric='GC' )
     return syn
 
 
@@ -104,4 +112,3 @@ ants.image_write( bftoiL1, prefix+'bfprob1leftSR.nii.gz' )
 ants.image_write( bftoiR1, prefix+'bfprob1rightSR.nii.gz' )
 ants.image_write( bftoiL2, prefix+'bfprob2leftSR.nii.gz' )
 ants.image_write( bftoiR2, prefix+'bfprob2rightSR.nii.gz' )
-

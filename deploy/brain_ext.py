@@ -1,4 +1,4 @@
-# this script assumes the image have been brain extracted
+# BA - checked for metric randomness
 import os.path
 from os import path
 
@@ -15,6 +15,7 @@ import os
 import sys
 import pandas as pd
 import numpy as np
+from superiq import rank_intensity
 
 import ia_batch_utils as batch
 
@@ -46,7 +47,12 @@ def main(input_config):
         rbxt5 = reg_bxt( template, input_image, rbxt4, 't1combined', 'Rigid', dilation=25 )
         img = ants.iMath(input_image * rbxt5, "TruncateIntensity", 0.0001, 0.999)
         imgn4 = ants.n4_bias_field_correction(img, shrink_factor=4)
-        syn=ants.registration(template, imgn4, "SyN" )
+        syn=ants.registration(
+            rank_intensity(template),
+            rank_intensity(imgn4),
+            "SyN",
+            syn_metric='CC', syn_sampling=2,
+            aff_metric='GC', random_seed=1  )
         bxt = ants.apply_transforms( imgn4, btem, syn['invtransforms'], interpolator='nearestNeighbor')
         bxt = bxt * rbxt5
     else:
@@ -106,10 +112,12 @@ def reg_bxt( intemplate, inimg, inbxt, bxt_type, txtype, dilation=0 ):
     img = ants.iMath( inimg * inbxt, "TruncateIntensity", 0.0001, 0.999)
     imgn4 = ants.n3_bias_field_correction(img, downsample_factor=4)
     rig = ants.registration(
-            intemplate,
-            imgn4,
+            rank_intensity(intemplate),
+            rank_intensity(imgn4),
             txtype,
             aff_iterations=(10000, 500, 0, 0),
+            aff_metric='GC',
+            random_seed=1,
         )
     if dilation > 0:
         rigi = ants.apply_transforms( intemplate, inimg * inbxtdil, rig['fwdtransforms'] )

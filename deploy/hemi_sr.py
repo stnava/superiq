@@ -1,11 +1,14 @@
+# BA - checked for metric randomness
 import os
 import sys
 import ia_batch_utils as batch
-
+from superiq import rank_intensity
+import ants
 
 def dap( x ):
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
     bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
+    bbt = rank_intensity( bbt )
     qaff=ants.registration( bbt, x, "AffineFast" )
     dapper = antspynet.deep_atropos( qaff['warpedmovout'], do_preprocessing=False )
     dappertox = ants.apply_transforms(
@@ -72,14 +75,16 @@ def main(config):
             #lregits=[600,60,0,0,0]
             verber=True
         reg = ants.registration(
-            template * temcerebrum,
-            img * imgcerebrum,
+            rank_intensity( template * temcerebrum ),
+            rank_intensity( img * imgcerebrum ),
             type_of_transform="SyN",
             grad_step = 0.20,
             syn_metric='CC',
             syn_sampling=2,
             reg_iterations=regits,
             outprefix=prefix,
+            random_seed=1,
+            aff_metric='GC',
             verbose=verber )
 
     # 1 is left, 2 is right

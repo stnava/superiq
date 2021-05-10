@@ -1,3 +1,4 @@
+# BA - checked for metric randomness
 # this script assumes the image have been brain extracted
 import os
 import sys
@@ -31,7 +32,7 @@ def import_handling(config):
 def dap( x ):
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
     bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
-    qaff=ants.registration( bbt, x, "AffineFast" )
+    qaff=ants.registration( bbt, x, "AffineFast", aff_metric='GC', random_seed=1 )
     dapper = antspynet.deep_atropos( qaff['warpedmovout'], do_preprocessing=False )
     dappertox = ants.apply_transforms(
       x,
@@ -46,12 +47,13 @@ def dap( x ):
 def localsyn(img, template, hemiS, templateHemi, whichHemi, tbftotLoc, ibftotLoc, padder, iterations ):
     ihemi=img*ants.threshold_image( hemiS, whichHemi, whichHemi )
     themi=template*ants.threshold_image( templateHemi, whichHemi, whichHemi )
-    rig = ants.registration( tbftotLoc, ibftotLoc, 'Affine', random_seed = 1  )
+    rig = ants.registration( tbftotLoc, ibftotLoc, 'Affine', aff_metric='GC', random_seed=1 )
     tbftotLoct = ants.threshold_image( tbftotLoc, 0.25, 2.0 ).iMath("MD", padder )
     tcrop = ants.crop_image( themi, tbftotLoct )
     syn = ants.registration( tcrop, ihemi, 'SyNOnly',
         syn_metric='CC', syn_sampling=2, reg_iterations=iterations,
-        initial_transform=rig['fwdtransforms'][0], verbose=False, random_seed = 1 )
+        initial_transform=rig['fwdtransforms'][0], verbose=False,
+        aff_metric='GC', random_seed=1 )
     return syn
 
 def find_in_list(list_, find):

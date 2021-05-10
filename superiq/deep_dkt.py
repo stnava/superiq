@@ -21,7 +21,7 @@ def deep_dkt(
     """
     img = target_image
 
-    rig = ants.registration( template, img, "Rigid" )
+    rig = ants.registration( template, img, "Rigid", random_seed=1, aff_metric='GC' )
     rigi = rig['warpedmovout']
 
     mdl = tf.keras.models.load_model(sr_model)
@@ -79,4 +79,3 @@ def deep_dkt(
         "labels_or": output_filename_native_csv,
         "labels_sr": output_filename_sr_seg_csv,
     }
-

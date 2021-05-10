@@ -1,4 +1,4 @@
-# this script assumes the image have been brain extracted
+# BA - israndom
 import os.path
 from os import path
 
