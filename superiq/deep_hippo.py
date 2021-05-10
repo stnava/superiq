@@ -6,9 +6,35 @@ from scipy.stats import rankdata
 import tensorflow as tf
 
 
-def rank_intensity( x, method='max' ):
-    fim = ants.get_mask( x )
-    fir = rankdata( (x*fim).numpy(), method=method )
+def rank_intensity( x, method='max', do_mask=False ):
+    """
+    Rank transform the intensity of the input image with or without masking.
+    Intensities will transform from [0,1,2,55] to [0,1,2,3] so this may not be
+    appropriate for quantitative images - however, you never know.  rank
+    transformations generally improve robustness so it is an empirical question
+    that should be evaluated.
+
+    Arguments
+    ---------
+
+    x : ANTsImage
+        input image
+
+    method : a scipy rank method (max,min,average,dense)
+
+    do_mask : boolean
+
+    return: transformed image
+
+    Example
+    -------
+    >>> rank_intensity( some_image )
+    """
+    if do_mask:
+        fim = ants.get_mask( x )
+        fir = rankdata( (x*fim).numpy(), method=method )
+    else:
+        fir = rankdata( x.numpy(), method=method )
     fir = fir - 1
     fir = fir.reshape( x.shape )
     rimg = ants.from_numpy( fir.astype(float)  )
