@@ -30,33 +30,37 @@ def main(input_config):
         os.makedirs(c.output_folder)
     output_filename = c.output_folder + "/"
 
-    ukbb = antspynet.get_antsxnet_data("biobank")
-    template = ants.image_read(ukbb)
-    btem = antspynet.brain_extraction(template, 't1v0')
-    template = template * btem
+    if False:
+        ukbb = antspynet.get_antsxnet_data("biobank")
+        template = ants.image_read(ukbb)
+        btem = antspynet.brain_extraction(template, 't1v0')
+        template = template * btem
 
-    run_extra=True
+        run_extra=True
 
-    b0 = antspynet.brain_extraction(input_image, 't1v0')
-    rbxt1 = reg_bxt( template, input_image, b0, 't1v0', 'Rigid', dilation=0 )
-    rbxt2 = reg_bxt( template, input_image, rbxt1, 't1v0', 'Rigid', dilation=0  )
-    rbxt3 = reg_bxt( template, input_image, rbxt2, 't1v0', 'Rigid', dilation=0 )
-    rbxt3 = ants.threshold_image( rbxt3, 0.5, 2. ).iMath("GetLargestComponent")
-    rbxt4 = reg_bxt( template, input_image, rbxt3, 't1combined', 'Rigid', dilation=0 )
-    if run_extra:
-        rbxt5 = reg_bxt( template, input_image, rbxt4, 't1combined', 'Rigid', dilation=25 )
-        img = ants.iMath(input_image * rbxt5, "TruncateIntensity", 0.0001, 0.999)
-        imgn4 = ants.n4_bias_field_correction(img, shrink_factor=4)
-        syn=ants.registration(
-            rank_intensity(template),
-            rank_intensity(imgn4),
-            "SyN",
-            syn_metric='CC', syn_sampling=2,
-            aff_metric='GC', random_seed=1  )
-        bxt = ants.apply_transforms( imgn4, btem, syn['invtransforms'], interpolator='nearestNeighbor')
-        bxt = bxt * rbxt5
+        b0 = antspynet.brain_extraction(input_image, 't1v0')
+        rbxt1 = reg_bxt( template, input_image, b0, 't1v0', 'Rigid', dilation=0 )
+        rbxt2 = reg_bxt( template, input_image, rbxt1, 't1v0', 'Rigid', dilation=0  )
+        rbxt3 = reg_bxt( template, input_image, rbxt2, 't1v0', 'Rigid', dilation=0 )
+        rbxt3 = ants.threshold_image( rbxt3, 0.5, 2. ).iMath("GetLargestComponent")
+        rbxt4 = reg_bxt( template, input_image, rbxt3, 't1combined', 'Rigid', dilation=0 )
+        if run_extra:
+            rbxt5 = reg_bxt( template, input_image, rbxt4, 't1combined', 'Rigid', dilation=25 )
+            img = ants.iMath(input_image * rbxt5, "TruncateIntensity", 0.0001, 0.999)
+            imgn4 = ants.n4_bias_field_correction(img, shrink_factor=4)
+            syn=ants.registration(
+                rank_intensity(template),
+                rank_intensity(imgn4),
+                "SyN",
+                syn_metric='CC', syn_sampling=2,
+                aff_metric='GC', random_seed=1  )
+            bxt = ants.apply_transforms( imgn4, btem, syn['invtransforms'], interpolator='nearestNeighbor')
+            bxt = bxt * rbxt5
+        else:
+            bxt = rbxt4
     else:
-        bxt = rbxt4
+        seg = antspynet.deep_atropos(input_image, use_spatial_priors=0)
+        bxt = ants.threshold_image( seg['segmentation_image'], 1, 6 )
 
     img = ants.iMath(input_image * bxt, "TruncateIntensity", 0.0001, 0.999)
     bxton4 = ants.n4_bias_field_correction(img, shrink_factor=4 )
