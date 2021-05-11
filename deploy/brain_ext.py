@@ -61,7 +61,10 @@ def main(input_config):
     else:
         seg = antspynet.deep_atropos(input_image, use_spatial_priors=0)
         bxt = ants.threshold_image( seg['segmentation_image'], 1, 6 )
-
+        bxtt=ants.iMath( bxt, "MD", 20 )
+        bxt2=antspynet.brain_extraction(img*bxtt,'t1combined')
+        bxt=ants.threshold_image(bxt2,2,6).morphology("close",3).iMath("FillHoles")
+        
     img = ants.iMath(input_image * bxt, "TruncateIntensity", 0.0001, 0.999)
     bxton4 = ants.n4_bias_field_correction(img, shrink_factor=4 )
     plot_path = 'outputs/bxtoplot.png'
