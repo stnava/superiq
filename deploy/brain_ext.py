@@ -64,7 +64,7 @@ def main(input_config):
         bxtt=ants.iMath( bxt, "MD", 20 )
         bxt2=antspynet.brain_extraction(img*bxtt,'t1combined')
         bxt=ants.threshold_image(bxt2,2,6).morphology("close",3).iMath("FillHoles")
-        
+
     img = ants.iMath(input_image * bxt, "TruncateIntensity", 0.0001, 0.999)
     bxton4 = ants.n4_bias_field_correction(img, shrink_factor=4 )
     plot_path = 'outputs/bxtoplot.png'
@@ -98,6 +98,7 @@ def main(input_config):
     rec['extension'] = ".nii.gz"
     rec['resolution'] = "OR"
     for vol in volumes:
+        vol.pop('Label', None)
         for k, v in vol.items():
             rec['data'] = {}
             rec['data']['label'] = 1
