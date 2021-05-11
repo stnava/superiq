@@ -19,7 +19,7 @@ def join_all(dfs, how):
     for d in dfs[1:]:
         merge = pd.merge(df, d, on='originalimage', how=how, suffixes=('', "_y"))
         cols = [i for i in merge.columns if i.endswith('_y')]
-        merge.drop(cols, axis=1, inplace=True)
+        #merge.drop(cols, axis=1, inplace=True)
         print(merge.shape)
         df = merge
 
@@ -33,12 +33,13 @@ def join_all(dfs, how):
 #hemi_sr = qa(['7CB4'], 'hemi_sr')
 #deepl = qa(['E3C8'], 'deepl')
 #deepr = qa(['275B'], 'deepr')
-bxt1 = qa(['5E97'], 'bxt1')
-bxt2 = qa(['7E9A'], 'bxt2')
+bxt1 = qa(['3B76'], 'bxt1')
+bxt2 = qa(['770F'], 'bxt2')
 meta = pd.read_csv('s3://eisai-basalforebrainsuperres2/metadata/full_metadata_20210208.csv')
 meta['originalimage'] = meta['filename']
 #data = [bf_star_or, bf_star_sr, rbp, deephipp, hemi_sr, deepl, deepr]
 data = [bxt1, bxt2]
 vols = join_all(data, "left")
+vols['originalimage'] = [i.replace('.nii.gz.nii.gz', '.nii.gz') for i in vols['originalimage']]
 df = join_all([meta,vols], "right")
 df.to_csv('s3://invicro-data-outputs/brain_extraction_validation.csv')
