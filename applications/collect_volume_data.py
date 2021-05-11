@@ -33,8 +33,8 @@ def join_all(dfs, how):
 #hemi_sr = qa(['7CB4'], 'hemi_sr')
 #deepl = qa(['E3C8'], 'deepl')
 #deepr = qa(['275B'], 'deepr')
-bxt1 = qa(['CAE2'], 'bxt1')
-bxt2 = qa(['48D3'], 'bxt2')
+bxt1 = qa(['5E97'], 'bxt1')
+bxt2 = qa(['7E9A'], 'bxt2')
 meta = pd.read_csv('s3://eisai-basalforebrainsuperres2/metadata/full_metadata_20210208.csv')
 meta['originalimage'] = meta['filename']
 #data = [bf_star_or, bf_star_sr, rbp, deephipp, hemi_sr, deepl, deepr]

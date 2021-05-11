@@ -6,7 +6,7 @@
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
-        "version": "V1",
+        "version": "V2",
         "batch_id": "",
         "process_name": "brainextraction",
         "input_bucket" : "eisai-basalforebrainsuperres2",
