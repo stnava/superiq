@@ -6,7 +6,7 @@ from scipy.stats import rankdata
 import tensorflow as tf
 
 
-def rank_intensity( x, method='max', do_mask=False ):
+def rank_intensity( x, method='max', do_mask=True ):
     """
     Rank transform the intensity of the input image with or without masking.
     Intensities will transform from [0,1,2,55] to [0,1,2,3] so this may not be
