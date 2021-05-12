@@ -87,7 +87,7 @@ def main(input_config):
             raise ValueError(f"Expected registration_transform values [{*accepted_transforms,}], not {c.registration_transform}")
         template = ants.image_read( templatefn ).crop_image().resample_image(nvox, use_voxels=True)
         resamp = ants.registration( template, resamp, registration_transform, aff_metric='GC' )['warpedmovout']
-    imat = ants.image_list_to_matrix([resamp], resamp*0+1)
+    imat = ants.get_neighborhood_in_mask(resamp, resamp*0+1,[0,0,0], boundary_condition='mean' )
     uproj = np.matmul(imat, randbasis)
     uprojpos = np.matmul(imat, rbpos)
     imgsum = resamp.sum()
