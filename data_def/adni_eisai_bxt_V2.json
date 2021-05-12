@@ -1,0 +1,8 @@
+{
+    "version": 1,
+    "bucket": "eisai-basalforebrainsuperres2",
+    "prefix": "ADNI_EISAI_PROD/ADNI/",
+    "filter_include": ["brainextraction","n4brain.nii.gz", "V2"],
+    "filter_exclude": [],
+    "dryrun": false
+}
