@@ -24,10 +24,12 @@ def join_all(dfs, how):
 
 bxt = qa(['07FA'], 'bxt')
 bxt['originalimage'] = [i.replace('.nii.gz.nii.gz', '.nii.gz') for i in bxt['originalimage']]
-rdp =  qa(['546B'], 'rdp')
+#rdp1 =  qa(['546B'], 'rdp1')
+rdp =  qa(['EBF7'], 'rdp')
+hemi_sr =  qa(['AA80'], 'hemisr')
 meta = pd.read_csv('s3://eisai-basalforebrainsuperres2/metadata/full_metadata_20210208.csv')
 meta['originalimage'] = meta['filename']
-data = [bxt, rdp]
+data = [bxt, rdp, hemi_sr]
 vols = join_all(data, "left")
 #vols['originalimage'] = [i.replace('.nii.gz.nii.gz', '.nii.gz') for i in vols['originalimage']]
 df = join_all([meta,vols], "right")
