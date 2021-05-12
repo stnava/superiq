@@ -64,6 +64,12 @@ def main(input_config):
         bxtt=ants.iMath( bxt, "MD", 20 )
         bxt2=antspynet.brain_extraction(input_image*bxtt,'t1combined')
         bxt=ants.threshold_image(bxt2,2,6).morphology("close",3).iMath("FillHoles")
+        bxti = input_image * bxt                                  
+        reg = ants.registration( bxti, template, "antsRegistrationSyNQuickRepro[s]" )
+        msk2img = ants.apply_transforms( input_image, btem, reg['fwdtransforms'])
+        msk2img = ants.threshold_image( msk2img, 0.5, 1000 )
+        bxt = ants.threshold_image( bxt + ants.iMath( msk2img,"ME",5), 0.5, 11.0)
+
 
     img = ants.iMath(input_image * bxt, "TruncateIntensity", 0.0001, 0.999)
     bxton4 = ants.n4_bias_field_correction(img, shrink_factor=4 )
