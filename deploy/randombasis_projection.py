@@ -85,7 +85,7 @@ def main(input_config):
             registration_transform = c.registration_transform
         else:
             raise ValueError(f"Expected registration_transform values [{*accepted_transforms,}], not {c.registration_transform}")
-        template = ants.image_read( templatefn ).resample_image(nvox, use_voxels=True)
+        template = ants.image_read( templatefn ).crop_image().resample_image(nvox, use_voxels=True)
         resamp = ants.registration( template, resamp, registration_transform )['warpedmovout']
     imat = ants.image_list_to_matrix([resamp], resamp*0+1)
     uproj = np.matmul(imat, randbasis)
