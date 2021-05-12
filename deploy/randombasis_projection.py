@@ -1,7 +1,7 @@
 # BA - checked for metric randomness
 import os.path
 from os import path
-
+import pickle
 import sys
 import ants
 import numpy as np
@@ -14,23 +14,25 @@ import pandas as pd
 from multiprocessing import Pool
 
 # for repeatability
-np.random.seed(42)
 
 def myproduct(lst):
     return( functools.reduce(mul, lst) )
 
 
 def main(input_config):
-    random.seed(0)
     c = input_config
     nvox = c.nvox
     nBasis = c.nbasis
+    if c.random_state != '-1':
+        random_state = int(c.random_state)
+        np.random.seed(int(c.random_state))
+    else:
+        random_state=None
     X = np.random.rand( nBasis*2, myproduct( nvox ) )
-
     U, Sigma, randbasis = randomized_svd(
         X,
         n_components=nBasis,
-        random_state=None
+        random_state=random_state
     )
     if randbasis.shape[1] != myproduct(nvox):
         raise ValueError("columns in rand basis do not match the nvox product")
@@ -42,41 +44,6 @@ def main(input_config):
         templatefn = batch.get_s3_object(c.template_bucket, c.template_key, 'data')
     imgfn = batch.get_s3_object(c.input_bucket, c.input_value, 'data')
     img = ants.image_read(imgfn).iMath("Normalize")
-
-    #imgt = ants.threshold_image(img, .5, 1)
-    #labs = ants.label_geometry_measures(imgt)
-    #labs = labs[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
-    #labs_records = labs.to_dict('records')
-
-    #split = c.input_value.split('/')[-1].split('-')
-    #rec = {}
-    #rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
-    #rec['batchid'] = c.batch_id
-    #rec['hashfields'] = ['originalimage', 'process', 'batchid', "data"]
-    #rec['project'] = split[0]
-    #rec['subject'] = split[1]
-    #rec['date'] = split[2]
-    #rec['modality'] = split[3]
-    #rec['repeat'] = split[4]
-    #rec['process'] = 'bxt'
-    #rec['name'] = "wholebrain"
-    #rec['extension'] = ".nii.gz"
-    #rec['resolution'] = "OR"
-
-    #for r in labs_records:
-    #    label = r['Label']
-    #    r.pop('Label', None)
-    #    for k,v in r.items():
-    #        data_field = {
-    #            "label": label,
-    #            'key': k,
-    #            "value": v,
-    #        }
-    #        rec['data'] = data_field
-    #        batch.write_to_dynamo(rec)
-
-
-
 
     norm = ants.iMath(img, 'Normalize')
     resamp = ants.resample_image(norm, nvox, use_voxels=True)
