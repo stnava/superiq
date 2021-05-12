@@ -82,9 +82,9 @@ def main(input_config):
     volumes = bxtvol[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
     volumes = volumes.to_dict('records')
 
-    split = c.input_value.split('/')[-1].split('-')
+    split = c.input_value.split('/')[-1].split('.')[0]
     rec = {}
-    rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
+    rec['originalimage'] = split
     rec['hashfields'] = ['originalimage', 'process', 'batchid', 'data']
     rec['batchid'] = c.batch_id
     rec['project'] = split[0]

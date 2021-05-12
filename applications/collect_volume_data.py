@@ -9,8 +9,6 @@ def qa(procid, filename):
     df.to_csv(f's3://invicro-data-outputs/dynamoqa/{filename}-stacked.csv')
     df = batch.pivot_data(df)
     df.to_csv(f's3://invicro-data-outputs/dynamoqa/{filename}-pivoted.csv')
-    print(filename)
-    print(df.shape)
     print("******")
     return df
 
@@ -19,27 +17,18 @@ def join_all(dfs, how):
     for d in dfs[1:]:
         merge = pd.merge(df, d, on='originalimage', how=how, suffixes=('', "_y"))
         cols = [i for i in merge.columns if i.endswith('_y')]
-        #merge.drop(cols, axis=1, inplace=True)
-        print(merge.shape)
+        merge.drop(cols, axis=1, inplace=True)
         df = merge
 
     return df
 
-#bf_star_or_old = qa(['A7DA'], 'bf_star_or_old')
-#bf_star_or_new = qa(['687D'], 'bf_star_or_new')
-#bf_star_sr = qa(['2BF9'], 'bf_star_sr')
-#rbp = qa(['A134'], 'rbp')
-#deephipp = qa(['4D50'], 'deephip')
-#hemi_sr = qa(['7CB4'], 'hemi_sr')
-#deepl = qa(['E3C8'], 'deepl')
-#deepr = qa(['275B'], 'deepr')
-bxt1 = qa(['3B76'], 'bxt1')
-bxt2 = qa(['770F'], 'bxt2')
+bxt = qa(['07FA'], 'bxt')
+bxt['originalimage'] = [i.replace('.nii.gz.nii.gz', '.nii.gz') for i in bxt['originalimage']]
+rdp =  qa(['546B'], 'rdp')
 meta = pd.read_csv('s3://eisai-basalforebrainsuperres2/metadata/full_metadata_20210208.csv')
 meta['originalimage'] = meta['filename']
-#data = [bf_star_or, bf_star_sr, rbp, deephipp, hemi_sr, deepl, deepr]
-data = [bxt1, bxt2]
+data = [bxt, rdp]
 vols = join_all(data, "left")
-vols['originalimage'] = [i.replace('.nii.gz.nii.gz', '.nii.gz') for i in vols['originalimage']]
+#vols['originalimage'] = [i.replace('.nii.gz.nii.gz', '.nii.gz') for i in vols['originalimage']]
 df = join_all([meta,vols], "right")
-df.to_csv('s3://invicro-data-outputs/brain_extraction_validation.csv')
+df.to_csv('s3://eisai-basalforebrainsuperres2/eisai_volume_outputs_with_metadata.csv')
