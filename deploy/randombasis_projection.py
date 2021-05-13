@@ -8,12 +8,11 @@ import numpy as np
 import random
 import functools
 from operator import mul
-from sklearn.utils.extmath import randomized_svd
+from scipy.sparse.linalg import svds
+
 import ia_batch_utils as batch
 import pandas as pd
 from multiprocessing import Pool
-
-# for repeatability
 
 def myproduct(lst):
     return( functools.reduce(mul, lst) )
@@ -29,11 +28,7 @@ def main(input_config):
     else:
         random_state=None
     X = np.random.rand( nBasis*2, myproduct( nvox ) )
-    U, Sigma, randbasis = randomized_svd(
-        X,
-        n_components=nBasis,
-        random_state=random_state
-    )
+    u, s, randbasis = svds(X, k=nBasis)
     if randbasis.shape[1] != myproduct(nvox):
         raise ValueError("columns in rand basis do not match the nvox product")
 
