@@ -2,7 +2,7 @@
     "version": 1,
     "aws_profile": "role",
     "job_definition" : "superiq_rbp",
-    "job_queue" : "superiq2",
+    "job_queue" : "superiq3",
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
