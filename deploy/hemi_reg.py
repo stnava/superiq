@@ -59,8 +59,7 @@ def main(input_config):
 
     tdir = "data/"
     img_path = batch.get_s3_object(c.input_bucket, c.input_value, tdir)
-    img=ants.rank_intensity(ants.image_read(img_path))
-
+    img=ants.rank_intensity( ants.image_read(img_path) )
     filter_vals = c.input_value.split('/')
     x = '/'.join(filter_vals[:6]) + "/"
     pipeline_objects = batch.list_objects(c.hemisr_bucket, x + 'hemi_sr/' + f"{c.hemisr_version}/")
@@ -117,7 +116,7 @@ def main(input_config):
     bfprob2R=ants.image_read(bfR2).resample_image_to_target( img, interp_type='linear')
 
     template_bucket = c.template_bucket
-    template = ants.rank_intensity(ants.image_read(batch.get_s3_object(template_bucket, c.template_base, tdir)))
+    template = ants.rank_intensity( ants.image_read(batch.get_s3_object(template_bucket, c.template_base, tdir)) )
     templateBF1L = ants.image_read(batch.get_s3_object(template_bucket,  c.templateBF1L, tdir))
     templateBF2L = ants.image_read(batch.get_s3_object(template_bucket,  c.templateBF2L, tdir))
     templateBF1R = ants.image_read(batch.get_s3_object(template_bucket,  c.templateBF1R, tdir))
