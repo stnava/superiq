@@ -63,46 +63,46 @@ def main(input_config):
     img=ants.image_read(img_path).rank_intensity()
 
     filter_vals = c.input_value.split('/')
-    x = '/'.join(filter_vals[2:7])
-    pipeline_objects = batch.list_objects(c.hemi_bucket, c.hemi_prefix + x + f'/hemi_sr/' )
+    x = '/'.join(filter_vals[:6]) + "/"
+    pipeline_objects = batch.list_objects(c.hemisr_bucket, x + 'hemi_sr/' + f"{c.hemisr_version}/")
     tSeg = batch.get_s3_object(
-        c.hemi_bucket,
+        c.hemisr_bucket,
         #pipeline_objects.endswith('tissueSegmentation.nii.gz'),
         find_in_list(pipeline_objects, "tissueSegmentation.nii.gz"),
         tdir,
     )
     hemi = batch.get_s3_object(
-        c.hemi_bucket,
+        c.hemisr_bucket,
         #pipeline_objects.endswith('hemisphere.nii.gz'),
         find_in_list(pipeline_objects, "hemisphere.nii.gz"),
         tdir,
     )
     citL = batch.get_s3_object(
-        c.hemi_bucket,
+        c.hemisr_bucket,
         #pipeline_objects.endswith('CIT168Labels.nii.gz'),
         find_in_list(pipeline_objects, "CIT168Labels.nii.gz"),
         tdir,
     )
     bfL1 = batch.get_s3_object(
-        c.hemi_bucket,
+        c.hemisr_bucket,
         #pipeline_objects.endswith('bfprob1left.nii.gz'),
         find_in_list(pipeline_objects, "bfprob1left.nii.gz"),
         tdir,
     )
     bfL2 = batch.get_s3_object(
-        c.hemi_bucket,
+        c.hemisr_bucket,
         #pipeline_objects.endswith('bfprob2left.nii.gz'),
         find_in_list(pipeline_objects, "bfprob2left.nii.gz"),
         tdir,
     )
     bfR1 = batch.get_s3_object(
-        c.hemi_bucket,
+        c.hemisr_bucket,
         #pipeline_objects.endswith('bfprob1right.nii.gz'),
         find_in_list(pipeline_objects, "bfprob1right.nii.gz"),
         tdir,
     )
     bfR2 = batch.get_s3_object(
-        c.hemi_bucket,
+        c.hemisr_bucket,
         #pipeline_objects.endswith('bfprob2right.nii.gz'),
         find_in_list(pipeline_objects, "bfprob2right.nii.gz"),
         tdir,
