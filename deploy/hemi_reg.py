@@ -18,14 +18,13 @@ import pandas as pd
 import numpy as np
 from superiq import super_resolution_segmentation_per_label
 from superiq import list_to_string
-from superiq import rank_intensity
 import superiq
 import ia_batch_utils as batch
 
 def dap( x ):
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
     bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
-    bbt = rank_intensity( bbt )
+    bbt = ants.rank_intensity( bbt )
     qaff=ants.registration( bbt, x, "AffineFast", aff_metric='GC', random_seed=1 )
     dapper = antspynet.deep_atropos( qaff['warpedmovout'], do_preprocessing=False )
     dappertox = ants.apply_transforms(
@@ -60,7 +59,7 @@ def main(input_config):
 
     tdir = "data/"
     img_path = batch.get_s3_object(c.input_bucket, c.input_value, tdir)
-    img=ants.image_read(img_path).rank_intensity()
+    img=ants.rank_intensity( ants.image_read(img_path) )
 
     filter_vals = c.input_value.split('/')
     x = '/'.join(filter_vals[:6]) + "/"
@@ -118,7 +117,7 @@ def main(input_config):
     bfprob2R=ants.image_read(bfR2).resample_image_to_target( img, interp_type='linear')
 
     template_bucket = c.template_bucket
-    template = ants.image_read(batch.get_s3_object(template_bucket, c.template_base, tdir)).rank_intensity()
+    template = ants.rank_intensity( ants.image_read(batch.get_s3_object(template_bucket, c.template_base, tdir)) )
     templateBF1L = ants.image_read(batch.get_s3_object(template_bucket,  c.templateBF1L, tdir))
     templateBF2L = ants.image_read(batch.get_s3_object(template_bucket,  c.templateBF2L, tdir))
     templateBF1R = ants.image_read(batch.get_s3_object(template_bucket,  c.templateBF1R, tdir))
