@@ -1,8 +1,8 @@
 {
     "version": 1,
     "aws_profile": "role",
-    "job_definition" : "superiq_bfstar",
-    "job_queue" : "superiq",
+    "job_definition" : "superiq_hemireg",
+    "job_queue" : "superiq2",
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
@@ -10,6 +10,7 @@
         "process_name": "hemi_reg_sr",
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "ADNI_EISAI_PROD/ADNI/002_S_0729/20060717/T1w/000/hemi_sr/V0/ADNI-002_S_0729-20060717-T1w-000-hemi_sr-V0-SR.nii.gz",
+        "batch_id": "",
         "hemisr_bucket": "eisai-basalforebrainsuperres2",
         "hemisr_version": "V0",
        	"template_bucket": "invicro-pipeline-inputs",

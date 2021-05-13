@@ -1,10 +1,7 @@
 # BA - checked for metric randomness
 import os.path
 from os import path
-try:
-    threads = os.environ['cpu_threads']
-except KeyError:
-    threads = "8"
+threads = "64"
 # set number of threads - this should be optimized per compute instance
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
