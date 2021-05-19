@@ -3,7 +3,7 @@
     "aws_profile": "role",
     "job_definition" : "superiq_hemireg",
     "job_queue" : "superiq4",
-    "skip_repeats": false,
+    "skip_repeats": true,
     "parameters": {
         "environment" : "prod",
         "version": "V0",
@@ -27,6 +27,6 @@
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
         "output_prefix": "ADNI_EISAI_PROD/",
-        "output_suffix": ""
+        "expected_output":"<project>-<subject>-<date>-<modality>-<repeat>-<process>-<version>-left_hemi_jacobian.nii.gz"
     }
 }
