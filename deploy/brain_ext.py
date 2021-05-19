@@ -60,23 +60,18 @@ def main(input_config):
             bxt = rbxt4
     else:
         input_image_n3=ants.n3_bias_field_correction( input_image, 4 )
-        bxt3=antspynet.brain_extraction(input_image_n3,'t1combined')
+        bxt3=antspynet.brain_extraction(input_image_n3,'t1combined[8]')
         bxt=ants.threshold_image(bxt3,2,3)
         bxti = input_image * bxt
 
     img = ants.iMath(input_image * bxt, "TruncateIntensity", 0.0001, 0.999)
     bxton4 = ants.n4_bias_field_correction(img, shrink_factor=4 )
     plot_path = 'outputs/bxtoplot.png'
-    ants.plot(
-        bxton4,
-        axis=2,
-        filename=plot_path
-    )
+    ants.plot(bxton4,nslices=21,axis=0,ncol=7,crop=True,filename=plot_path)
     output_filename = c.output_folder + "/"
     n4_path = output_filename + 'n4brain.nii.gz'
     ants.image_write( bxton4, n4_path)
 
-    ants.plot(bxton4,nslices=21,axis=0,ncol=7,crop=True,filename=output_filename + 'n4brain.png')
 
     bxt_lgm = ants.threshold_image(bxt, 0.5, 1)
     bxtvol = ants.label_geometry_measures( bxt_lgm )
