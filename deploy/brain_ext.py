@@ -59,17 +59,10 @@ def main(input_config):
         else:
             bxt = rbxt4
     else:
-        seg = antspynet.deep_atropos(input_image, use_spatial_priors=0)
-        bxt = ants.threshold_image( seg['segmentation_image'], 1, 6 )
-        bxtt=ants.iMath( bxt, "MD", 20 )
-        bxt2=antspynet.brain_extraction(input_image*bxtt,'t1combined')
-        bxt=ants.threshold_image(bxt2,2,6).morphology("close",3).iMath("FillHoles")
-        bxti = input_image * bxt                                  
-        reg = ants.registration( bxti, template, "antsRegistrationSyNQuickRepro[s]" )
-        msk2img = ants.apply_transforms( input_image, btem, reg['fwdtransforms'])
-        msk2img = ants.threshold_image( msk2img, 0.5, 1000 )
-        bxt = ants.threshold_image( bxt + ants.iMath( msk2img,"ME",5), 0.5, 11.0)
-
+        input_image_n3=ants.n3_bias_field_correction( input_image, 4 )
+        bxt3=antspynet.brain_extraction(input_image_n3,'t1combined')
+        bxt=ants.threshold_image(bxt3,2,3)
+        bxti = input_image * bxt
 
     img = ants.iMath(input_image * bxt, "TruncateIntensity", 0.0001, 0.999)
     bxton4 = ants.n4_bias_field_correction(img, shrink_factor=4 )
@@ -82,6 +75,8 @@ def main(input_config):
     output_filename = c.output_folder + "/"
     n4_path = output_filename + 'n4brain.nii.gz'
     ants.image_write( bxton4, n4_path)
+
+    ants.plot(bxton4,nslices=21,axis=0,ncol=7,crop=True,filename=output_filename + 'n4brain.png')
 
     bxt_lgm = ants.threshold_image(bxt, 0.5, 1)
     bxtvol = ants.label_geometry_measures( bxt_lgm )
