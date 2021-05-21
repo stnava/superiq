@@ -1,0 +1,8 @@
+{
+    "version": 1,
+    "bucket": "lilly-superres",
+    "prefix": "original_images/AZES/",
+    "filter_include": ["nii.gz"],
+    "filter_exclude": [],
+    "dryrun": false
+}
