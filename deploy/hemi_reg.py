@@ -129,7 +129,7 @@ def main(input_config):
 
     # upsample the template if we are passing SR as input
     if min(ants.get_spacing(img)) < 0.8:
-        regsegits=[200,200,200,200]
+        regsegits=[200,200,200,20]
         template = ants.resample_image( template, (0.5,0.5,0.5), interp_type = 0 )
 
     templateCIT = ants.resample_image_to_target(
