@@ -99,6 +99,7 @@ def main(config):
             syn_sampling=2,
             reg_iterations=regits,
             outprefix=prefix,
+            total_sigma=0.5,
             random_seed=1,
             aff_metric='GC',
             verbose=verber )
