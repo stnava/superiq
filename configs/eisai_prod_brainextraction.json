@@ -1,0 +1,19 @@
+{
+    "version": 1,
+    "aws_profile": "role",
+    "job_definition" : "superiq_bxt",
+    "job_queue" : "superiq_prod_spot_c5",
+    "skip_repeats": false,
+    "parameters": {
+        "environment" : "prod",
+        "version": "V0",
+        "batch_id": "",
+        "process_name": "brain_extraction",
+        "input_bucket" : "eisai-basalforebrainsuperres2",
+        "input_value" : "",
+        "output_folder": "outputs",
+        "output_bucket" : "eisai-basalforebrainsuperres2",
+        "output_prefix": "EISAI_20210524/derived_data/",
+        "output_suffix": "n4brain.nii.gz"
+    }
+}
