@@ -1,0 +1,20 @@
+{
+    "version": 1,
+    "aws_profile": "role",
+    "job_definition" : "superiq_deep_hippo",
+    "job_queue" : "superiq2",
+    "skip_repeats": false,
+    "parameters": {
+        "environment" : "prod",
+        "process_name": "deep_hippo",
+        "input_bucket" : "lilly-superres",
+        "input_value" : "",
+        "version": "V0",
+        "batchid": "",
+        "model_bucket": "invicro-pipeline-inputs",
+        "model_key": "models/SEGSR_32_ANINN222_3.h5",
+        "local_output_path": "outputs",
+        "output_bucket" : "lilly-superres",
+        "output_prefix": "derived_data/"
+    }
+}

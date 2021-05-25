@@ -1,4 +1,5 @@
 import os
+
 threads = "16"
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
