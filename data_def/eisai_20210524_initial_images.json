@@ -1,7 +1,7 @@
 {
     "version": 1,
     "bucket": "eisai-basalforebrainsuperres2",
-    "prefix": "EISAI_20210525/initial_images/",
+    "prefix": "EISAI_20210524/initial_images/",
     "filter_include": ["nii.gz"],
     "filter_exclude": [],
     "dryrun": false
