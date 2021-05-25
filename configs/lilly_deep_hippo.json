@@ -10,7 +10,7 @@
         "input_bucket" : "lilly-superres",
         "input_value" : "",
         "version": "V0",
-        "batchid": "",
+        "batch_id": "",
         "model_bucket": "invicro-pipeline-inputs",
         "model_key": "models/SEGSR_32_ANINN222_3.h5",
         "local_output_path": "outputs",

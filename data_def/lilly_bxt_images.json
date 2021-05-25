@@ -1,0 +1,8 @@
+{
+    "version": 1,
+    "bucket": "lilly-superres",
+    "prefix": "derived_data/AZES/",
+    "filter_include": ["nii.gz", "brainextraction", "V0"],
+    "filter_exclude": [],
+    "dryrun": false
+}
