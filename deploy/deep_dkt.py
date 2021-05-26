@@ -52,7 +52,7 @@ def main(input_config):
     sr_model = batch.get_s3_object(config.model_bucket, config.model_key, "data")
     mdl = tf.keras.models.load_model(sr_model)
 
-    output_path = config.output_file_prefix
+    output_path = config.output_path
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
