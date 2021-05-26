@@ -6,6 +6,7 @@ def get_data(procid):
     for i in procid:
         new = batch.collect_data(i, '')
         df = pd.concat([df,new])
+    df.drop_duplicates(["originalimage", "key", "label"], inplace=True)
     df = batch.pivot_data(df)
     return df
 
@@ -40,4 +41,4 @@ vols = join_all(data, "left")
 meta = pd.read_csv('s3://eisai-basalforebrainsuperres2/metadata/full_metadata_20210208.csv')
 meta['originalimage'] = meta['filename']
 df = join_all([meta,vols], "right")
-df.to_csv('s3://eisai-basalforebrainsuperres2/eisai_20210524_with_metadata.csv')
+df.to_csv('s3://eisai-basalforebrainsuperres2/eisai_20210524_with_metadata.csv', index=False)

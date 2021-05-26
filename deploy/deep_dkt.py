@@ -1,5 +1,5 @@
 import os
-threads = "8"
+threads = "16"
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
 os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
@@ -91,7 +91,7 @@ def main(input_config):
         rec['repeat'] = split[4]
         rec['process'] = 'deep_dkt'
         rec['name'] = "deep_dkt"
-        rec['version'] = config..version
+        rec['version'] = config.version
         rec['extension'] = ".nii.gz"
         rec['resolution'] = key
         df = value[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
