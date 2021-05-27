@@ -19,7 +19,7 @@
             "dilation_amount": 6,
             "verbose": true
         },
-        "output_path": "/outputs/",
+        "output_path": "outputs",
         "output_bucket" : "eisai-basalforebrainsuperres2",
         "output_prefix": "EISAI_20210524/derived_data/",
         "output_suffix": ""
