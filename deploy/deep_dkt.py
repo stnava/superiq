@@ -19,7 +19,7 @@ def main(input_config):
     config = batch.LoadConfig(input_config)
     c = config
     if config.environment == 'prod':
-
+        print(c.input_value)
         input_image = batch.get_s3_object(
                 config.input_bucket,
                 config.input_value,
@@ -119,7 +119,7 @@ def main(input_config):
             config.output_prefix,
             config.input_value,
             config.process_name,
-            config.verions
+            config.version
         )
 
     elif config.environment == 'val':
