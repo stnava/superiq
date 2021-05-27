@@ -7,7 +7,7 @@
     "parameters": {
         "environment" : "prod",
         "process_name": "rbp",
-        "version": "V0",
+        "version": "V1",
         "resolution": "OR",
         "batch_id": "",
         "random_state": "42",
