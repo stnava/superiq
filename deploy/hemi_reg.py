@@ -125,7 +125,7 @@ def main(input_config):
 
     # FIXME - this should be a "good" registration like we use in direct reg seg
     # ideally, we would compute this separately - but also note that
-    regsegits=[200,200,200]
+    regsegits=[200,200,20]
     # regsegits=[4,0,0] # testing
 
     # upsample the template if we are passing SR as input
