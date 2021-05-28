@@ -1,33 +1,20 @@
 # BA - checked for metric randomness
 # this script assumes the image have been brain extracted
 import os
+threads = "8"
+# set number of threads - this should be optimized per compute instance
+os.environ["TF_NUM_INTEROP_THREADS"] = threads
+os.environ["TF_NUM_INTRAOP_THREADS"] = threads
+os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
+
+import ants
+import antspynet
+import pandas as pd
+import numpy as np
+import superiq
 import sys
 import ia_batch_utils as batch
 
-def import_handling(config):
-    try:
-        threads = os.environ['cpu_threads']
-    except KeyError:
-        threads = "8"
-    # set number of threads - this should be optimized per compute instance
-    os.environ["TF_NUM_INTEROP_THREADS"] = threads
-    os.environ["TF_NUM_INTRAOP_THREADS"] = threads
-
-    if config.ants_random_seed != '-1':
-        os.environ['ANTS_RANDOM_SEED'] = config.ants_random_seed
-
-    if config.itk_threads != '-1':
-        os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = config.itk_threads
-    else:
-        os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
-
-    global ants, antspynet, pd, np, superiq
-
-    import ants
-    import antspynet
-    import pandas as pd
-    import numpy as np
-    import superiq
 
 def dap( x ):
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
@@ -70,9 +57,12 @@ def main(input_config):
     img_path = batch.get_s3_object(c.input_bucket, c.input_value, tdir)
     img=ants.image_read(img_path)
 
-    filter_vals = c.input_value.split('/')
-    x = '/'.join(filter_vals[2:7])
-    pipeline_objects = batch.list_objects(c.hemi_bucket, c.hemi_prefix + x + f'/hemi_sr/' )
+    filename = c.input_value.split('/')[-1]
+    basename = filename.split(".")[0]
+    split = basename.split('-')[:-1]
+    pathname = '/'.join(split) + '/'
+    print(pathname)
+    pipeline_objects = batch.list_objects(c.hemi_bucket, c.hemi_prefix + pathname)
     tSeg = batch.get_s3_object(
         c.hemi_bucket,
         #pipeline_objects.endswith('tissueSegmentation.nii.gz'),
@@ -299,5 +289,4 @@ def main(input_config):
 if __name__=="__main__":
     config = sys.argv[1]
     config = batch.LoadConfig(config)
-    import_handling(config)
     main(config)
