@@ -24,7 +24,7 @@ def deep_hippo_deploy(input_config):
         img = ants.image_read(input_image_path)
         template = antspynet.get_antsxnet_data( "biobank" )
         template = ants.image_read( template )
-        template = template * antspynet.brain_extraction( template, 't1v0' )
+        template = template * antspynet.brain_extraction( template, 't1' )
 
         sr_model_path = batch.get_s3_object(
             c.model_bucket,

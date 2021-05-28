@@ -21,7 +21,7 @@ from superiq import list_to_string
 
 def dap( x ):
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
-    bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
+    bbt = antspynet.brain_extraction( bbt, "t1" ) * bbt
     bbt = rank_intensity( bbt )
     qaff=ants.registration( bbt, x, "AffineFast" )
     dapper = antspynet.deep_atropos( qaff['warpedmovout'], do_preprocessing=False )
