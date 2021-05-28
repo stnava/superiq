@@ -20,7 +20,7 @@ import ia_batch_utils as batch
 
 def dap( x ):
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
-    bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
+    bbt = antspynet.brain_extraction( bbt, "t1" ) * bbt
     bbt = ants.rank_intensity( bbt )
     qaff=ants.registration( bbt, x, "AffineFast", aff_metric='GC', random_seed=1 )
     dapper = antspynet.deep_atropos( qaff['warpedmovout'], do_preprocessing=False )
@@ -41,6 +41,7 @@ def localsyn(img, template, hemiS, templateHemi, whichHemi, padder, iterations, 
     tcrop = ants.crop_image( themi, hemicropmask )
     syn = ants.registration( tcrop, ihemi, 'SyN', aff_metric='GC',
         syn_metric='CC', syn_sampling=2, reg_iterations=iterations,
+        flow_sigma=3.0, total_sigma=0.50,
         verbose=False, outprefix = output_prefix, random_seed=1 )
     return syn
 
@@ -124,7 +125,7 @@ def main(input_config):
 
     # FIXME - this should be a "good" registration like we use in direct reg seg
     # ideally, we would compute this separately - but also note that
-    regsegits=[200,200,200]
+    regsegits=[200,200,20]
     # regsegits=[4,0,0] # testing
 
     # upsample the template if we are passing SR as input

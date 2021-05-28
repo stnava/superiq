@@ -18,7 +18,7 @@ import ia_batch_utils as batch
 
 def dap( x ):
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
-    bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
+    bbt = antspynet.brain_extraction( bbt, "t1" ) * bbt
     qaff=ants.registration( bbt, x, "AffineFast", aff_metric='GC', random_seed=1 )
     dapper = antspynet.deep_atropos( qaff['warpedmovout'], do_preprocessing=False )
     dappertox = ants.apply_transforms(
