@@ -3,12 +3,12 @@
     "aws_profile": "role",
     "job_definition" : "superiq_deep_dkt",
     "job_queue" : "superiq_prod_spot_r5",
-    "skip_repeats": false,
+    "skip_repeats": true,
     "parameters": {
         "environment" : "prod",
         "process_name": "deep_dkt",
         "version" : "V0",
-        "batch_id" :"",
+        "batch_id" :"A2B5",
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "EISAI_20210524/derived_data/ADNI/002_S_0729/20060717/T1w/000/brain_extraction/V0/ADNI-002_S_0729-20060717-T1w-000-brain_extraction-V0-n4brain.nii.gz",
         "model_bucket": "invicro-pipeline-inputs",
@@ -22,6 +22,6 @@
         "output_path": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
         "output_prefix": "EISAI_20210524/derived_data/",
-        "output_suffix": ""
+        "output_suffix": "deep_dkt_Labels_1006_1007_1015_1016_SR.nii.gz"
     }
 }

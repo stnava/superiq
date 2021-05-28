@@ -22,22 +22,27 @@ def join_all(dfs, how):
 
 proc = {
     "bxt":["B143"],
-    #"rbp":["4350"],
     "rbp":["D00E"],
     "hemi_sr":["F210"],
     "bf_star":[],
-    "deep_dkt":[],
-    "deep_hippo":[],
+    "deep_dkt":["C4FF", "A2B5"],
+    "deep_hippo":['56D6'],
     "hemi_reg":[],
 }
 
 bxt = get_data(proc['bxt'])
+print(f'bxt: {bxt.shape}')
 bxt['originalimage'] = [i + '.nii.gz' for i in bxt['originalimage']]
 rbp = get_data(proc['rbp'])
+print(f'rbp: {rbp.shape}')
 hemi_sr = get_data(proc['hemi_sr'])
+print(f'hemi_sr: {hemi_sr.shape}')
+deep_hippo = get_data(proc['deep_hippo'])
+print(f'deep_hippo: {deep_hippo.shape}')
+deep_dkt = get_data(proc['deep_dkt'])
+print(f'deep_dkt: {deep_dkt.shape}')
 
-
-data = [bxt, rbp, hemi_sr]
+data = [bxt, rbp, hemi_sr, deep_hippo]
 vols = join_all(data, "left")
 meta = pd.read_csv('s3://eisai-basalforebrainsuperres2/metadata/full_metadata_20210208.csv')
 meta['originalimage'] = meta['filename']
