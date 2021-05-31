@@ -21,8 +21,8 @@ def deep_dkt(
     """
     img = target_image
 
-    rig = ants.registration( template, img, "Rigid", random_seed=1, aff_metric='GC' )
-    rigi = rig['warpedmovout']
+    rig = ants.registration( template, img, "Affine", random_seed=1, aff_metric='GC' )
+    rigi = ants.iMath( rig['warpedmovout'], "Normalize" )
 
     mdl = tf.keras.models.load_model(sr_model)
 
