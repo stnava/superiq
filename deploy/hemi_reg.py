@@ -60,7 +60,7 @@ def main(input_config):
     img=ants.rank_intensity( ants.image_read(img_path) )
     filename = c.input_value.split('/')[-1]
     filename_split = filename.split('-')
-    x = hemi_path + '/'.join(filename_split[:-1]) + "/"
+    x = c.hemi_path + '/'.join(filename_split[:-1]) + "/"
     pipeline_objects = batch.list_objects(c.hemisr_bucket, x + 'hemi_sr/' + f"{c.hemi_version}/")
     tSeg = batch.get_s3_object(
         c.hemisr_bucket,
