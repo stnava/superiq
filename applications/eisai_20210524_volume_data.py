@@ -1,15 +1,44 @@
 import ia_batch_utils as batch
 import pandas as pd
 
-def get_data(procid, name="", drop_dupes=False):
+def get_data(procid, name=""):
     df = pd.DataFrame()
     for i in procid:
         new = batch.collect_data(i, '')
         df = pd.concat([df,new])
     df.to_csv(f"s3://eisai-basalforebrainsuperres2/test_stack_{name}.csv")
-    if drop_dupes:
-        df.drop_duplicates(["originalimage", "key", "label"], inplace=True)
-    df = batch.pivot_data(df)
+    dupe_fields = [
+        'key',
+        'originalimage',
+        'label',
+        'process',
+        'version',
+        'name',
+        'resolution',
+        'batchid',
+    ]
+    df.drop_duplicates(dupe_fields, inplace=True)
+    df = batch.pivot_data(
+        df,
+        index_fields=[
+            'project',
+            'subject',
+            'date',
+            'modality',
+            'repeat',
+            'originalimage',
+        ],
+        column_name_fields=[
+            'key',
+            'label',
+            'resolution',
+            'process',
+            'version',
+            'name',
+        ],
+        exclude_fields=['hashfields', 'batchid','extension', 'hashid'],
+    )
+    df.to_csv(f"s3://eisai-basalforebrainsuperres2/test_pivot_{name}.csv")
     return df
 
 def join_all(dfs, how):
@@ -29,7 +58,7 @@ proc = {
     "bf_star":["C1C1"],
     "deep_dkt":["C4FF", "A2B5"],
     "deep_hippo":['56D6'],
-    "hemi_reg":[],
+    "hemi_reg":["4320"],
 }
 
 bxt = get_data(proc['bxt'])

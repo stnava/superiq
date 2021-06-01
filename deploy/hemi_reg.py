@@ -61,7 +61,7 @@ def main(input_config):
     filename = c.input_value.split('/')[-1]
     filename_split = filename.split('-')
     x = c.hemi_path + '/'.join(filename_split[:-1]) + "/"
-    pipeline_objects = batch.list_objects(c.hemisr_bucket, x + 'hemi_sr/' + f"{c.hemi_version}/")
+    pipeline_objects = batch.list_objects(c.hemisr_bucket, x)
     tSeg = batch.get_s3_object(
         c.hemisr_bucket,
         #pipeline_objects.endswith('tissueSegmentation.nii.gz'),

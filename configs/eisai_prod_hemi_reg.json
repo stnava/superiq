@@ -11,7 +11,7 @@
         "process_name": "hemi_reg",
         "input_bucket" : "eisai-basalforebrainsuperres2",
         "input_value" : "",
-        "hemi_bucket": "eisai-basalforebrainsuperres2",
+        "hemisr_bucket": "eisai-basalforebrainsuperres2",
         "hemi_path": "EISAI_20210524/derived_data/",
         "hemi_version": "V0",
        	"template_bucket": "invicro-pipeline-inputs",
