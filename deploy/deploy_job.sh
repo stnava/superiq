@@ -3,7 +3,7 @@ cpus=$2
 memory_in_gb="$(($3 * 1000))"
 script_path=$4
 antspy_hash="86cd1749ec28e71176780c1dac9dd26b9bb690cd"
-antspynet_hash="8b21a6998ae6696ce07a4cac8bb71ed58a9b7da5"
+antspynet_hash="1da45624dcc37966d7571df5e175fa46d27509fb"
 superiq_hash=$(git rev-parse HEAD)
 
 repo="651875258113.dkr.ecr.us-east-1.amazonaws.com"
