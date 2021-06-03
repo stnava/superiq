@@ -59,8 +59,8 @@ def main(input_config):
 
     filename = c.input_value.split('/')[-1]
     basename = filename.split(".")[0]
-    split = basename.split('-')[:-1]
-    pathname = '/'.join(split) + '/'
+    split = basename.split('-')[:-3]
+    pathname = '/'.join(split) + f'/hemi_sr/{c.hemi_version}/'
     print(pathname)
     pipeline_objects = batch.list_objects(c.hemi_bucket, c.hemi_prefix + pathname)
     tSeg = batch.get_s3_object(
