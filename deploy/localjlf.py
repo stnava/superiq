@@ -8,54 +8,33 @@ import tensorflow as tf
 import math
 import ants
 import sys
-from superiq.pipeline_utils import *
 from superiq import native_to_superres_ljlf_segmentation
 from superiq import check_for_labels_in_image
 from superiq import super_resolution_segmentation_per_label
+import ia_batch_utils as batch
 
 def local_jlf(input_config):
-    config = LoadConfig(input_config)
+    config = batch.LoadConfig(input_config)
+    tdir = "data"
     if config.environment == "prod":
-        input_image = get_pipeline_data(
-            config.brain_extraction_suffix, # TODO:Possible breaking change here
-            config.input_value,
-            config.pipeline_bucket,
-            config.pipeline_prefix,
-        )
-
-        atlas_image_keys = list_images(config.atlas_bucket, config.atlas_image_prefix)
-        brains = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_image_keys]
-        brains.sort()
-        brains = [ants.image_read(i) for i in brains]
-
-        atlas_label_keys = list_images(config.atlas_bucket, config.atlas_label_prefix)
-        brainsSeg = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_label_keys]
-        brainsSeg.sort()
-        brainsSeg = [ants.image_read(i) for i in brainsSeg]
-    elif config.environment == 'val':
-        input_image = get_s3_object(config.input_bucket, config.input_value, "data")
-        target_image_base = input_image.split('/')[-1].split('.')[0]
-        target_image_label_name = \
-            config.atlas_label_prefix +  target_image_base + '_JLFSegOR.nii.gz'
-        target_image_labels_path = get_s3_object(
+        input_image = batch.get_s3_object(
             config.input_bucket,
-            target_image_label_name,
-            "data",
+            config.input_value,
+            tdir,
         )
 
-        atlas_image_keys = list_images(config.atlas_bucket, config.atlas_image_prefix)
-        atlas_image_keys = [i for i in atlas_image_keys if i != input_image]
-        brains = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_image_keys]
+        atlas_image_keys = batch.list_objects(config.atlas_bucket, config.atlas_prefix)
+        brains = [batch.get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_image_keys]
         brains.sort()
         brains = [ants.image_read(i) for i in brains]
 
-        atlas_label_keys = list_images(config.atlas_bucket, config.atlas_label_prefix)
-        atlas_label_keys = [i for i in atlas_label_keys if i != target_image_labels_path]
-        brainsSeg = [get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_label_keys]
+        atlas_label_keys = list_objects(config.atlas_bucket, config.atlas_labels)
+        brainsSeg = [batch.get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_label_keys]
         brainsSeg.sort()
         brainsSeg = [ants.image_read(i) for i in brainsSeg]
     else:
         raise ValueError(f"The environemnt {config.environment} is not recognized")
+
     input_image = ants.image_read(input_image)
 
     # Noise Correction
@@ -63,13 +42,13 @@ def local_jlf(input_config):
     input_image = ants.iMath(input_image, 'TruncateIntensity', 0.000001, 0.995)
 
     wlab = config.wlab
-    template = get_s3_object(config.template_bucket, config.template_key, "data")
+    template = batch.get_s3_object(config.template_bucket, config.template_key, "data")
     template = ants.image_read(template)
 
-    templateL = get_s3_object(config.template_bucket, config.template_label_key, "data")
+    templateL = batch.get_s3_object(config.template_bucket, config.template_labels, "data")
     templateL = ants.image_read(templateL)
 
-    model_path = get_s3_object(config.model_bucket, config.model_key, "models")
+    model_path = batch.get_s3_object(config.model_bucket, config.model_key, "models")
     mdl = tf.keras.models.load_model(model_path)
 
     havelabels = check_for_labels_in_image( wlab, templateL )
@@ -77,22 +56,19 @@ def local_jlf(input_config):
     if not havelabels:
         raise Exception("Label missing from the template")
 
-    output_filename = "outputs/" + config.output_file_prefix
-    if not os.path.exists("outputs"):
-        os.makedirs('outputs')
+    output_filename = config.output_folder
+    if not os.path.exists(config.output_foler):
+        os.makedirs(config.output_folder)
 
-    output_filename_sr = output_filename + "_SR.nii.gz"
-    output_filename_srOnNativeSeg = output_filename  +  "_srOnNativeSeg.nii.gz"
-    output_filename_sr_seg = output_filename  +  "_SR_seg.nii.gz"
-    output_filename_nr_seg = output_filename  +  "_NR_seg.nii.gz"
+    output_filename_sr = output_filename + "SR.nii.gz"
+    output_filename_srOnNativeSeg = output_filename  +  "srOnNativeSeg.nii.gz"
+    output_filename_sr_seg = output_filename  +  "SR_seg.nii.gz"
+    output_filename_nr_seg = output_filename  +  "NR_seg.nii.gz"
 
-    output_filename_sr_seg_csv = output_filename  + "_SR_seg.csv"
-    output_filename_srOnNativeSeg_csv = output_filename  + "_srOnNativeSeg.csv"
-    output_filename_nr_seg_csv = output_filename  + "_NR_seg.csv"
-    output_filename_ortho_plot_sr = output_filename  +  "_ortho_plot_SR.png"
-    output_filename_ortho_plot_srOnNativeSeg = output_filename  +  "_ortho_plot_srOnNativeSeg.png"
-    output_filename_ortho_plot_nrseg = output_filename  +  "_ortho_plot_NRseg.png"
-    output_filename_ortho_plot_srseg = output_filename  +  "_ortho_plot_SRseg.png"
+    output_filename_ortho_plot_sr = output_filename  +  "ortho_plot_SR.png"
+    output_filename_ortho_plot_srOnNativeSeg = output_filename  +  "ortho_plot_srOnNativeSeg.png"
+    output_filename_ortho_plot_nrseg = output_filename  +  "ortho_plot_NRseg.png"
+    output_filename_ortho_plot_srseg = output_filename  +  "ortho_plot_SRseg.png"
 
     output = native_to_superres_ljlf_segmentation(
             target_image = input_image, # n3 image
@@ -124,8 +100,16 @@ def local_jlf(input_config):
             srOnNativeSeg,
             output_filename_srOnNativeSeg,
     )
-    SRNSdf = ants.label_geometry_measures(srOnNativeSeg)
-    SRNSdf.to_csv(output_filename_srOnNativeSeg_csv, index=False)
+    srnsdf = ants.label_geometry_measures(srOnNativeSeg)
+    prepare_dynamo_outputs(
+        srnsdf,
+        config.input_value,
+        config.batch_id,
+        config.version,
+        "super_resolution_on_native_seg",
+        "SR"
+    )
+
     cmask = ants.threshold_image(srOnNativeSeg, 1, math.inf).morphology('dilate', 4)
     ants.plot_ortho(
             ants.crop_image(sr, cmask),
@@ -140,8 +124,17 @@ def local_jlf(input_config):
             srSeg,
             output_filename_sr_seg,
     )
-    SRdf = ants.label_geometry_measures(srSeg)
-    SRdf.to_csv(output_filename_sr_seg_csv, index=False)
+
+    srdf = ants.label_geometry_measures(srSeg)
+    prepare_dynamo_outputs(
+        srdf,
+        config.input_value,
+        config.batch_id,
+        config.version,
+        "super_resolution",
+        "SR"
+    )
+
     cmask = ants.threshold_image(srSeg, 1, math.inf).morphology('dilate', 4)
     ants.plot_ortho(
             ants.crop_image(sr, cmask),
@@ -156,8 +149,17 @@ def local_jlf(input_config):
             nativeSeg,
             output_filename_nr_seg,
     )
-    NRdf = ants.label_geometry_measures(nativeSeg)
-    NRdf.to_csv(output_filename_nr_seg_csv, index=False)
+
+    nrdf = ants.label_geometry_measures(nativeSeg)
+    prepare_dynamo_outputs(
+        nrdf,
+        config.input_value,
+        config.batch_id,
+        config.version,
+        "original_resolution",
+        "OR"
+    )
+
     cmask = ants.threshold_image(nativeSeg, 1, math.inf).morphology('dilate', 4)
     ants.plot_ortho(
             ants.crop_image(input_image, cmask),
@@ -172,76 +174,38 @@ def local_jlf(input_config):
             config.output_prefix,
             config.process_name,
         )
-    elif config.environment ==  "val":
-        ### Set up target image labels ###
-        nativeGroundTruth = ants.image_read(target_image_labels_path)
-        nativeGroundTruth = ants.mask_image(
-            nativeGroundTruth,
-            nativeGroundTruth,
-            level = wlab,
-            binarize=False
-        )
-        gtSR = super_resolution_segmentation_per_label(
-            imgIn = ants.iMath(input_image, "Normalize"),
-            segmentation = nativeGroundTruth, # usually, an estimate from a template, not GT
-            upFactor = config.sr_params['upFactor'],
-            sr_model = mdl,
-            segmentation_numbers = wlab,
-            dilation_amount = config.sr_params['dilation_amount'],
-            verbose = config.sr_params['verbose']
-        )
-        nativeGroundTruthProbSR = gtSR['probability_images'][0]
-        nativeGroundTruthSR = gtSR['super_resolution_segmentation']
-        nativeGroundTruthBinSR = ants.mask_image(
-            nativeGroundTruthSR,
-            nativeGroundTruthSR,
-            wlab,
-            binarize=True
-        )
-        ######
-
-        srsegLJLF = ants.threshold_image(output['srSeg']['probsum'], 0.5, math.inf )
-        nativeOverlapSloop = ants.label_overlap_measures(
-            nativeGroundTruth,
-            output['nativeSeg']['segmentation']
-        )
-        srOnNativeOverlapSloop = ants.label_overlap_measures(
-            nativeGroundTruthSR,
-            output['srOnNativeSeg']['super_resolution_segmentation']
-        )
-        srOverlapSloop = ants.label_overlap_measures(
-            nativeGroundTruthSR,
-            output['srSeg']['segmentation']
-        )
-        srOverlap2 = ants.label_overlap_measures( nativeGroundTruthBinSR, srsegLJLF )
-
-        brainName = []
-        dicevalNativeSeg = []
-        dicevalSRNativeSeg = []
-        dicevalSRSeg = []
-
-        brainName.append(target_image_base)
-        dicevalNativeSeg.append(nativeOverlapSloop["MeanOverlap"][0])
-        dicevalSRNativeSeg.append( srOnNativeOverlapSloop["MeanOverlap"][0])
-        dicevalSRSeg.append( srOverlapSloop["MeanOverlap"][0])
-
-        dict = {
-		'name': brainName,
-		'diceNativeSeg': dicevalNativeSeg,
-		'diceSRNativeSeg': dicevalSRNativeSeg,
-		'diceSRSeg': dicevalSRSeg
-	}
-        df = pd.DataFrame(dict)
-        path = f"{target_image_base}_dice_scores.csv"
-        df.to_csv("/tmp/" + path, index=False)
-        s3 = boto3.client('s3')
-        s3.upload_file(
-            "/tmp/" + path,
-            config.output_bucket,
-            config.output_prefix + path,
-        )
     else:
         raise ValueError(f"The environemnt {config.environment} is not recognized")
+
+def prepare_dynamo_outputs(lgmdf, input_value, batch_id, version, name, resolution):
+    volumes = lgmdf[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
+
+    volumes = volumes.to_dict('records')
+
+    split = input_value.split('/')[-1].split('.')[0]
+    rec = {}
+    rec['originalimage'] = split
+    rec['hashfields'] = ['originalimage', 'process', 'batchid', 'data']
+    rec['batchid'] = batch_id
+    rec['project'] = split[0]
+    rec['subject'] = split[1]
+    rec['date'] = split[2]
+    rec['modality'] = split[3]
+    rec['repeat'] = split[4]
+    rec['process'] = 'local_jlf'
+    rec['version'] = version
+    rec['name'] = name
+    rec['extension'] = ".nii.gz"
+    rec['resolution'] = resolution
+    for vol in volumes:
+        vol.pop('Label', None)
+        for k, v in vol.items():
+            rec['data'] = {}
+            rec['data']['label'] = 1
+            rec['data']['key'] = k
+            rec['data']['value'] = v
+            batch.write_to_dynamo(rec)
+
 
 if __name__ == "__main__":
     config = sys.argv[1]

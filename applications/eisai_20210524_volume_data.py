@@ -55,10 +55,11 @@ proc = {
     "bxt":["B143"],
     "rbp":["D00E"],
     "hemi_sr":["F210"],
-    "bf_star":["C1C1"],
-    "deep_dkt":["C4FF", "A2B5"],
-    "deep_hippo":['56D6'],
-    "hemi_reg":["4320"],
+    "bf_star_sr":["C1C1"],
+    "bf_star_or":["120F"],
+    #"deep_dkt":["C4FF", "A2B5"],
+    "deep_dkt":["8740", "EFFA"],
+    "deep_hippo":['56D6']
 }
 
 bxt = get_data(proc['bxt'])
@@ -72,10 +73,12 @@ deep_hippo = get_data(proc['deep_hippo'], name="deep_hippo")
 print(f'deep_hippo: {deep_hippo.shape}')
 deep_dkt = get_data(proc['deep_dkt'], name="deep_dkt")
 print(f'deep_dkt: {deep_dkt.shape}')
-bf_star = get_data(proc['bf_star'])
-print(f'bf_star: {bf_star.shape}')
+bf_star_sr = get_data(proc['bf_star_sr'])
+print(f'bf_star_sr: {bf_star_sr.shape}')
+bf_star_or = get_data(proc['bf_star_or'])
+print(f'bf_star_or: {bf_star_or.shape}')
 
-data = [bxt, rbp, hemi_sr, deep_hippo, bf_star, deep_dkt]
+data = [bxt, rbp, hemi_sr, deep_hippo, bf_star_or, deep_dkt, bf_star_sr]
 vols = join_all(data, "left")
 meta = pd.read_csv('s3://eisai-basalforebrainsuperres2/metadata/full_metadata_20210208.csv')
 meta['originalimage'] = meta['filename']
