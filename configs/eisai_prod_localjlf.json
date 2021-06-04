@@ -17,6 +17,31 @@
         "model_bucket": "invicro-pipeline-inputs",
         "model_key": "models/SEGSR_32_ANINN222_3.h5",
         "wlab": [75, 76],
+        "seg_params":{
+            "submask_dilation": 8,
+            "reg_iterations": [100,100,20],
+            "searcher": 1,
+            "radder": 2,
+            "syn_sampling": 32,
+            "syn_metric": "mattes",
+            "max_lab_plus_one": true,
+            "verbose": false
+        },
+        "seg_params_sr": {
+            "submask_dilation": 16,
+            "reg_iterations": [100,100,20,0],
+            "searcher": 2,
+            "radder": 4,
+            "syn_sampling": 32,
+            "syn_metric": "mattes",
+            "max_lab_plus_one": true,
+            "verbose": false
+        },
+        "sr_params":{
+            "upFactor": [2,2,2],
+            "dilation_amount": 8,
+            "verbose": true
+        },
         "atlas_bucket": "invicro-pipeline-inputs",
         "atlas_prefix": "OASIS30/Brains/",
         "atlas_labels": "OASIS30/Segmentations/",

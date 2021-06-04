@@ -28,7 +28,7 @@ def local_jlf(input_config):
         brains.sort()
         brains = [ants.image_read(i) for i in brains]
 
-        atlas_label_keys = list_objects(config.atlas_bucket, config.atlas_labels)
+        atlas_label_keys = batch.list_objects(config.atlas_bucket, config.atlas_labels)
         brainsSeg = [batch.get_s3_object(config.atlas_bucket, k, "atlas") for k in atlas_label_keys]
         brainsSeg.sort()
         brainsSeg = [ants.image_read(i) for i in brainsSeg]
@@ -57,7 +57,7 @@ def local_jlf(input_config):
         raise Exception("Label missing from the template")
 
     output_filename = config.output_folder
-    if not os.path.exists(config.output_foler):
+    if not os.path.exists(config.output_folder):
         os.makedirs(config.output_folder)
 
     output_filename_sr = output_filename + "SR.nii.gz"

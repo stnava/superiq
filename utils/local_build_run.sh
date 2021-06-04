@@ -4,7 +4,7 @@ container_name="$1"
 script_path=$2
 config_path=$3
 antspy_hash="86cd1749ec28e71176780c1dac9dd26b9bb690cd"
-antspynet_hash="8b21a6998ae6696ce07a4cac8bb71ed58a9b7da5"
+antspynet_hash="1da45624dcc37966d7571df5e175fa46d27509fb"
 superiq_hash=$(git rev-parse HEAD)
 aws_profile=${4:-default}
 
