@@ -168,11 +168,12 @@ def local_jlf(input_config):
             filename=output_filename_ortho_plot_nrseg,
     )
     if  config.environment == "prod":
-        handle_outputs(
-            config.input_value,
+        batch.handle_outputs(
             config.output_bucket,
-            config.output_prefix,
+            config.output_bucket,
+            config.input_value,
             config.process_name,
+            config.version,
         )
     else:
         raise ValueError(f"The environemnt {config.environment} is not recognized")
