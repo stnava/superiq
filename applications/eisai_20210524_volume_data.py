@@ -51,6 +51,10 @@ def join_all(dfs, how):
 
     return df
 
+def fix_localjlf(df):
+    df['originalimage'] = [i.replace('-brain_extraction-V0-n4brain',".nii.gz") for i in df['originalimage']]
+    return df
+
 proc = {
     "bxt":["B143"],
     "rbp":["D00E"],
@@ -59,7 +63,8 @@ proc = {
     "bf_star_or":["120F"],
     #"deep_dkt":["C4FF", "A2B5"],
     "deep_dkt":["8740", "EFFA"],
-    "deep_hippo":['56D6']
+    "deep_hippo":['56D6'],
+    "localjlf": ['04C0']
 }
 
 bxt = get_data(proc['bxt'])
@@ -77,8 +82,13 @@ bf_star_sr = get_data(proc['bf_star_sr'])
 print(f'bf_star_sr: {bf_star_sr.shape}')
 bf_star_or = get_data(proc['bf_star_or'])
 print(f'bf_star_or: {bf_star_or.shape}')
+localjlf = get_data(proc['localjlf'], name="localjlf")
+localjlf = fix_localjlf(localjlf)
+print(f'localjlf: {localjlf.shape}')
 
-data = [bxt, rbp, hemi_sr, deep_hippo, bf_star_or, deep_dkt, bf_star_sr]
+
+
+data = [bxt, rbp, hemi_sr, deep_hippo, bf_star_or, deep_dkt, bf_star_sr, localjlf]
 vols = join_all(data, "left")
 meta = pd.read_csv('s3://eisai-basalforebrainsuperres2/metadata/full_metadata_20210208.csv')
 meta['originalimage'] = meta['filename']
