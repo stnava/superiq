@@ -58,9 +58,15 @@ def main(input_config):
     tdir = "data/"
     img_path = batch.get_s3_object(c.input_bucket, c.input_value, tdir)
     img=ants.rank_intensity( ants.image_read(img_path) )
-    filename = c.input_value.split('/')[-1]
-    filename_split = filename.split('-')
-    x = c.hemi_path + '/'.join(filename_split[:-1]) + "/"
+    if c.resolution == "SR":
+        filename = c.input_value.split('/')[-1]
+        filename_split = filename.split('-')
+        x = c.hemi_path + '/'.join(filename_split[:-1]) + "/"
+    else:
+        filename = c.input_value.split('/')[-1]
+        no_ext = filename.split('.')[0]
+        filename_split = no_ext.split('-')
+        x = c.hemi_path + '/'.join(filename_split) + "/hemi_sr/" + f'{c.hemi_version}/'
     pipeline_objects = batch.list_objects(c.hemisr_bucket, x)
     tSeg = batch.get_s3_object(
         c.hemisr_bucket,

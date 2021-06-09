@@ -5,7 +5,7 @@ import ia_batch_utils as batch
 from superiq import rank_intensity
 import ants
 
-threads = "64"
+threads = "32"
 # set number of threads - this should be optimized per compute instance
 os.environ["TF_NUM_INTEROP_THREADS"] = threads
 os.environ["TF_NUM_INTRAOP_THREADS"] = threads
