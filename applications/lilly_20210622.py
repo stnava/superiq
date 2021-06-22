@@ -59,7 +59,7 @@ proc = {
     "bxt":["D83B"],
     "rbp":["8AA9"] , #, "onSR"],
     "hemi_sr":["B045"],
-    "deep_hippo": ["56D6"]
+    "deep_hippo": ["A704"]
 }
 
 bxt = get_data(proc['bxt'])
@@ -73,9 +73,11 @@ deep_hippo = get_data(proc['deep_hippo'])
 print(f'deep_hippo: {deep_hippo.shape}')
 
 
-data = [bxt, rbp, hemi_sr, deep_hippo]
+data = [hemi_sr, bxt, rbp,  deep_hippo]
 vols = join_all(data, "left")
-#meta = pd.read_csv('s3://eisai-basalforebrainsuperres2/metadata/full_metadata_20210208.csv')
+meta = pd.read_csv('s3://lilly-superres/additional_data/TauIQ_Results.csv')
+meta['subject'] = [i.replace('-', "_") for i in meta['Subject ID']]
 #meta['originalimage'] = meta['filename']
 #df = join_all([meta,vols], "right")
+vols = pd.merge(vols, meta, on='subject', how='left')
 vols.to_csv('s3://lilly-superres/volume_data/LillyPOCLabelVolumesV2.csv', index=False)
