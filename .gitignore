@@ -5,7 +5,6 @@ __pycache__/
 
 .DS_Store
 outputs3*
-*outputs*
 models/*
 *data/*
 *.nii.gz*
