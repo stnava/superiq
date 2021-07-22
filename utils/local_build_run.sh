@@ -3,8 +3,8 @@
 container_name="$1"
 script_path=$2
 config_path=$3
-antspy_hash="e7e8644857a78c442aff5e688ccd491164746b24"
-antspynet_hash="02da39786fc92b9903a0c3bdcf40622e003f5622"
+antspy_hash="86cd1749ec28e71176780c1dac9dd26b9bb690cd"
+antspynet_hash="1da45624dcc37966d7571df5e175fa46d27509fb"
 superiq_hash=$(git rev-parse HEAD)
 aws_profile=${4:-default}
 
@@ -18,6 +18,5 @@ docker build \
 
 docker run --rm -it \
     --name $container_name \
-    -e cpu_threads="8" \
     $container_name:latest \
     python3 $2 $3

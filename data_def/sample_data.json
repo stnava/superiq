@@ -1,0 +1,8 @@
+{
+    "version": 1,
+    "bucket": "brain-extraction-sample",
+    "prefix": "input_images/",
+    "filter_include": ["nii.gz"],
+    "filter_exclude": [],
+    "dryrun": false
+}

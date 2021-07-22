@@ -2,14 +2,14 @@
     "version": 1,
     "aws_profile": "role",
     "job_definition" : "superiq_hemisr",
-    "job_queue" : "superiq2",
+    "job_queue" : "lilly_prod_spot_r5",
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
         "process_name": "hemi_sr",
         "version": "V0",
-        "input_bucket" : "eisai-basalforebrainsuperres2",
-        "input_value" : "ADNI_EISAI_COHORT/brain_extraction/ADNI/002_S_0729/20060717/T1w/000/brainextraction/ADNI-002_S_0729-20060717-T1w-000-brainextraction-n4brain.nii.gz",
+        "input_bucket" : "lilly-superres",
+        "input_value" : "",
         "batch_id": "",
         "do_reg": true,
         "model_bucket": "invicro-pipeline-inputs",
@@ -23,8 +23,8 @@
         "templateBF1R": "CIT168_adni/CIT168_basal_forebrain_adni_prob_1_right.nii.gz",
         "templateBF2R": "CIT168_adni/CIT168_basal_forebrain_adni_prob_2_right.nii.gz",
         "output_file_prefix": "outputs/",
-        "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "ADNI_EISAI_PROD/",
-        "output_suffix": "cerebrum.nii.gz"
+        "output_bucket" : "lilly-superres",
+        "output_prefix": "derived_data/",
+        "output_suffix": "SR"
     }
 }

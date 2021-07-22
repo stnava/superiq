@@ -1,4 +1,4 @@
-# this script assumes the image have been brain extracted
+# BA - israndom
 import os.path
 from os import path
 
@@ -60,7 +60,7 @@ def main(input_config):
     templateL = ants.image_read(tfnl)
 
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
-    bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
+    bbt = antspynet.brain_extraction( bbt, "t1" ) * bbt
 
     tdap = dap( template )
     idap = dap( imgIn )

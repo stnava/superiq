@@ -1,4 +1,4 @@
-# this script assumes the image have been brain extracted
+# BA - checked for metric randomness
 import os.path
 from os import path
 
@@ -15,6 +15,7 @@ import os
 import sys
 import pandas as pd
 import numpy as np
+from superiq import rank_intensity
 
 import ia_batch_utils as batch
 
@@ -29,49 +30,57 @@ def main(input_config):
         os.makedirs(c.output_folder)
     output_filename = c.output_folder + "/"
 
-    ukbb = antspynet.get_antsxnet_data("biobank")
-    template = ants.image_read(ukbb)
-    btem = antspynet.brain_extraction(template, 't1v0')
-    template = template * btem
+    if False:
+        ukbb = antspynet.get_antsxnet_data("biobank")
+        template = ants.image_read(ukbb)
+        btem = antspynet.brain_extraction(template, 't1v0')
+        template = template * btem
 
-    run_extra=True
+        run_extra=True
 
-    b0 = antspynet.brain_extraction(input_image, 't1v0')
-    rbxt1 = reg_bxt( template, input_image, b0, 't1v0', 'Rigid', dilation=0 )
-    rbxt2 = reg_bxt( template, input_image, rbxt1, 't1v0', 'Rigid', dilation=0  )
-    rbxt3 = reg_bxt( template, input_image, rbxt2, 't1v0', 'Rigid', dilation=0 )
-    rbxt3 = ants.threshold_image( rbxt3, 0.5, 2. ).iMath("GetLargestComponent")
-    rbxt4 = reg_bxt( template, input_image, rbxt3, 't1combined', 'Rigid', dilation=0 )
-    if run_extra:
-        rbxt5 = reg_bxt( template, input_image, rbxt4, 't1combined', 'Rigid', dilation=25 )
-        img = ants.iMath(input_image * rbxt5, "TruncateIntensity", 0.0001, 0.999)
-        imgn4 = ants.n4_bias_field_correction(img, shrink_factor=4)
-        syn=ants.registration(template, imgn4, "SyN" )
-        bxt = ants.apply_transforms( imgn4, btem, syn['invtransforms'], interpolator='nearestNeighbor')
-        bxt = bxt * rbxt5
+        b0 = antspynet.brain_extraction(input_image, 't1v0')
+        rbxt1 = reg_bxt( template, input_image, b0, 't1v0', 'Rigid', dilation=0 )
+        rbxt2 = reg_bxt( template, input_image, rbxt1, 't1v0', 'Rigid', dilation=0  )
+        rbxt3 = reg_bxt( template, input_image, rbxt2, 't1v0', 'Rigid', dilation=0 )
+        rbxt3 = ants.threshold_image( rbxt3, 0.5, 2. ).iMath("GetLargestComponent")
+        rbxt4 = reg_bxt( template, input_image, rbxt3, 't1combined', 'Rigid', dilation=0 )
+        if run_extra:
+            rbxt5 = reg_bxt( template, input_image, rbxt4, 't1combined', 'Rigid', dilation=25 )
+            img = ants.iMath(input_image * rbxt5, "TruncateIntensity", 0.0001, 0.999)
+            imgn4 = ants.n4_bias_field_correction(img, shrink_factor=4)
+            syn=ants.registration(
+                rank_intensity(template),
+                rank_intensity(imgn4),
+                "SyN",
+                syn_metric='CC', syn_sampling=2,
+                aff_metric='GC', random_seed=1  )
+            bxt = ants.apply_transforms( imgn4, btem, syn['invtransforms'], interpolator='nearestNeighbor')
+            bxt = bxt * rbxt5
+        else:
+            bxt = rbxt4
     else:
-        bxt = rbxt4
+        input_image_n3=ants.n3_bias_field_correction( input_image, 4 )
+        bxt3=antspynet.brain_extraction(input_image_n3,'t1combined[8]')
+        bxt=ants.threshold_image(bxt3,2,3)
+        bxti = input_image * bxt
 
     img = ants.iMath(input_image * bxt, "TruncateIntensity", 0.0001, 0.999)
     bxton4 = ants.n4_bias_field_correction(img, shrink_factor=4 )
     plot_path = 'outputs/bxtoplot.png'
-    ants.plot(
-        bxton4,
-        axis=2,
-        filename=plot_path
-    )
+    ants.plot(bxton4,nslices=21,axis=0,ncol=7,crop=True,filename=plot_path)
     output_filename = c.output_folder + "/"
     n4_path = output_filename + 'n4brain.nii.gz'
     ants.image_write( bxton4, n4_path)
+
 
     bxt_lgm = ants.threshold_image(bxt, 0.5, 1)
     bxtvol = ants.label_geometry_measures( bxt_lgm )
     volumes = bxtvol[['Label', 'VolumeInMillimeters', 'SurfaceAreaInMillimetersSquared']]
     volumes = volumes.to_dict('records')
 
-    split = c.input_value.split('/')[-1].split('-')
+    split = c.input_value.split('/')[-1].split('.')[0]
     rec = {}
-    rec['originalimage'] = "-".join(split[:5]) + '.nii.gz'
+    rec['originalimage'] = split
     rec['hashfields'] = ['originalimage', 'process', 'batchid', 'data']
     rec['batchid'] = c.batch_id
     rec['project'] = split[0]
@@ -85,6 +94,7 @@ def main(input_config):
     rec['extension'] = ".nii.gz"
     rec['resolution'] = "OR"
     for vol in volumes:
+        vol.pop('Label', None)
         for k, v in vol.items():
             rec['data'] = {}
             rec['data']['label'] = 1
@@ -106,10 +116,12 @@ def reg_bxt( intemplate, inimg, inbxt, bxt_type, txtype, dilation=0 ):
     img = ants.iMath( inimg * inbxt, "TruncateIntensity", 0.0001, 0.999)
     imgn4 = ants.n3_bias_field_correction(img, downsample_factor=4)
     rig = ants.registration(
-            intemplate,
-            imgn4,
+            rank_intensity(intemplate),
+            rank_intensity(imgn4),
             txtype,
             aff_iterations=(10000, 500, 0, 0),
+            aff_metric='GC',
+            random_seed=1,
         )
     if dilation > 0:
         rigi = ants.apply_transforms( intemplate, inimg * inbxtdil, rig['fwdtransforms'] )

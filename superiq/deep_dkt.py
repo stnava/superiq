@@ -21,8 +21,8 @@ def deep_dkt(
     """
     img = target_image
 
-    rig = ants.registration( template, img, "Rigid" )
-    rigi = rig['warpedmovout']
+    rig = ants.registration( template, img, "Affine", random_seed=1, aff_metric='GC' )
+    rigi = ants.iMath( rig['warpedmovout'], "Normalize" )
 
     mdl = tf.keras.models.load_model(sr_model)
 
@@ -52,7 +52,7 @@ def deep_dkt(
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-    output_filename = output_path + "deep_dkt_Labels" + list_to_string(segmentation_numbers)
+    output_filename = output_path + "deep_dkt_Labels" + list_to_string(segmentation_numbers, "_")
     print(output_filename)
     output_filename_native = output_filename + "_OR_seg.nii.gz"
     output_filename_native_csv = output_filename + "_OR_seg.csv"
@@ -79,4 +79,3 @@ def deep_dkt(
         "labels_or": output_filename_native_csv,
         "labels_sr": output_filename_sr_seg_csv,
     }
-

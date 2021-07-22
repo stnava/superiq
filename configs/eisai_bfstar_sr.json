@@ -1,20 +1,19 @@
 {
     "version": 1,
     "aws_profile": "role",
-    "job_definition" : "superiq_hemisr",
-    "job_queue" : "superiq2",
+    "job_definition" : "superiq_bfstar",
+    "job_queue" : "superiq_prod_spot_r5",
     "skip_repeats": false,
     "parameters": {
         "environment" : "prod",
-        "process_name": "hemi_sr",
-        "version": "V0",
-        "input_bucket" : "eisai-basalforebrainsuperres2",
-        "input_value" : "ADNI_EISAI_COHORT/brain_extraction/ADNI/002_S_0729/20060717/T1w/000/brainextraction/ADNI-002_S_0729-20060717-T1w-000-brainextraction-n4brain.nii.gz",
+        "version" : "V0",
         "batch_id": "",
-        "do_reg": true,
-        "model_bucket": "invicro-pipeline-inputs",
-        "model_key": "models/SEGSR_32_ANINN222_3.h5",
-        "template_bucket": "invicro-pipeline-inputs",
+        "process_name": "bf_star_on_sr",
+        "input_bucket" : "eisai-basalforebrainsuperres2",
+        "input_value" : "EISAI_20210524/derived_data/ADNI/002_S_0729/20060717/T1w/000/hemi_sr/V0/ADNI-002_S_0729-20060717-T1w-000-hemi_sr-V0-SR.nii.gz",
+        "hemi_bucket": "eisai-basalforebrainsuperres2",
+        "hemi_prefix": "EISAI_20210524/derived_data/",
+       	"template_bucket": "invicro-pipeline-inputs",
         "template_base" : "CIT168_adni/CIT168_T1w_700um_pad_adni0.nii.gz",
         "templateCIT": "CIT168_adni/det_atlas_25_pad_LR_adni.nii.gz",
         "templateHemi": "CIT168_adni/CIT168_T1w_700um_pad_HemisphereLabel_adni.nii.gz",
@@ -22,9 +21,10 @@
         "templateBF2L": "CIT168_adni/CIT168_basal_forebrain_adni_prob_2_left.nii.gz",
         "templateBF1R": "CIT168_adni/CIT168_basal_forebrain_adni_prob_1_right.nii.gz",
         "templateBF2R": "CIT168_adni/CIT168_basal_forebrain_adni_prob_2_right.nii.gz",
+        "resolution" : "SR",
         "output_file_prefix": "outputs/",
         "output_bucket" : "eisai-basalforebrainsuperres2",
-        "output_prefix": "ADNI_EISAI_PROD/",
-        "output_suffix": "cerebrum.nii.gz"
+        "output_prefix": "EISAI_20210524/derived_data/",
+        "output_suffix": ""
     }
 }

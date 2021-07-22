@@ -1,11 +1,28 @@
+# BA - checked for metric randomness
 import os
 import sys
 import ia_batch_utils as batch
+from superiq import rank_intensity
+import ants
 
+threads = "32"
+# set number of threads - this should be optimized per compute instance
+os.environ["TF_NUM_INTEROP_THREADS"] = threads
+os.environ["TF_NUM_INTRAOP_THREADS"] = threads
+os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
+
+import ants
+import antspynet
+import tensorflow as tf
+import pandas as pd
+
+from superiq import super_resolution_segmentation_per_label
+from superiq import list_to_string
 
 def dap( x ):
     bbt = ants.image_read( antspynet.get_antsxnet_data( "biobank" ) )
-    bbt = antspynet.brain_extraction( bbt, "t1v0" ) * bbt
+    bbt = antspynet.brain_extraction( bbt, "t1" ) * bbt
+    bbt = rank_intensity( bbt )
     qaff=ants.registration( bbt, x, "AffineFast" )
     dapper = antspynet.deep_atropos( qaff['warpedmovout'], do_preprocessing=False )
     dappertox = ants.apply_transforms(
@@ -72,14 +89,17 @@ def main(config):
             #lregits=[600,60,0,0,0]
             verber=True
         reg = ants.registration(
-            template * temcerebrum,
-            img * imgcerebrum,
+            rank_intensity( template * temcerebrum ),
+            rank_intensity( img * imgcerebrum ),
             type_of_transform="SyN",
             grad_step = 0.20,
             syn_metric='CC',
             syn_sampling=2,
             reg_iterations=regits,
             outprefix=prefix,
+            total_sigma=0.5,
+            random_seed=1,
+            aff_metric='GC',
             verbose=verber )
 
     # 1 is left, 2 is right
@@ -209,33 +229,8 @@ def main(config):
         c.version,
     )
 
-def import_handling(config):
-    try:
-        threads = os.environ['cpu_threads']
-    except KeyError:
-        threads = "8"
-    # set number of threads - this should be optimized per compute instance
-    os.environ["TF_NUM_INTEROP_THREADS"] = threads
-    os.environ["TF_NUM_INTRAOP_THREADS"] = threads
-
-    if config.ants_random_seed != '-1':
-        os.environ['ANTS_RANDOM_SEED'] = config.ants_random_seed
-
-    if config.itk_threads != '-1':
-        os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = config.itk_threads
-    else:
-        os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = threads
-
-    import ants
-    import antspynet
-    import tensorflow as tf
-    import pandas as pd
-
-    from superiq import super_resolution_segmentation_per_label
-    from superiq import list_to_string
 
 if __name__ == "__main__":
     config = sys.argv[1]
     config = batch.LoadConfig(config)
-    import_handling(config)
     main(config)

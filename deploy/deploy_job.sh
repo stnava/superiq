@@ -2,8 +2,8 @@ container_name="$1"
 cpus=$2
 memory_in_gb="$(($3 * 1000))"
 script_path=$4
-antspy_hash="e7e8644857a78c442aff5e688ccd491164746b24"
-antspynet_hash="b991b14edc7c0aad79fec2cd02afedee49a9c18a"
+antspy_hash="86cd1749ec28e71176780c1dac9dd26b9bb690cd"
+antspynet_hash="1da45624dcc37966d7571df5e175fa46d27509fb"
 superiq_hash=$(git rev-parse HEAD)
 
 repo="651875258113.dkr.ecr.us-east-1.amazonaws.com"
@@ -27,7 +27,7 @@ docker tag $container_name $repo_image && \
     --job-definition-name $job_definition_name \
     --type container \
     --timeout attemptDurationSeconds=36000 \
-    --retry-strategy attempts=1 \
+    --retry-strategy attempts=3 \
     --container-properties \
     '{
         "image": "'"${repo_image_latest}"'",
