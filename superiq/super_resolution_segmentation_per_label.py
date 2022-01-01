@@ -246,6 +246,7 @@ def super_resolution_segmentation_per_label(
     >>> ref = ants.image_read( ants.get_ants_data('r16'))
     >>> FIXME
     """
+    import re
     if re.search( 'h5', sr_model ) is not None:
         if verbose:
             print("load model")
