@@ -246,6 +246,10 @@ def super_resolution_segmentation_per_label(
     >>> ref = ants.image_read( ants.get_ants_data('r16'))
     >>> FIXME
     """
+    if re.search( 'h5', sr_model ) is not None:
+        if verbose:
+            print("load model")
+        sr_model=tf.keras.models.load_model( sr_model )
     newspc = ( np.asarray( ants.get_spacing( imgIn ) ) ).tolist()
     for k in range(len(newspc)):
         newspc[k] = newspc[k]/upFactor[k]
@@ -292,6 +296,9 @@ def super_resolution_segmentation_per_label(
                 binsegup = ants.resample_image_to_target( binseg, imgup, interp_type='linear' )
                 problist.append( binsegup )
             else:
+                if verbose:
+                    print(imgc)
+                    print(imgch)
                 myarr = np.stack( [imgc.numpy(),imgch.numpy()],axis=3 )
                 newshape = np.concatenate( [ [1],np.asarray( myarr.shape )] )
                 myarr = myarr.reshape( newshape )
