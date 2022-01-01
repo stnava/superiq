@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='superiq',
-      version='0.0.1',
+      version='0.0.2',
       description='Super-resolution image quantification',
       url='https://github.com/stnava/superiq',
       author='Avants and Gosselin',
