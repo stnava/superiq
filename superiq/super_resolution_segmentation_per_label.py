@@ -308,6 +308,9 @@ def super_resolution_segmentation_per_label(
                     print("calling prediction function")
                     print( myarr.shape )
                 pred = sr_model.predict( myarr )
+                if verbose:
+                    print("predict done")
+                    print( pred.shape )
                 imgsr = ants.from_numpy( tf.squeeze( pred[0] ).numpy())
                 imgsr = ants.copy_image_info( imgc, imgsr )
                 newspc = ( np.asarray( ants.get_spacing( imgsr ) ) * 0.5 ).tolist()
@@ -316,6 +319,8 @@ def super_resolution_segmentation_per_label(
                 imgsrh = ants.copy_image_info( imgc, imgsrh )
                 ants.set_spacing( imgsrh,  newspc )
                 problist.append( imgsrh )
+                if verbose:
+                    print("match intensity")
                 imgsr = antspynet.regression_match_image( imgsr, ants.resample_image_to_target(imgup,imgsr) )
                 contribtoavg = ants.resample_image_to_target( imgsr*0+1, imgup, interp_type='nearestNeighbor' )
                 weightedavg = weightedavg + contribtoavg
