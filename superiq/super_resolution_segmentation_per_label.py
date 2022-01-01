@@ -247,10 +247,11 @@ def super_resolution_segmentation_per_label(
     >>> FIXME
     """
     import re
-    if re.search( 'h5', sr_model ) is not None:
-        if verbose:
-            print("load model")
-        sr_model=tf.keras.models.load_model( sr_model )
+    if type( sr_model ) == type(""):
+        if re.search( 'h5', sr_model ) is not None:
+            if verbose:
+                print("load model")
+            sr_model=tf.keras.models.load_model( sr_model )
     newspc = ( np.asarray( ants.get_spacing( imgIn ) ) ).tolist()
     for k in range(len(newspc)):
         newspc[k] = newspc[k]/upFactor[k]
