@@ -258,7 +258,7 @@ def super_resolution_segmentation_per_label(
     segmentationUse = ants.mask_image( segmentationUse, segmentationUse, segmentation_numbers )
     segmentation_numbers_use = segmentation_numbers.copy()
     if max_lab_plus_one:
-        background = ants.threshold_image( segmentationUse, 1, max(segmentation_numbers) )
+        background = ants.mask_image( segmentationUse, segmentationUse, segmentation_numbers, binarize=True )
         background = ants.iMath(background,"MD",bkgdilate) - background
         backgroundup = ants.resample_image_to_target( background, imgup, interp_type='linear' )
         segmentation_numbers_use.append( max(segmentation_numbers) + 1 )
@@ -295,6 +295,9 @@ def super_resolution_segmentation_per_label(
                 myarr = np.stack( [imgc.numpy(),imgch.numpy()],axis=3 )
                 newshape = np.concatenate( [ [1],np.asarray( myarr.shape )] )
                 myarr = myarr.reshape( newshape )
+                if verbose:
+                    print("calling prediction function")
+                    print( myarr.shape )
                 pred = sr_model.predict( myarr )
                 imgsr = ants.from_numpy( tf.squeeze( pred[0] ).numpy())
                 imgsr = ants.copy_image_info( imgc, imgsr )
